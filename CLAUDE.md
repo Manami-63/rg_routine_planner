@@ -35,7 +35,8 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
 
 - `lib/core/database/`: Drift `AppDatabase` and tables. Table/column names
   mirror a future MySQL schema. Dates are stored as ISO-8601 text
-  (`build.yaml`). Bump `schemaVersion` and add a migration on any change.
+  (`build.yaml`), always in UTC (the repository converts); the UI shows
+  local time. Bump `schemaVersion` and add a migration on any change.
 - `features/routines/`: `Routine` (id = UUID, name, level, timestamps, `db`
   content) and `RoutineRepository` (`DriftRoutineRepository`).
 - Routines store catalogue ids, never values; values resolve from the
@@ -44,7 +45,15 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
 - `DbRoutine` is only the DB content (ruleset, elements, risks). Name and
   level live on `Routine`. Edit via `routineControllerProvider`; DB helpers
   are the `DbRoutineEditing` extension in `db_routine_providers.dart`.
-- Repository tests use `AppDatabase(NativeDatabase.memory())`.
+- Flow: Home -> `/routines` (My routines) -> `/routines/:id/db` (calculator).
+- `routineControllerProvider(id)` is an auto-disposing async family: loads
+  by id, saves every change (name debounced 500 ms), flushes a pending save
+  on dispose, and reports `routineSaveStatusProvider(id)`. Automatic retry
+  is off; screens offer a manual Retry. DB widgets take a `routineId`.
+- Repository tests use `AppDatabase(NativeDatabase.memory())`. Widget and
+  controller tests use `FakeRoutineRepository` (Drift's live queries leave
+  timers that widget tests reject). `pumpDbCalculator` in
+  `test/features/db_calculator/pump_db_calculator.dart` sets up the screen.
 
 ## Scoring rules (important)
 

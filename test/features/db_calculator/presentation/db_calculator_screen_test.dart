@@ -1,37 +1,19 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_element.dart';
-import 'package:rg_routine_planner/features/db_calculator/presentation/db_calculator_providers.dart';
-import 'package:rg_routine_planner/features/db_calculator/presentation/db_calculator_screen.dart';
+import 'package:rg_routine_planner/features/routines/domain/routine.dart';
 import 'package:rg_routine_planner/features/routines/presentation/routine_controller.dart';
 
+import '../pump_db_calculator.dart';
 import '../test_data.dart';
 
 void main() {
   Future<void> pumpScreen(
     WidgetTester tester, {
     FakeDbCatalogueRepository? repository,
-  }) async {
-    // A tall surface so the whole scroll view is built without scrolling.
-    tester.view.physicalSize = const Size(800, 2400);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          dbCatalogueRepositoryProvider.overrideWithValue(
-            repository ?? FakeDbCatalogueRepository(),
-          ),
-        ],
-        child: const MaterialApp(home: DbCalculatorScreen()),
-      ),
-    );
-    await tester.pump();
-  }
+  }) => pumpDbCalculator(tester, catalogue: repository);
 
   String subtotalText(WidgetTester tester) =>
       tester.widget<Text>(find.byKey(const ValueKey('db-subtotal'))).data!;
@@ -111,12 +93,10 @@ void main() {
     tester,
   ) async {
     await pumpScreen(tester);
-    final container = ProviderScope.containerOf(
-      tester.element(find.byType(DbCalculatorScreen)),
-    );
+    final container = containerOf(tester);
 
     await tester.enterText(find.byType(TextField), 'Hoop routine');
-    expect(container.read(routineControllerProvider).name, 'Hoop routine');
+    expect(container.read(routineProvider(testRoutineId)).name, 'Hoop routine');
 
     await tester.tap(find.byTooltip('Add Test Jump'));
     await tester.pump();
@@ -125,7 +105,7 @@ void main() {
     await tester.tap(find.text('Clear'));
     await tester.pumpAndSettle();
 
-    expect(container.read(routineControllerProvider).name, 'Hoop routine');
+    expect(container.read(routineProvider(testRoutineId)).name, 'Hoop routine');
     expect(find.text('Hoop routine'), findsOneWidget);
   });
 
@@ -319,5 +299,76 @@ void main() {
     await tester.pump();
 
     expect(find.text('Catalogue is empty'), findsOneWidget);
+  });
+
+  group('routine states', () {
+    testWidgets('shows not found for a missing routine', (tester) async {
+      await pumpDbCalculator(
+        tester,
+        routine: Routine.create(
+          id: 'someone-else',
+          rulesetId: testRuleset.id,
+          now: DateTime.utc(2026),
+        ),
+      );
+
+      expect(find.text('Routine not found'), findsOneWidget);
+    });
+
+    testWidgets('refuses a routine from another ruleset', (tester) async {
+      await pumpDbCalculator(
+        tester,
+        routine: Routine.create(
+          id: testRoutineId,
+          rulesetId: 'old-v0',
+          now: DateTime.utc(2026),
+        ),
+      );
+
+      expect(find.text('Different ruleset'), findsOneWidget);
+      expect(find.byTooltip('Clear all'), findsNothing);
+    });
+
+    testWidgets('explains items missing from the catalogue', (tester) async {
+      final routine = emptyTestRoutine();
+      await pumpDbCalculator(
+        tester,
+        routine: routine.withDb(
+          routine.db
+              .withElementAdded(
+                const DbElement.unknown(id: 'gone', rulesetId: 'test-v1'),
+              )
+              .withElementAdded(testJump),
+        ),
+      );
+
+      expect(
+        find.textContaining('1 item is no longer in the catalogue'),
+        findsOneWidget,
+      );
+      expect(find.text('Unknown element'), findsOneWidget);
+      expect(subtotalText(tester), '0.30');
+    });
+
+    testWidgets('shows save status and retries after a failure', (
+      tester,
+    ) async {
+      final routines = await pumpDbCalculator(tester);
+      expect(find.byTooltip('Saved'), findsOneWidget);
+
+      routines.saveError = StateError('disk full');
+      await tester.tap(find.byTooltip('Add Test Jump'));
+      await tester.pump();
+      await tester.pump();
+      expect(find.byTooltip("Couldn't save. Tap to retry"), findsOneWidget);
+
+      routines.saveError = null;
+      await tester.tap(find.byTooltip("Couldn't save. Tap to retry"));
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.byTooltip('Saved'), findsOneWidget);
+      expect(routines.routines[testRoutineId]!.db.elements, [testJump]);
+    });
   });
 }

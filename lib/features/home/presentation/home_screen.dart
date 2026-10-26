@@ -29,24 +29,18 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 32),
             _FeatureCard(
-              icon: Icons.calculate_outlined,
-              title: 'DB Calculator',
+              icon: Icons.event_note_outlined,
+              title: 'My routines',
               description:
-                  'Build a list of body difficulties and see a provisional '
+                  'Create and save routines, and see a provisional DB '
                   'subtotal. Uses sample data for now.',
-              onTap: () => context.go(AppRoutes.dbCalculator),
+              onTap: () => context.go(AppRoutes.routines),
             ),
             const SizedBox(height: 12),
             const _FeatureCard(
               icon: Icons.sports_gymnastics,
               title: 'DA Calculator',
               description: 'Dynamic difficulty with apparatus.',
-            ),
-            const SizedBox(height: 12),
-            const _FeatureCard(
-              icon: Icons.event_note_outlined,
-              title: 'Routine Planner',
-              description: 'Save and organise full routines.',
             ),
           ],
         ),

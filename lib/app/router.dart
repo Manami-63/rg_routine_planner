@@ -3,10 +3,12 @@ import 'package:go_router/go_router.dart';
 
 import '../features/db_calculator/presentation/db_calculator_screen.dart';
 import '../features/home/presentation/home_screen.dart';
+import '../features/routines/presentation/routines_screen.dart';
 
 abstract final class AppRoutes {
   static const home = '/';
-  static const dbCalculator = '/db-calculator';
+  static const routines = '/routines';
+  static String dbCalculator(String routineId) => '/routines/$routineId/db';
 }
 
 /// Created per [ProviderScope], so each widget test gets a fresh router
@@ -19,10 +21,18 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.home,
         builder: (context, state) => const HomeScreen(),
         routes: [
-          // Nested under home, so the calculator gets a back button.
+          // Nested routes give each screen a back button to its parent:
+          // calculator -> my routines -> home.
           GoRoute(
-            path: 'db-calculator',
-            builder: (context, state) => const DbCalculatorScreen(),
+            path: 'routines',
+            builder: (context, state) => const RoutinesScreen(),
+            routes: [
+              GoRoute(
+                path: ':id/db',
+                builder: (context, state) =>
+                    DbCalculatorScreen(routineId: state.pathParameters['id']!),
+              ),
+            ],
           ),
         ],
       ),

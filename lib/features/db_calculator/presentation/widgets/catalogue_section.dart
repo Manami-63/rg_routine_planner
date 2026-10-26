@@ -12,7 +12,9 @@ import 'value_badge.dart';
 /// Sliver showing the element catalogue grouped by family, with loading,
 /// error and empty states.
 class CatalogueSection extends ConsumerWidget {
-  const CatalogueSection({super.key});
+  const CatalogueSection({super.key, required this.routineId});
+
+  final String routineId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -68,7 +70,7 @@ class CatalogueSection extends ConsumerWidget {
                     tooltip: 'Add ${element.name}',
                     icon: const Icon(Icons.add_circle_outline),
                     onPressed: () => ref
-                        .read(routineControllerProvider.notifier)
+                        .read(routineControllerProvider(routineId).notifier)
                         .addElement(element),
                   ),
                 ],

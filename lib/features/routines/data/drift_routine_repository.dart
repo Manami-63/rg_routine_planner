@@ -175,8 +175,10 @@ class DriftRoutineRepository implements RoutineRepository {
             customDbMax: Value(custom?.db.max),
             customDaMin: Value(custom?.da.min),
             customDaMax: Value(custom?.da.max),
-            createdAt: routine.createdAt,
-            updatedAt: routine.updatedAt,
+            // Always stored in UTC (shown in local time by the UI), so data
+            // from devices in different time zones sorts and syncs cleanly.
+            createdAt: routine.createdAt.toUtc(),
+            updatedAt: routine.updatedAt.toUtc(),
           ),
         );
 

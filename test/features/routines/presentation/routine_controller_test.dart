@@ -6,89 +6,146 @@ import 'package:rg_routine_planner/features/db_calculator/presentation/db_calcul
 import 'package:rg_routine_planner/features/db_calculator/presentation/db_routine_providers.dart';
 import 'package:rg_routine_planner/features/levels/data/fig_levels.dart';
 import 'package:rg_routine_planner/features/routines/presentation/routine_controller.dart';
+import 'package:rg_routine_planner/features/routines/presentation/routine_providers.dart';
 
+import '../../db_calculator/pump_db_calculator.dart';
 import '../../db_calculator/test_data.dart';
+import '../fake_routine_repository.dart';
 
 void main() {
+  late FakeRoutineRepository repository;
   late ProviderContainer container;
 
+  ProviderContainer createContainer() => ProviderContainer(
+    overrides: [
+      dbCatalogueRepositoryProvider.overrideWithValue(
+        FakeDbCatalogueRepository(),
+      ),
+      routineRepositoryProvider.overrideWithValue(repository),
+    ],
+  );
+
+  /// Loads the routine and keeps its auto-disposing providers alive.
+  Future<RoutineController> load() async {
+    container.listen(routineControllerProvider(testRoutineId), (_, _) {});
+    container.listen(routineSaveStatusProvider(testRoutineId), (_, _) {});
+    await container.read(routineControllerProvider(testRoutineId).future);
+    return container.read(routineControllerProvider(testRoutineId).notifier);
+  }
+
+  SaveStatus status() =>
+      container.read(routineSaveStatusProvider(testRoutineId));
+
+  /// Lets queued saves (futures) complete.
+  Future<void> settle() => Future<void>.delayed(Duration.zero);
+
   setUp(() {
-    container = ProviderContainer.test(
-      overrides: [
-        dbCatalogueRepositoryProvider.overrideWithValue(
-          FakeDbCatalogueRepository(),
-        ),
-      ],
+    repository = FakeRoutineRepository([emptyTestRoutine()]);
+    container = createContainer();
+    addTearDown(container.dispose);
+  });
+
+  test('loads the routine from the repository', () async {
+    await load();
+
+    final routine = container.read(routineProvider(testRoutineId));
+    expect(routine, emptyTestRoutine());
+  });
+
+  test('a missing routine fails with RoutineNotFoundException', () async {
+    container.listen(routineControllerProvider('missing'), (_, _) {});
+
+    await expectLater(
+      container.read(routineControllerProvider('missing').future),
+      throwsA(isA<RoutineNotFoundException>()),
     );
   });
 
-  RoutineController controller() =>
-      container.read(routineControllerProvider.notifier);
+  test('DB changes save immediately and update the timestamp', () async {
+    final controller = await load();
 
-  test('starts empty, unnamed, without level, on the repository ruleset', () {
-    final routine = container.read(routineControllerProvider);
+    controller.addElement(testJump);
+    await settle();
 
-    expect(routine.db.isEmpty, isTrue);
-    expect(routine.name, isEmpty);
-    expect(routine.level, isNull);
-    expect(routine.rulesetId, testRuleset.id);
-    expect(routine.id, isNotEmpty);
+    final saved = repository.routines[testRoutineId]!;
+    expect(saved.db.elements, [testJump]);
+    expect(saved.updatedAt.isAfter(emptyTestRoutine().updatedAt), isTrue);
+    expect(status(), SaveStatus.saved);
   });
 
-  test('subtotal follows add, remove and clear', () {
-    controller()
-      ..addElement(testJump)
-      ..addElement(testBalance);
-    expect(
-      container.read(dbScoreResultProvider).subtotal,
-      const Score.hundredths(50),
-    );
+  test('subtotal follows the routine', () async {
+    final controller = await load();
+    container.listen(dbScoreResultProvider(testRoutineId), (_, _) {});
 
-    controller().removeElementAt(0);
-    expect(
-      container.read(dbScoreResultProvider).subtotal,
-      const Score.hundredths(20),
-    );
-
-    controller().clearDb();
-    expect(container.read(dbScoreResultProvider).subtotal, Score.zero);
-  });
-
-  test('subtotal includes risks', () {
-    controller()
+    controller
       ..addElement(testJump)
       ..addRisk(RiskElement(rotation: testTwoRotations));
-    final result = container.read(dbScoreResultProvider);
+    final result = container.read(dbScoreResultProvider(testRoutineId));
 
     expect(result.bodySubtotal, const Score.hundredths(30));
     expect(result.riskSubtotal, const Score.hundredths(20));
     expect(result.subtotal, const Score.hundredths(50));
-
-    controller().removeRiskAt(0);
-    expect(container.read(dbScoreResultProvider).riskSubtotal, Score.zero);
   });
 
-  test('clearing DB content keeps name and level', () {
-    controller()
+  test('renaming saves after a pause, not on every keystroke', () async {
+    final controller = await load();
+
+    controller
+      ..rename('H')
+      ..rename('Ho')
+      ..rename('Hoop');
+    await settle();
+
+    expect(repository.routines[testRoutineId]!.name, isEmpty);
+    expect(status(), SaveStatus.saving);
+
+    await Future<void>.delayed(
+      RoutineController.nameSaveDelay + const Duration(milliseconds: 50),
+    );
+
+    expect(repository.routines[testRoutineId]!.name, 'Hoop');
+    expect(repository.saveCount, 1);
+    expect(status(), SaveStatus.saved);
+  });
+
+  test('a pending rename is saved when the controller is disposed', () async {
+    final controller = await load();
+
+    controller.rename('Leaving quickly');
+    container.dispose();
+    await settle();
+
+    expect(repository.routines[testRoutineId]!.name, 'Leaving quickly');
+  });
+
+  test('a failed save is reported and can be retried', () async {
+    final controller = await load();
+    repository.saveError = StateError('disk full');
+
+    controller.addElement(testJump);
+    await settle();
+    expect(status(), SaveStatus.failed);
+
+    repository.saveError = null;
+    controller.saveNow();
+    await settle();
+
+    expect(status(), SaveStatus.saved);
+    expect(repository.routines[testRoutineId]!.db.elements, [testJump]);
+  });
+
+  test('clearing DB content keeps name and level', () async {
+    final controller = await load();
+
+    controller
       ..rename('Hoop')
       ..selectLevel(figSenior)
       ..addElement(testJump)
-      ..addRisk(RiskElement(rotation: testTwoRotations))
       ..clearDb();
-    final routine = container.read(routineControllerProvider);
+    final routine = container.read(routineProvider(testRoutineId));
 
     expect(routine.db.isEmpty, isTrue);
     expect(routine.name, 'Hoop');
     expect(routine.level, figSenior);
-  });
-
-  test('rename and selectLevel update the routine', () {
-    controller()
-      ..rename('Ribbon final')
-      ..selectLevel(figJunior);
-    final routine = container.read(routineControllerProvider);
-
-    expect(routine.name, 'Ribbon final');
-    expect(routine.level, figJunior);
   });
 }

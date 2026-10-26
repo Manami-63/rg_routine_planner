@@ -1,36 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rg_routine_planner/features/db_calculator/presentation/db_calculator_providers.dart';
-import 'package:rg_routine_planner/features/db_calculator/presentation/db_calculator_screen.dart';
 import 'package:rg_routine_planner/features/routines/presentation/routine_controller.dart';
 import 'package:rg_routine_planner/features/levels/domain/competition_level.dart';
 import 'package:rg_routine_planner/features/levels/domain/count_limit.dart';
 
-import '../../db_calculator/test_data.dart';
+import '../../db_calculator/pump_db_calculator.dart';
 
 void main() {
   late ProviderContainer container;
 
   Future<void> pumpScreen(WidgetTester tester) async {
-    tester.view.physicalSize = const Size(800, 2400);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          dbCatalogueRepositoryProvider.overrideWithValue(
-            FakeDbCatalogueRepository(),
-          ),
-        ],
-        child: const MaterialApp(home: DbCalculatorScreen()),
-      ),
-    );
-    await tester.pump();
-    container = ProviderScope.containerOf(
-      tester.element(find.byType(DbCalculatorScreen)),
-    );
+    await pumpDbCalculator(tester);
+    container = containerOf(tester);
   }
 
   Future<void> openPicker(WidgetTester tester) async {
@@ -78,7 +60,10 @@ void main() {
     await tester.pump();
     await apply(tester);
 
-    expect(container.read(routineControllerProvider).level?.id, 'fig-senior');
+    expect(
+      container.read(routineProvider(testRoutineId)).level?.id,
+      'fig-senior',
+    );
     expect(find.text('FIG Senior'), findsOneWidget);
     expect(
       noticeText(
@@ -102,7 +87,7 @@ void main() {
     await apply(tester);
 
     expect(
-      container.read(routineControllerProvider).level?.requirements,
+      container.read(routineProvider(testRoutineId)).level?.requirements,
       const LevelRequirements(db: CountLimit(min: 1, max: 2)),
     );
     expect(find.text('DB 1–2'), findsOneWidget);
@@ -146,7 +131,10 @@ void main() {
     await tester.tapAt(const Offset(10, 10)); // Tap the barrier.
     await tester.pumpAndSettle();
 
-    expect(container.read(routineControllerProvider).level?.id, 'fig-junior');
+    expect(
+      container.read(routineProvider(testRoutineId)).level?.id,
+      'fig-junior',
+    );
   });
 
   testWidgets('remove level clears the selection', (tester) async {
@@ -160,14 +148,14 @@ void main() {
     await tester.tap(find.text('Remove level'));
     await tester.pumpAndSettle();
 
-    expect(container.read(routineControllerProvider).level, isNull);
+    expect(container.read(routineProvider(testRoutineId)).level, isNull);
     expect(find.text('Select a level'), findsOneWidget);
   });
 
   testWidgets('reopening a non-FIG level keeps its numbers', (tester) async {
     await pumpScreen(tester);
     container
-        .read(routineControllerProvider.notifier)
+        .read(routineControllerProvider(testRoutineId).notifier)
         .selectLevel(
           const CompetitionLevel.custom(
             LevelRequirements(da: CountLimit(max: 3)),
@@ -195,6 +183,9 @@ void main() {
     await tester.tap(find.text('Clear'));
     await tester.pumpAndSettle();
 
-    expect(container.read(routineControllerProvider).level?.id, 'fig-senior');
+    expect(
+      container.read(routineProvider(testRoutineId)).level?.id,
+      'fig-senior',
+    );
   });
 }

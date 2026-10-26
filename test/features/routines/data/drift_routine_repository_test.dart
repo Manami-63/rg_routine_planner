@@ -77,6 +77,21 @@ void main() {
     expect(loaded.createdAt.millisecond, 123);
   });
 
+  test('stores times as UTC even when given local times', () async {
+    // 9:00 at UTC+11 (e.g. Sydney summer) is 22:00 UTC the previous day.
+    final local = DateTime.parse('2026-10-27T09:00:00+11:00').toLocal();
+    await repository.saveRoutine(routine().withUpdatedAt(local));
+
+    final raw = await db
+        .customSelect('SELECT updated_at FROM routines')
+        .getSingle();
+    expect(raw.read<String>('updated_at'), '2026-10-26T22:00:00.000Z');
+
+    final loaded = await repository.fetchRoutine('r1');
+    expect(loaded!.updatedAt.isUtc, isTrue);
+    expect(loaded.updatedAt.isAtSameMomentAs(local), isTrue);
+  });
+
   test('round-trips a custom level', () async {
     const custom = CompetitionLevel.custom(
       LevelRequirements(db: CountLimit(min: 1, max: 4), da: CountLimit(max: 3)),

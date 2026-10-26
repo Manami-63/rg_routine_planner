@@ -6,7 +6,9 @@ import '../../../routines/presentation/routine_controller.dart';
 /// Edits the routine name. Stateful because a [TextEditingController] must
 /// live as long as the field and be disposed with it.
 class RoutineNameField extends ConsumerStatefulWidget {
-  const RoutineNameField({super.key});
+  const RoutineNameField({super.key, required this.routineId});
+
+  final String routineId;
 
   @override
   ConsumerState<RoutineNameField> createState() => _RoutineNameFieldState();
@@ -14,7 +16,7 @@ class RoutineNameField extends ConsumerStatefulWidget {
 
 class _RoutineNameFieldState extends ConsumerState<RoutineNameField> {
   late final TextEditingController _controller = TextEditingController(
-    text: ref.read(routineControllerProvider).name,
+    text: ref.read(routineProvider(widget.routineId)).name,
   );
 
   @override
@@ -34,7 +36,9 @@ class _RoutineNameFieldState extends ConsumerState<RoutineNameField> {
         hintText: 'Untitled routine',
         prefixIcon: Icon(Icons.edit_outlined),
       ),
-      onChanged: ref.read(routineControllerProvider.notifier).rename,
+      onChanged: ref
+          .read(routineControllerProvider(widget.routineId).notifier)
+          .rename,
     );
   }
 }

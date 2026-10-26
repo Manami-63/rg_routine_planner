@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/widgets/message_view.dart';
 import '../../../core/widgets/sample_data_banner.dart';
 import '../../levels/presentation/count_limit_notice.dart';
 import '../../levels/presentation/level_selector.dart';
 import '../../routines/presentation/routine_controller.dart';
+import '../domain/db_routine.dart';
 import 'db_calculator_providers.dart';
 import 'db_routine_providers.dart';
 import 'widgets/catalogue_section.dart';
@@ -14,18 +16,90 @@ import 'widgets/section_header.dart';
 import 'widgets/selected_elements_section.dart';
 import 'widgets/subtotal_bar.dart';
 
-/// DB calculator with two tabs: body difficulties and risks.
-///
-/// Both count towards the same DB subtotal, but are built differently:
-/// body difficulties are picked from a catalogue, risks are composed.
+/// DB calculator for one saved routine, with two tabs: body difficulties
+/// and risks. Handles loading, "not found" and ruleset mismatch first.
 class DbCalculatorScreen extends ConsumerWidget {
-  const DbCalculatorScreen({super.key});
+  const DbCalculatorScreen({super.key, required this.routineId});
+
+  final String routineId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Only rebuild when loading state or ruleset changes, not on every edit.
+    final rulesetId = ref.watch(
+      routineControllerProvider(routineId)
+          .select((routine) => routine.whenData((r) => r.rulesetId)),
+    );
+    final engineRuleset = ref.watch(dbScoringEngineProvider).ruleset;
+
+    return rulesetId.when(
+      loading: () => const _MessageScaffold(
+        child: CircularProgressIndicator(semanticsLabel: 'Loading routine'),
+      ),
+      error: (error, _) => _MessageScaffold(
+        child: error is RoutineNotFoundException
+            ? const MessageView(
+                icon: Icons.search_off,
+                title: 'Routine not found',
+                message: 'It may have been deleted.',
+              )
+            : MessageView(
+                icon: Icons.error_outline,
+                isError: true,
+                title: 'Could not open the routine',
+                message: 'Please try again.',
+                action: FilledButton.tonalIcon(
+                  onPressed: () =>
+                      ref.invalidate(routineControllerProvider(routineId)),
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Retry'),
+                ),
+              ),
+      ),
+      data: (rulesetId) => rulesetId == engineRuleset.id
+          ? _DbCalculatorContent(routineId: routineId)
+          : _MessageScaffold(
+              child: MessageView(
+                icon: Icons.rule,
+                title: 'Different ruleset',
+                message:
+                    'This routine was planned with the "$rulesetId" '
+                    'ruleset, which is not available in this version of '
+                    'the app.',
+              ),
+            ),
+    );
+  }
+}
+
+class _MessageScaffold extends StatelessWidget {
+  const _MessageScaffold({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('DB Calculator')),
+    body: Center(child: child),
+  );
+}
+
+class _DbCalculatorContent extends ConsumerWidget {
+  const _DbCalculatorContent({required this.routineId});
+
+  final String routineId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ruleset = ref.watch(dbScoringEngineProvider).ruleset;
-    final level = ref.watch(routineControllerProvider.select((r) => r.level));
-    final isEmpty = ref.watch(dbRoutineProvider.select((r) => r.isEmpty));
+    final level = ref.watch(routineProvider(routineId).select((r) => r.level));
+    final isEmpty = ref.watch(
+      dbRoutineProvider(routineId).select((r) => r.isEmpty),
+    );
+    final unknownCount = ref.watch(
+      dbRoutineProvider(routineId).select(_countUnknown),
+    );
+    final controller = ref.read(routineControllerProvider(routineId).notifier);
 
     return DefaultTabController(
       length: 2,
@@ -33,10 +107,13 @@ class DbCalculatorScreen extends ConsumerWidget {
         appBar: AppBar(
           title: const Text('DB Calculator'),
           actions: [
+            _SaveStatusIndicator(routineId: routineId),
             IconButton(
               tooltip: 'Clear all',
               icon: const Icon(Icons.delete_sweep_outlined),
-              onPressed: isEmpty ? null : () => _confirmClear(context, ref),
+              onPressed: isEmpty
+                  ? null
+                  : () => _confirmClear(context, controller),
             ),
           ],
         ),
@@ -51,14 +128,16 @@ class DbCalculatorScreen extends ConsumerWidget {
                 sliver: SliverList.list(
                   children: [
                     SampleDataBanner(ruleset: ruleset),
+                    if (unknownCount > 0) ...[
+                      const SizedBox(height: 8),
+                      _UnknownItemsBanner(count: unknownCount),
+                    ],
                     const SizedBox(height: 16),
-                    const RoutineNameField(),
+                    RoutineNameField(routineId: routineId),
                     const SizedBox(height: 12),
                     LevelSelector(
                       level: level,
-                      onChanged: ref
-                          .read(routineControllerProvider.notifier)
-                          .selectLevel,
+                      onChanged: controller.selectLevel,
                     ),
                   ],
                 ),
@@ -80,22 +159,38 @@ class DbCalculatorScreen extends ConsumerWidget {
                 ),
               ),
             ],
-            body: const TabBarView(children: [_BodyTab(), _RisksTab()]),
+            body: TabBarView(
+              children: [
+                _BodyTab(routineId: routineId),
+                _RisksTab(routineId: routineId),
+              ],
+            ),
           ),
         ),
-        bottomNavigationBar: const SubtotalBar(),
+        bottomNavigationBar: SubtotalBar(routineId: routineId),
       ),
     );
   }
 
-  Future<void> _confirmClear(BuildContext context, WidgetRef ref) async {
+  static int _countUnknown(DbRoutine db) =>
+      db.elements.where((e) => e.isUnknown).length +
+      db.risks
+          .where(
+            (r) => r.rotation.isUnknown || r.criteria.any((c) => c.isUnknown),
+          )
+          .length;
+
+  Future<void> _confirmClear(
+    BuildContext context,
+    RoutineController controller,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Clear routine?'),
         content: const Text(
           'This removes all body difficulties and risks. '
-          'The routine name is kept.',
+          'The routine name and level are kept.',
         ),
         actions: [
           TextButton(
@@ -109,18 +204,83 @@ class DbCalculatorScreen extends ConsumerWidget {
         ],
       ),
     );
-    if (confirmed ?? false) {
-      ref.read(routineControllerProvider.notifier).clearDb();
-    }
+    if (confirmed ?? false) controller.clearDb();
+  }
+}
+
+/// Saved / saving / failed indicator. Tapping it after a failure retries.
+class _SaveStatusIndicator extends ConsumerWidget {
+  const _SaveStatusIndicator({required this.routineId});
+
+  final String routineId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = Theme.of(context).colorScheme;
+    return switch (ref.watch(routineSaveStatusProvider(routineId))) {
+      SaveStatus.saved => Tooltip(
+        message: 'Saved',
+        child: Icon(Icons.check_circle_outline, color: colors.primary),
+      ),
+      SaveStatus.saving => Tooltip(
+        message: 'Saving…',
+        child: Icon(Icons.sync, color: colors.onSurfaceVariant),
+      ),
+      SaveStatus.failed => IconButton(
+        tooltip: "Couldn't save. Tap to retry",
+        icon: Icon(Icons.error_outline, color: colors.error),
+        onPressed: ref
+            .read(routineControllerProvider(routineId).notifier)
+            .saveNow,
+      ),
+    };
+  }
+}
+
+class _UnknownItemsBanner extends StatelessWidget {
+  const _UnknownItemsBanner({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colors.errorContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.help_outline, color: colors.onErrorContainer),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              '$count ${count == 1 ? 'item is' : 'items are'} no longer in '
+              'the catalogue and count as 0.00. Remove and re-add them.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colors.onErrorContainer,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
 class _BodyTab extends ConsumerWidget {
-  const _BodyTab();
+  const _BodyTab({required this.routineId});
+
+  final String routineId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final count = ref.watch(dbRoutineProvider.select((r) => r.elements.length));
+    final count = ref.watch(
+      dbRoutineProvider(routineId).select((r) => r.elements.length),
+    );
     return _TabScrollView(
       slivers: [
         SectionHeader(title: 'Your routine', trailing: '$count selected'),
@@ -129,7 +289,7 @@ class _BodyTab extends ConsumerWidget {
           sliver: SliverToBoxAdapter(
             child: CountLimitNotice(
               level: ref.watch(
-                routineControllerProvider.select((r) => r.level),
+                routineProvider(routineId).select((r) => r.level),
               ),
               category: 'DB',
               count: count,
@@ -137,26 +297,30 @@ class _BodyTab extends ConsumerWidget {
             ),
           ),
         ),
-        const SelectedElementsSection(),
+        SelectedElementsSection(routineId: routineId),
         const SectionHeader(title: 'Element catalogue'),
-        const CatalogueSection(),
+        CatalogueSection(routineId: routineId),
       ],
     );
   }
 }
 
 class _RisksTab extends ConsumerWidget {
-  const _RisksTab();
+  const _RisksTab({required this.routineId});
+
+  final String routineId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final count = ref.watch(dbRoutineProvider.select((r) => r.risks.length));
+    final count = ref.watch(
+      dbRoutineProvider(routineId).select((r) => r.risks.length),
+    );
     return _TabScrollView(
       slivers: [
         SectionHeader(title: 'Your risks', trailing: '$count added'),
         // The action comes first so it stays reachable on small screens.
-        const BuildRiskAction(),
-        const SelectedRisksSection(),
+        BuildRiskAction(routineId: routineId),
+        SelectedRisksSection(routineId: routineId),
       ],
     );
   }

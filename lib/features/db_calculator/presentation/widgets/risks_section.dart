@@ -11,12 +11,14 @@ import 'value_badge.dart';
 
 /// Sliver listing the risks in the routine, or an empty state.
 class SelectedRisksSection extends ConsumerWidget {
-  const SelectedRisksSection({super.key});
+  const SelectedRisksSection({super.key, required this.routineId});
+
+  final String routineId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final risks = ref.watch(
-      dbRoutineProvider.select((routine) => routine.risks),
+      dbRoutineProvider(routineId).select((routine) => routine.risks),
     );
     final engine = ref.watch(dbScoringEngineProvider);
 
@@ -46,7 +48,7 @@ class SelectedRisksSection extends ConsumerWidget {
                 tooltip: 'Remove risk ${index + 1}',
                 icon: const Icon(Icons.remove_circle_outline),
                 onPressed: () => ref
-                    .read(routineControllerProvider.notifier)
+                    .read(routineControllerProvider(routineId).notifier)
                     .removeRiskAt(index),
               ),
             ],
@@ -59,7 +61,9 @@ class SelectedRisksSection extends ConsumerWidget {
 
 /// Sliver with the "Build a risk" action, once the risk catalogue loads.
 class BuildRiskAction extends ConsumerWidget {
-  const BuildRiskAction({super.key});
+  const BuildRiskAction({super.key, required this.routineId});
+
+  final String routineId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -82,7 +86,11 @@ class BuildRiskAction extends ConsumerWidget {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
             child: FilledButton.tonalIcon(
-              onPressed: () => RiskBuilderSheet.show(context, catalogue),
+              onPressed: () => RiskBuilderSheet.show(
+                context,
+                routineId: routineId,
+                catalogue: catalogue,
+              ),
               icon: const Icon(Icons.add),
               label: const Text('Build a risk'),
             ),

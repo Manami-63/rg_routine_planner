@@ -12,16 +12,26 @@ import 'value_badge.dart';
 /// The half-built risk is local widget state (not Riverpod): it only
 /// matters while the sheet is open, and is discarded if the user cancels.
 class RiskBuilderSheet extends ConsumerStatefulWidget {
-  const RiskBuilderSheet({super.key, required this.catalogue});
+  const RiskBuilderSheet({
+    super.key,
+    required this.routineId,
+    required this.catalogue,
+  });
 
+  final String routineId;
   final RiskCatalogue catalogue;
 
-  static Future<void> show(BuildContext context, RiskCatalogue catalogue) {
+  static Future<void> show(
+    BuildContext context, {
+    required String routineId,
+    required RiskCatalogue catalogue,
+  }) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (context) => RiskBuilderSheet(catalogue: catalogue),
+      builder: (context) =>
+          RiskBuilderSheet(routineId: routineId, catalogue: catalogue),
     );
   }
 
@@ -40,7 +50,9 @@ class _RiskBuilderSheetState extends ConsumerState<RiskBuilderSheet> {
   );
 
   void _add() {
-    ref.read(routineControllerProvider.notifier).addRisk(_risk);
+    ref
+        .read(routineControllerProvider(widget.routineId).notifier)
+        .addRisk(_risk);
     Navigator.of(context).pop();
   }
 

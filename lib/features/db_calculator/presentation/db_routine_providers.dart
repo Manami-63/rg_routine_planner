@@ -7,17 +7,18 @@ import '../domain/db_scoring_engine.dart';
 import '../domain/risk.dart';
 import 'db_calculator_providers.dart';
 
-/// The DB content of the routine being edited.
-final dbRoutineProvider = Provider<DbRoutine>(
-  (ref) => ref.watch(routineControllerProvider.select((r) => r.db)),
+/// The DB content of the routine with the given id.
+final dbRoutineProvider = Provider.autoDispose.family<DbRoutine, String>(
+  (ref, id) => ref.watch(routineProvider(id).select((r) => r.db)),
 );
 
 /// Derived state: recalculated automatically whenever the DB content changes.
-final dbScoreResultProvider = Provider<DbScoreResult>(
-  (ref) => ref
-      .watch(dbScoringEngineProvider)
-      .calculate(ref.watch(dbRoutineProvider)),
-);
+final dbScoreResultProvider = Provider.autoDispose
+    .family<DbScoreResult, String>(
+      (ref, id) => ref
+          .watch(dbScoringEngineProvider)
+          .calculate(ref.watch(dbRoutineProvider(id))),
+    );
 
 /// DB editing actions, kept in the DB feature so the routines feature does
 /// not need to know DB vocabulary.

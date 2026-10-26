@@ -8,12 +8,14 @@ import 'value_badge.dart';
 
 /// Sliver listing the elements in the routine, or an empty state.
 class SelectedElementsSection extends ConsumerWidget {
-  const SelectedElementsSection({super.key});
+  const SelectedElementsSection({super.key, required this.routineId});
+
+  final String routineId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final elements = ref.watch(
-      dbRoutineProvider.select((routine) => routine.elements),
+      dbRoutineProvider(routineId).select((routine) => routine.elements),
     );
 
     if (elements.isEmpty) {
@@ -43,7 +45,7 @@ class SelectedElementsSection extends ConsumerWidget {
                 tooltip: 'Remove ${element.name}',
                 icon: const Icon(Icons.remove_circle_outline),
                 onPressed: () => ref
-                    .read(routineControllerProvider.notifier)
+                    .read(routineControllerProvider(routineId).notifier)
                     .removeElementAt(index),
               ),
             ],

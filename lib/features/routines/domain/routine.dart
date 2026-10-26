@@ -35,6 +35,8 @@ class Routine {
   final CompetitionLevel? level;
 
   final DbRoutine db;
+
+  /// Timestamps are UTC; convert with `toLocal()` only for display.
   final DateTime createdAt;
   final DateTime updatedAt;
 

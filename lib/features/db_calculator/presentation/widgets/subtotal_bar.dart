@@ -6,11 +6,13 @@ import '../db_routine_providers.dart';
 
 /// Sticky bottom bar with the provisional DB subtotal and its breakdown.
 class SubtotalBar extends ConsumerWidget {
-  const SubtotalBar({super.key});
+  const SubtotalBar({super.key, required this.routineId});
+
+  final String routineId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final result = ref.watch(dbScoreResultProvider);
+    final result = ref.watch(dbScoreResultProvider(routineId));
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final isProvisional = result.notices.isNotEmpty;
