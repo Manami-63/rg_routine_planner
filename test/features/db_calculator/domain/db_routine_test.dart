@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_routine.dart';
+import 'package:rg_routine_planner/features/db_calculator/domain/risk.dart';
 
 import '../test_data.dart';
 
@@ -32,8 +33,31 @@ void main() {
       expect(routine.elements, [testBalance, testJump]);
     });
 
-    test('clearing removes elements but keeps name and ruleset', () {
-      final routine = empty.withElementAdded(testJump).cleared();
+    test('adds and removes risks by position', () {
+      final twoRot = RiskElement(rotation: testTwoRotations);
+      final threeRot = RiskElement(rotation: testThreeRotations);
+      final routine = empty
+          .withRiskAdded(twoRot)
+          .withRiskAdded(threeRot)
+          .withRiskRemovedAt(0);
+
+      expect(routine.risks, [threeRot]);
+      expect(routine.isEmpty, isFalse);
+    });
+
+    test('adding a risk keeps elements and vice versa', () {
+      final risk = RiskElement(rotation: testTwoRotations);
+      final routine = empty.withElementAdded(testJump).withRiskAdded(risk);
+
+      expect(routine.elements, [testJump]);
+      expect(routine.risks, [risk]);
+    });
+
+    test('clearing removes elements and risks but keeps name and ruleset', () {
+      final routine = empty
+          .withElementAdded(testJump)
+          .withRiskAdded(RiskElement(rotation: testTwoRotations))
+          .cleared();
 
       expect(routine.isEmpty, isTrue);
       expect(routine.name, 'Hoop');

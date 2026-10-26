@@ -17,7 +17,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.widgetWithText(AppBar, 'DB Calculator'), findsOneWidget);
+    expect(find.text('Body difficulties'), findsOneWidget);
+    expect(find.text('Risks'), findsOneWidget);
     // Runs against the real sample catalogue.
+    await tester.scrollUntilVisible(
+      find.text('Sample Jump A'),
+      200,
+      scrollable: find.byType(Scrollable).last,
+    );
     expect(find.text('Sample Jump A'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Back'));

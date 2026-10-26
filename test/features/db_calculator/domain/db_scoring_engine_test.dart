@@ -4,6 +4,7 @@ import 'package:rg_routine_planner/core/scoring/score.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_element.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_routine.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_scoring_engine.dart';
+import 'package:rg_routine_planner/features/db_calculator/domain/risk.dart';
 
 import '../test_data.dart';
 
@@ -80,6 +81,72 @@ void main() {
       );
 
       expect(() => engine.calculate(routineOf([foreign])), throwsArgumentError);
+    });
+  });
+
+  group('ProvisionalDbScoringEngine risks', () {
+    test('risk value is rotation value plus criteria values', () {
+      final risk = RiskElement(
+        rotation: testTwoRotations,
+        criteria: const [testCriterionA, testCriterionB],
+      );
+
+      // 0.20 + 0.10 + 0.20
+      expect(engine.riskValue(risk), const Score.hundredths(50));
+    });
+
+    test('risk without criteria is worth its rotation value', () {
+      expect(
+        engine.riskValue(RiskElement(rotation: testThreeRotations)),
+        const Score.hundredths(30),
+      );
+    });
+
+    test('reports body and risk subtotals separately', () {
+      final routine = DbRoutine(
+        name: 'Test',
+        rulesetId: 'test-v1',
+        elements: const [testJump, testBalance],
+        risks: [
+          RiskElement(rotation: testTwoRotations),
+          RiskElement(rotation: testThreeRotations, criteria: [testCriterionA]),
+        ],
+      );
+
+      final result = engine.calculate(routine);
+
+      expect(result.bodySubtotal, const Score.hundredths(50));
+      expect(result.riskSubtotal, const Score.hundredths(60));
+      expect(result.subtotal, const Score.hundredths(110));
+      expect(result.riskCount, 2);
+      expect(result.elementCount, 2);
+    });
+
+    test('rejects a risk rotation from another ruleset', () {
+      const foreign = RiskRotationOption(
+        id: 'foreign',
+        label: 'Foreign',
+        rotations: 2,
+        value: Score.hundredths(20),
+        rulesetId: 'other',
+      );
+
+      expect(
+        () => engine.riskValue(RiskElement(rotation: foreign)),
+        throwsArgumentError,
+      );
+    });
+
+    test('rejects a risk criterion from another ruleset', () {
+      const foreign = RiskCriterion(
+        id: 'foreign',
+        name: 'Foreign',
+        value: Score.hundredths(10),
+        rulesetId: 'other',
+      );
+      final risk = RiskElement(rotation: testTwoRotations, criteria: [foreign]);
+
+      expect(() => engine.riskValue(risk), throwsArgumentError);
     });
   });
 }

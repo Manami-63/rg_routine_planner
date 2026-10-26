@@ -1,7 +1,8 @@
 import 'package:rg_routine_planner/core/scoring/ruleset.dart';
 import 'package:rg_routine_planner/core/scoring/score.dart';
-import 'package:rg_routine_planner/features/db_calculator/data/db_element_repository.dart';
+import 'package:rg_routine_planner/features/db_calculator/data/db_catalogue_repository.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_element.dart';
+import 'package:rg_routine_planner/features/db_calculator/domain/risk.dart';
 
 // Test fixtures, independent of the app's sample catalogue so tests do not
 // break when sample values change.
@@ -36,12 +37,49 @@ const testRotation = DbElement(
   rulesetId: 'test-v1',
 );
 
-class FakeDbElementRepository implements DbElementRepository {
-  FakeDbElementRepository({
+const testTwoRotations = RiskRotationOption(
+  id: 'rot-2',
+  label: '2 rotations',
+  rotations: 2,
+  value: Score.hundredths(20),
+  rulesetId: 'test-v1',
+);
+
+const testThreeRotations = RiskRotationOption(
+  id: 'rot-3',
+  label: '3 rotations',
+  rotations: 3,
+  value: Score.hundredths(30),
+  rulesetId: 'test-v1',
+);
+
+const testCriterionA = RiskCriterion(
+  id: 'crit-a',
+  name: 'Criterion A',
+  value: Score.hundredths(10),
+  rulesetId: 'test-v1',
+);
+
+const testCriterionB = RiskCriterion(
+  id: 'crit-b',
+  name: 'Criterion B',
+  value: Score.hundredths(20),
+  rulesetId: 'test-v1',
+);
+
+final testRiskCatalogue = RiskCatalogue(
+  rotationOptions: const [testTwoRotations, testThreeRotations],
+  criteria: const [testCriterionA, testCriterionB],
+);
+
+class FakeDbCatalogueRepository implements DbCatalogueRepository {
+  FakeDbCatalogueRepository({
     this.elements = const [testJump, testBalance, testRotation],
     this.future,
     this.error,
-  });
+    RiskCatalogue? riskCatalogue,
+    this.riskError,
+  }) : riskCatalogue = riskCatalogue ?? testRiskCatalogue;
 
   final List<DbElement> elements;
 
@@ -53,6 +91,11 @@ class FakeDbElementRepository implements DbElementRepository {
   /// make a retry succeed.
   Object? error;
 
+  final RiskCatalogue riskCatalogue;
+
+  /// When set, [fetchRiskCatalogue] throws this error.
+  Object? riskError;
+
   @override
   RulesetVersion get ruleset => testRuleset;
 
@@ -60,5 +103,11 @@ class FakeDbElementRepository implements DbElementRepository {
   Future<List<DbElement>> fetchElements() async {
     if (error case final error?) throw error;
     return future ?? elements;
+  }
+
+  @override
+  Future<RiskCatalogue> fetchRiskCatalogue() async {
+    if (riskError case final riskError?) throw riskError;
+    return riskCatalogue;
   }
 }

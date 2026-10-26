@@ -1,30 +1,36 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/db_element_repository.dart';
-import '../data/sample_db_element_repository.dart';
+import '../data/db_catalogue_repository.dart';
+import '../data/sample_db_catalogue_repository.dart';
 import '../domain/db_element.dart';
 import '../domain/db_routine.dart';
 import '../domain/db_scoring_engine.dart';
+import '../domain/risk.dart';
 
 // This file is the feature's wiring: the only place that decides which
 // concrete repository and engine are used. Tests override
-// `dbElementRepositoryProvider` to supply their own data.
+// `dbCatalogueRepositoryProvider` to supply their own data.
 
-final dbElementRepositoryProvider = Provider<DbElementRepository>(
-  (ref) => const SampleDbElementRepository(),
+final dbCatalogueRepositoryProvider = Provider<DbCatalogueRepository>(
+  (ref) => const SampleDbCatalogueRepository(),
 );
 
 /// The engine always matches the repository's ruleset, so catalogue values
 /// and calculation rules cannot drift apart.
 final dbScoringEngineProvider = Provider<DbScoringEngine>(
   (ref) => ProvisionalDbScoringEngine(
-    ruleset: ref.watch(dbElementRepositoryProvider).ruleset,
+    ruleset: ref.watch(dbCatalogueRepositoryProvider).ruleset,
   ),
 );
 
-final dbCatalogueProvider = FutureProvider<List<DbElement>>(
-  (ref) => ref.watch(dbElementRepositoryProvider).fetchElements(),
+final dbElementsProvider = FutureProvider<List<DbElement>>(
+  (ref) => ref.watch(dbCatalogueRepositoryProvider).fetchElements(),
   // Local data will not fix itself on a retry; the user can retry manually.
+  retry: (_, _) => null,
+);
+
+final riskCatalogueProvider = FutureProvider<RiskCatalogue>(
+  (ref) => ref.watch(dbCatalogueRepositoryProvider).fetchRiskCatalogue(),
   retry: (_, _) => null,
 );
 
@@ -52,6 +58,10 @@ class DbRoutineController extends Notifier<DbRoutine> {
   void add(DbElement element) => state = state.withElementAdded(element);
 
   void removeAt(int index) => state = state.withElementRemovedAt(index);
+
+  void addRisk(RiskElement risk) => state = state.withRiskAdded(risk);
+
+  void removeRiskAt(int index) => state = state.withRiskRemovedAt(index);
 
   void clear() => state = state.cleared();
 }

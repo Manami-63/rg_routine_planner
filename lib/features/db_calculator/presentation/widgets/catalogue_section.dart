@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/widgets/message_view.dart';
 import '../../domain/db_element.dart';
 import '../db_calculator_providers.dart';
+import 'async_sliver.dart';
 import 'value_badge.dart';
 
 /// Sliver showing the element catalogue grouped by family, with loading,
@@ -13,34 +14,11 @@ class CatalogueSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final catalogue = ref.watch(dbCatalogueProvider);
-
-    return catalogue.when(
-      // Show the spinner again when the user retries after an error.
-      skipLoadingOnRefresh: false,
-      loading: () => const SliverToBoxAdapter(
-        child: Padding(
-          padding: EdgeInsets.all(32),
-          child: Center(
-            child: CircularProgressIndicator(
-              semanticsLabel: 'Loading catalogue',
-            ),
-          ),
-        ),
-      ),
-      error: (error, _) => SliverToBoxAdapter(
-        child: MessageView(
-          icon: Icons.error_outline,
-          isError: true,
-          title: 'Could not load the catalogue',
-          message: 'Please try again.',
-          action: FilledButton.tonalIcon(
-            onPressed: () => ref.invalidate(dbCatalogueProvider),
-            icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
-          ),
-        ),
-      ),
+    return AsyncSliver(
+      value: ref.watch(dbElementsProvider),
+      loadingLabel: 'Loading catalogue',
+      errorTitle: 'Could not load the catalogue',
+      onRetry: () => ref.invalidate(dbElementsProvider),
       data: (elements) {
         if (elements.isEmpty) {
           return const SliverToBoxAdapter(

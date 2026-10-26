@@ -39,7 +39,18 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   mismatched data.
 - `ProvisionalDbScoringEngine` only sums values. Real rules go in a new
   `DbScoringEngine` implementation, swapped in via `dbScoringEngineProvider`.
+- Risks (R) are part of DB but modelled separately (`domain/risk.dart`): a
+  rotation option plus criteria, valued by `DbScoringEngine.riskValue`. The
+  additive risk valuation is a placeholder assumption, not a verified rule.
+  The UI shows body difficulties and risks as two tabs with a breakdown.
+- `DbCatalogueRepository` serves both element and risk catalogues so they
+  always share one ruleset.
 - Keep DB and DA logic in separate features.
+- Competition levels live in `features/levels/` (shared by DB and DA). FIG
+  Senior/Junior presets have `requirements: null` until official counts are
+  verified from the Code of Points; never fill them with guessed numbers.
+  "Non-FIG level" lets users enter their own DB/DA min/max (e.g. national
+  levels). Count checks are advisory warnings, never blocking.
 - The UI must label totals as provisional while any notice is present.
 
 ## Tests

@@ -12,7 +12,7 @@ import '../test_data.dart';
 void main() {
   Future<void> pumpScreen(
     WidgetTester tester, {
-    FakeDbElementRepository? repository,
+    FakeDbCatalogueRepository? repository,
   }) async {
     // A tall surface so the whole scroll view is built without scrolling.
     tester.view.physicalSize = const Size(800, 2400);
@@ -22,8 +22,8 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          dbElementRepositoryProvider.overrideWithValue(
-            repository ?? FakeDbElementRepository(),
+          dbCatalogueRepositoryProvider.overrideWithValue(
+            repository ?? FakeDbCatalogueRepository(),
           ),
         ],
         child: const MaterialApp(home: DbCalculatorScreen()),
@@ -134,7 +134,7 @@ void main() {
     final pending = Completer<List<DbElement>>();
     await pumpScreen(
       tester,
-      repository: FakeDbElementRepository(future: pending.future),
+      repository: FakeDbCatalogueRepository(future: pending.future),
     );
 
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
@@ -152,7 +152,7 @@ void main() {
   ) async {
     await pumpScreen(
       tester,
-      repository: FakeDbElementRepository(error: StateError('boom')),
+      repository: FakeDbCatalogueRepository(error: StateError('boom')),
     );
     await tester.pump();
 
@@ -161,7 +161,7 @@ void main() {
   });
 
   testWidgets('retry reloads the catalogue after an error', (tester) async {
-    final repository = FakeDbElementRepository(error: StateError('boom'));
+    final repository = FakeDbCatalogueRepository(error: StateError('boom'));
     await pumpScreen(tester, repository: repository);
     await tester.pump();
 
@@ -174,10 +174,146 @@ void main() {
     expect(find.byTooltip('Add Test Jump'), findsOneWidget);
   });
 
+  group('risks tab', () {
+    Future<void> openRisksTab(WidgetTester tester) async {
+      await tester.tap(find.text('Risks'));
+      await tester.pumpAndSettle();
+    }
+
+    String breakdownText(WidgetTester tester) =>
+        tester.widget<Text>(find.byKey(const ValueKey('db-breakdown'))).data!;
+
+    testWidgets('starts with an empty state', (tester) async {
+      await pumpScreen(tester);
+      await openRisksTab(tester);
+
+      expect(find.text('No risks yet'), findsOneWidget);
+      expect(find.text('0 added'), findsOneWidget);
+      expect(breakdownText(tester), 'Body 0.00 · Risks 0.00');
+    });
+
+    testWidgets('building a risk previews its value and adds it', (
+      tester,
+    ) async {
+      await pumpScreen(tester);
+      await openRisksTab(tester);
+
+      await tester.tap(find.text('Build a risk'));
+      await tester.pumpAndSettle();
+
+      // First rotation option is preselected.
+      String previewText() => tester
+          .widget<Text>(
+            find.descendant(
+              of: find.byKey(const ValueKey('risk-preview-value')),
+              matching: find.byType(Text),
+            ),
+          )
+          .data!;
+      expect(previewText(), '0.20');
+
+      await tester.tap(find.text('3 rotations'));
+      await tester.tap(find.text('Criterion A'));
+      await tester.pump();
+      expect(previewText(), '0.40');
+
+      await tester.tap(find.text('Add risk'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Build a risk'), findsOneWidget); // Sheet closed.
+      expect(find.text('3 rotations + Criterion A'), findsOneWidget);
+      expect(find.text('1 added'), findsOneWidget);
+      expect(subtotalText(tester), '0.40');
+      expect(breakdownText(tester), 'Body 0.00 · Risks 0.40');
+    });
+
+    testWidgets('dismissing the builder adds nothing', (tester) async {
+      await pumpScreen(tester);
+      await openRisksTab(tester);
+
+      await tester.tap(find.text('Build a risk'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Criterion B'));
+      await tester.tapAt(const Offset(10, 10)); // Tap the barrier.
+      await tester.pumpAndSettle();
+
+      expect(find.text('No risks yet'), findsOneWidget);
+      expect(subtotalText(tester), '0.00');
+    });
+
+    testWidgets('removing a risk updates the subtotal', (tester) async {
+      await pumpScreen(tester);
+      await openRisksTab(tester);
+
+      await tester.tap(find.text('Build a risk'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add risk'));
+      await tester.pumpAndSettle();
+      expect(subtotalText(tester), '0.20');
+
+      await tester.tap(find.byTooltip('Remove risk 1'));
+      await tester.pump();
+
+      expect(find.text('No risks yet'), findsOneWidget);
+      expect(subtotalText(tester), '0.00');
+    });
+
+    testWidgets('subtotal combines body difficulties and risks', (
+      tester,
+    ) async {
+      await pumpScreen(tester);
+
+      await tester.tap(find.byTooltip('Add Test Jump'));
+      await tester.pump();
+      await openRisksTab(tester);
+      await tester.tap(find.text('Build a risk'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add risk'));
+      await tester.pumpAndSettle();
+
+      expect(breakdownText(tester), 'Body 0.30 · Risks 0.20');
+      expect(subtotalText(tester), '0.50');
+    });
+
+    testWidgets('clear all removes risks too', (tester) async {
+      await pumpScreen(tester);
+      await openRisksTab(tester);
+
+      await tester.tap(find.text('Build a risk'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Add risk'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Clear all'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Clear'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('No risks yet'), findsOneWidget);
+      expect(subtotalText(tester), '0.00');
+    });
+
+    testWidgets('shows an error with retry for risk options', (tester) async {
+      final repository = FakeDbCatalogueRepository(
+        riskError: StateError('boom'),
+      );
+      await pumpScreen(tester, repository: repository);
+      await openRisksTab(tester);
+
+      expect(find.text('Could not load risk options'), findsOneWidget);
+
+      repository.riskError = null;
+      await tester.tap(find.text('Retry'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Build a risk'), findsOneWidget);
+    });
+  });
+
   testWidgets('shows an empty state for an empty catalogue', (tester) async {
     await pumpScreen(
       tester,
-      repository: FakeDbElementRepository(elements: const []),
+      repository: FakeDbCatalogueRepository(elements: const []),
     );
     await tester.pump();
 

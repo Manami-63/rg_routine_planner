@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/db_scoring_engine.dart';
 import '../db_calculator_providers.dart';
 
-/// Sticky bottom bar with the provisional DB subtotal.
+/// Sticky bottom bar with the provisional DB subtotal and its breakdown.
 class SubtotalBar extends ConsumerWidget {
   const SubtotalBar({super.key});
 
@@ -14,6 +14,9 @@ class SubtotalBar extends ConsumerWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final isProvisional = result.notices.isNotEmpty;
+    final detailStyle = theme.textTheme.bodySmall?.copyWith(
+      color: colors.onSurfaceVariant,
+    );
 
     return Material(
       color: colors.surfaceContainer,
@@ -33,22 +36,21 @@ class SubtotalBar extends ConsumerWidget {
                       style: theme.textTheme.labelLarge,
                     ),
                     Text(
-                      '${result.elementCount} '
-                      '${result.elementCount == 1 ? 'element' : 'elements'}'
-                      ' · ${result.ruleset.label}',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colors.onSurfaceVariant,
-                      ),
+                      'Body ${result.bodySubtotal.format()}'
+                      ' · Risks ${result.riskSubtotal.format()}',
+                      key: const ValueKey('db-breakdown'),
+                      style: detailStyle,
                     ),
-                    if (result.notices.contains(
-                      DbScoreNotice.rulesNotValidated,
-                    ))
-                      Text(
-                        'No rule checks applied',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colors.onSurfaceVariant,
-                        ),
-                      ),
+                    Text(
+                      [
+                        result.ruleset.label,
+                        if (result.notices.contains(
+                          DbScoreNotice.rulesNotValidated,
+                        ))
+                          'No rule checks applied',
+                      ].join(' · '),
+                      style: detailStyle,
+                    ),
                   ],
                 ),
               ),
