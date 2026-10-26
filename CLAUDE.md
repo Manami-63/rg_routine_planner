@@ -8,12 +8,15 @@ difficulty elements (DB, later DA), and see provisional difficulty totals.
 - `dart format lib test`
 - `flutter analyze`
 - `flutter test`
+- `dart run build_runner build --delete-conflicting-outputs` after changing
+  Drift tables (generated `*.g.dart` files are committed)
 
 ## Stack
 
 Flutter, Riverpod 3 (non-generated APIs: `Provider`, `FutureProvider`,
-`NotifierProvider`), go_router, Material 3. No code generation, no Freezed.
-Drift/SQLite is planned for routine persistence but not added yet.
+`NotifierProvider`), go_router, Material 3, Drift (SQLite). Code generation
+is used only for Drift; no Freezed or Riverpod generators. A Laravel/MySQL
+backend is planned later; none exists yet.
 
 ## Architecture
 
@@ -27,6 +30,21 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   repositories/engines; tests override providers there.
 - `lib/core/` holds code shared across features (`Score`, `RulesetVersion`,
   shared widgets). `lib/app/` holds the app shell, router and theme.
+
+## Persistence
+
+- `lib/core/database/`: Drift `AppDatabase` and tables. Table/column names
+  mirror a future MySQL schema. Dates are stored as ISO-8601 text
+  (`build.yaml`). Bump `schemaVersion` and add a migration on any change.
+- `features/routines/`: `Routine` (id = UUID, name, level, timestamps, `db`
+  content) and `RoutineRepository` (`DriftRoutineRepository`).
+- Routines store catalogue ids, never values; values resolve from the
+  current catalogue on load. Missing ids, or a different ruleset, load as
+  `.unknown(...)` placeholders that keep the id so re-saving loses nothing.
+- `DbRoutine` is only the DB content (ruleset, elements, risks). Name and
+  level live on `Routine`. Edit via `routineControllerProvider`; DB helpers
+  are the `DbRoutineEditing` extension in `db_routine_providers.dart`.
+- Repository tests use `AppDatabase(NativeDatabase.memory())`.
 
 ## Scoring rules (important)
 

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../domain/db_scoring_engine.dart';
-import '../db_calculator_providers.dart';
+import '../db_routine_providers.dart';
 
 /// Sticky bottom bar with the provisional DB subtotal and its breakdown.
 class SubtotalBar extends ConsumerWidget {

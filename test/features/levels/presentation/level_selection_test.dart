@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rg_routine_planner/features/db_calculator/presentation/db_calculator_providers.dart';
 import 'package:rg_routine_planner/features/db_calculator/presentation/db_calculator_screen.dart';
+import 'package:rg_routine_planner/features/routines/presentation/routine_controller.dart';
 import 'package:rg_routine_planner/features/levels/domain/competition_level.dart';
 import 'package:rg_routine_planner/features/levels/domain/count_limit.dart';
-import 'package:rg_routine_planner/features/levels/presentation/level_providers.dart';
 
 import '../../db_calculator/test_data.dart';
 
@@ -78,7 +78,7 @@ void main() {
     await tester.pump();
     await apply(tester);
 
-    expect(container.read(selectedLevelProvider)?.id, 'fig-senior');
+    expect(container.read(routineControllerProvider).level?.id, 'fig-senior');
     expect(find.text('FIG Senior'), findsOneWidget);
     expect(
       noticeText(
@@ -102,7 +102,7 @@ void main() {
     await apply(tester);
 
     expect(
-      container.read(selectedLevelProvider)?.requirements,
+      container.read(routineControllerProvider).level?.requirements,
       const LevelRequirements(db: CountLimit(min: 1, max: 2)),
     );
     expect(find.text('DB 1–2'), findsOneWidget);
@@ -146,7 +146,7 @@ void main() {
     await tester.tapAt(const Offset(10, 10)); // Tap the barrier.
     await tester.pumpAndSettle();
 
-    expect(container.read(selectedLevelProvider)?.id, 'fig-junior');
+    expect(container.read(routineControllerProvider).level?.id, 'fig-junior');
   });
 
   testWidgets('remove level clears the selection', (tester) async {
@@ -160,15 +160,15 @@ void main() {
     await tester.tap(find.text('Remove level'));
     await tester.pumpAndSettle();
 
-    expect(container.read(selectedLevelProvider), isNull);
+    expect(container.read(routineControllerProvider).level, isNull);
     expect(find.text('Select a level'), findsOneWidget);
   });
 
   testWidgets('reopening a non-FIG level keeps its numbers', (tester) async {
     await pumpScreen(tester);
     container
-        .read(selectedLevelProvider.notifier)
-        .select(
+        .read(routineControllerProvider.notifier)
+        .selectLevel(
           const CompetitionLevel.custom(
             LevelRequirements(da: CountLimit(max: 3)),
           ),
@@ -195,6 +195,6 @@ void main() {
     await tester.tap(find.text('Clear'));
     await tester.pumpAndSettle();
 
-    expect(container.read(selectedLevelProvider)?.id, 'fig-senior');
+    expect(container.read(routineControllerProvider).level?.id, 'fig-senior');
   });
 }

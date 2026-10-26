@@ -6,7 +6,7 @@ import '../test_data.dart';
 
 void main() {
   group('DbRoutine', () {
-    final empty = DbRoutine(name: 'Hoop', rulesetId: 'test-v1');
+    final empty = DbRoutine(rulesetId: 'test-v1');
 
     test('adding returns a new routine and leaves the original unchanged', () {
       final updated = empty.withElementAdded(testJump);
@@ -53,22 +53,14 @@ void main() {
       expect(routine.risks, [risk]);
     });
 
-    test('clearing removes elements and risks but keeps name and ruleset', () {
+    test('clearing removes elements and risks but keeps the ruleset', () {
       final routine = empty
           .withElementAdded(testJump)
           .withRiskAdded(RiskElement(rotation: testTwoRotations))
           .cleared();
 
       expect(routine.isEmpty, isTrue);
-      expect(routine.name, 'Hoop');
       expect(routine.rulesetId, 'test-v1');
-    });
-
-    test('rename keeps elements', () {
-      final routine = empty.withElementAdded(testJump).rename('Ball');
-
-      expect(routine.name, 'Ball');
-      expect(routine.elements, [testJump]);
     });
 
     test('element list cannot be mutated from outside', () {
@@ -78,7 +70,7 @@ void main() {
     test('has value equality', () {
       expect(
         empty.withElementAdded(testJump),
-        DbRoutine(name: 'Hoop', rulesetId: 'test-v1', elements: [testJump]),
+        DbRoutine(rulesetId: 'test-v1', elements: [testJump]),
       );
     });
   });

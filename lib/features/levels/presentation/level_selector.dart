@@ -6,13 +6,23 @@ import '../domain/count_limit.dart';
 import 'level_providers.dart';
 import 'limit_text.dart';
 
-/// Shows the routine's level and opens the level picker.
-class LevelSelector extends ConsumerWidget {
-  const LevelSelector({super.key});
+/// Shows a routine's level and opens the level picker.
+///
+/// Takes the level and a callback instead of reading a provider, so this
+/// feature does not depend on where the level is stored.
+class LevelSelector extends StatelessWidget {
+  const LevelSelector({
+    super.key,
+    required this.level,
+    required this.onChanged,
+  });
+
+  final CompetitionLevel? level;
+  final ValueChanged<CompetitionLevel?> onChanged;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final level = ref.watch(selectedLevelProvider);
+  Widget build(BuildContext context) {
+    final level = this.level;
     return Card(
       clipBehavior: Clip.antiAlias,
       child: ListTile(
@@ -24,7 +34,11 @@ class LevelSelector extends ConsumerWidget {
               : describeRequirements(level.requirements),
         ),
         trailing: const Icon(Icons.chevron_right),
-        onTap: () => LevelPickerSheet.show(context),
+        onTap: () => LevelPickerSheet.show(
+          context,
+          initialLevel: level,
+          onApply: onChanged,
+        ),
       ),
     );
   }
@@ -35,14 +49,28 @@ class LevelSelector extends ConsumerWidget {
 /// The choice is held in local state and only applied on "Apply", so
 /// dismissing the sheet changes nothing.
 class LevelPickerSheet extends ConsumerStatefulWidget {
-  const LevelPickerSheet({super.key});
+  const LevelPickerSheet({
+    super.key,
+    required this.initialLevel,
+    required this.onApply,
+  });
 
-  static Future<void> show(BuildContext context) {
+  final CompetitionLevel? initialLevel;
+
+  /// Called with the chosen level, or `null` when the level is removed.
+  final ValueChanged<CompetitionLevel?> onApply;
+
+  static Future<void> show(
+    BuildContext context, {
+    required CompetitionLevel? initialLevel,
+    required ValueChanged<CompetitionLevel?> onApply,
+  }) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (context) => const LevelPickerSheet(),
+      builder: (context) =>
+          LevelPickerSheet(initialLevel: initialLevel, onApply: onApply),
     );
   }
 
@@ -51,7 +79,7 @@ class LevelPickerSheet extends ConsumerStatefulWidget {
 }
 
 class _LevelPickerSheetState extends ConsumerState<LevelPickerSheet> {
-  late final CompetitionLevel? _current = ref.read(selectedLevelProvider);
+  late final CompetitionLevel? _current = widget.initialLevel;
   late String? _selectedId = _current?.id;
   late LevelRequirements _custom = (_current?.isCustom ?? false)
       ? _current!.requirements!
@@ -67,12 +95,12 @@ class _LevelPickerSheetState extends ConsumerState<LevelPickerSheet> {
         : ref
               .read(presetLevelsProvider)
               .firstWhere((level) => level.id == _selectedId);
-    ref.read(selectedLevelProvider.notifier).select(level);
+    widget.onApply(level);
     Navigator.of(context).pop();
   }
 
   void _removeLevel() {
-    ref.read(selectedLevelProvider.notifier).select(null);
+    widget.onApply(null);
     Navigator.of(context).pop();
   }
 

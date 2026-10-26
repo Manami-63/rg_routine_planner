@@ -12,7 +12,7 @@ void main() {
   const engine = ProvisionalDbScoringEngine(ruleset: testRuleset);
 
   DbRoutine routineOf(List<DbElement> elements) =>
-      DbRoutine(name: 'Test', rulesetId: 'test-v1', elements: elements);
+      DbRoutine(rulesetId: 'test-v1', elements: elements);
 
   group('ProvisionalDbScoringEngine', () {
     test('empty routine has a zero subtotal', () {
@@ -66,7 +66,7 @@ void main() {
     });
 
     test('rejects a routine from another ruleset', () {
-      final routine = DbRoutine(name: 'Other', rulesetId: 'other');
+      final routine = DbRoutine(rulesetId: 'other');
 
       expect(() => engine.calculate(routine), throwsArgumentError);
     });
@@ -104,7 +104,6 @@ void main() {
 
     test('reports body and risk subtotals separately', () {
       final routine = DbRoutine(
-        name: 'Test',
         rulesetId: 'test-v1',
         elements: const [testJump, testBalance],
         risks: [

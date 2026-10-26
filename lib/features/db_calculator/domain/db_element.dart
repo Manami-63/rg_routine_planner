@@ -4,7 +4,10 @@ import '../../../core/scoring/score.dart';
 enum DbElementGroup {
   jump('Jumps / Leaps'),
   balance('Balances'),
-  rotation('Rotations');
+  rotation('Rotations'),
+
+  /// Only for [DbElement.unknown]; never used in a catalogue.
+  unknown('Unknown');
 
   const DbElementGroup(this.label);
 
@@ -21,6 +24,13 @@ class DbElement {
     required this.rulesetId,
   });
 
+  /// A saved reference whose id is not in the current catalogue (e.g. the
+  /// catalogue changed). Keeps the id so re-saving does not lose it.
+  const DbElement.unknown({required this.id, required this.rulesetId})
+    : name = 'Unknown element',
+      group = DbElementGroup.unknown,
+      value = Score.zero;
+
   final String id;
   final String name;
   final DbElementGroup group;
@@ -28,6 +38,8 @@ class DbElement {
 
   /// The [RulesetVersion.id] this element's value belongs to.
   final String rulesetId;
+
+  bool get isUnknown => group == DbElementGroup.unknown;
 
   @override
   bool operator ==(Object other) =>

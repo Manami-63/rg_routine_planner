@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_element.dart';
 import 'package:rg_routine_planner/features/db_calculator/presentation/db_calculator_providers.dart';
 import 'package:rg_routine_planner/features/db_calculator/presentation/db_calculator_screen.dart';
+import 'package:rg_routine_planner/features/routines/presentation/routine_controller.dart';
 
 import '../test_data.dart';
 
@@ -115,7 +116,7 @@ void main() {
     );
 
     await tester.enterText(find.byType(TextField), 'Hoop routine');
-    expect(container.read(dbRoutineControllerProvider).name, 'Hoop routine');
+    expect(container.read(routineControllerProvider).name, 'Hoop routine');
 
     await tester.tap(find.byTooltip('Add Test Jump'));
     await tester.pump();
@@ -124,7 +125,7 @@ void main() {
     await tester.tap(find.text('Clear'));
     await tester.pumpAndSettle();
 
-    expect(container.read(dbRoutineControllerProvider).name, 'Hoop routine');
+    expect(container.read(routineControllerProvider).name, 'Hoop routine');
     expect(find.text('Hoop routine'), findsOneWidget);
   });
 

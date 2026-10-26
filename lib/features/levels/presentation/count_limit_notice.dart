@@ -1,22 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/competition_level.dart';
 import '../domain/count_limit.dart';
-import 'level_providers.dart';
 import 'limit_text.dart';
 
 /// Compares a count (e.g. number of DB) with the selected level's limit.
 ///
 /// Advisory only: it never blocks editing, because a planned routine is
 /// often a work in progress. Renders nothing when there is nothing to check.
-class CountLimitNotice extends ConsumerWidget {
+class CountLimitNotice extends StatelessWidget {
   const CountLimitNotice({
     super.key,
+    required this.level,
     required this.category,
     required this.count,
     required this.limitOf,
   });
+
+  /// The routine's level, or `null` if none chosen.
+  final CompetitionLevel? level;
 
   /// Short name of what is counted, e.g. "DB".
   final String category;
@@ -24,8 +26,8 @@ class CountLimitNotice extends ConsumerWidget {
   final CountLimit Function(LevelRequirements requirements) limitOf;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final level = ref.watch(selectedLevelProvider);
+  Widget build(BuildContext context) {
+    final level = this.level;
     if (level == null) return const SizedBox.shrink();
 
     final colors = Theme.of(context).colorScheme;

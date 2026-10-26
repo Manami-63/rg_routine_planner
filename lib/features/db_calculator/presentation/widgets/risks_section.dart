@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/widgets/message_view.dart';
+import '../../../routines/presentation/routine_controller.dart';
 import '../db_calculator_providers.dart';
+import '../db_routine_providers.dart';
 import 'async_sliver.dart';
 import 'risk_builder_sheet.dart';
 import 'value_badge.dart';
@@ -14,7 +16,7 @@ class SelectedRisksSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final risks = ref.watch(
-      dbRoutineControllerProvider.select((routine) => routine.risks),
+      dbRoutineProvider.select((routine) => routine.risks),
     );
     final engine = ref.watch(dbScoringEngineProvider);
 
@@ -44,7 +46,7 @@ class SelectedRisksSection extends ConsumerWidget {
                 tooltip: 'Remove risk ${index + 1}',
                 icon: const Icon(Icons.remove_circle_outline),
                 onPressed: () => ref
-                    .read(dbRoutineControllerProvider.notifier)
+                    .read(routineControllerProvider.notifier)
                     .removeRiskAt(index),
               ),
             ],

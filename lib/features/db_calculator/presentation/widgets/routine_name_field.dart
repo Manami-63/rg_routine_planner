@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../db_calculator_providers.dart';
+import '../../../routines/presentation/routine_controller.dart';
 
 /// Edits the routine name. Stateful because a [TextEditingController] must
 /// live as long as the field and be disposed with it.
@@ -14,7 +14,7 @@ class RoutineNameField extends ConsumerStatefulWidget {
 
 class _RoutineNameFieldState extends ConsumerState<RoutineNameField> {
   late final TextEditingController _controller = TextEditingController(
-    text: ref.read(dbRoutineControllerProvider).name,
+    text: ref.read(routineControllerProvider).name,
   );
 
   @override
@@ -34,7 +34,7 @@ class _RoutineNameFieldState extends ConsumerState<RoutineNameField> {
         hintText: 'Untitled routine',
         prefixIcon: Icon(Icons.edit_outlined),
       ),
-      onChanged: ref.read(dbRoutineControllerProvider.notifier).rename,
+      onChanged: ref.read(routineControllerProvider.notifier).rename,
     );
   }
 }

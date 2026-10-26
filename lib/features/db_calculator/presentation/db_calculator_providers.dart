@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/db_catalogue_repository.dart';
 import '../data/sample_db_catalogue_repository.dart';
 import '../domain/db_element.dart';
-import '../domain/db_routine.dart';
 import '../domain/db_scoring_engine.dart';
 import '../domain/risk.dart';
 
@@ -33,35 +32,3 @@ final riskCatalogueProvider = FutureProvider<RiskCatalogue>(
   (ref) => ref.watch(dbCatalogueRepositoryProvider).fetchRiskCatalogue(),
   retry: (_, _) => null,
 );
-
-final dbRoutineControllerProvider =
-    NotifierProvider<DbRoutineController, DbRoutine>(DbRoutineController.new);
-
-/// Derived state: recalculated automatically whenever the routine changes.
-final dbScoreResultProvider = Provider<DbScoreResult>(
-  (ref) => ref
-      .watch(dbScoringEngineProvider)
-      .calculate(ref.watch(dbRoutineControllerProvider)),
-);
-
-/// Holds the routine being edited. In-memory for now; a later milestone can
-/// load the initial state from, and save changes to, a routine repository.
-class DbRoutineController extends Notifier<DbRoutine> {
-  @override
-  DbRoutine build() => DbRoutine(
-    name: '',
-    rulesetId: ref.watch(dbScoringEngineProvider).ruleset.id,
-  );
-
-  void rename(String name) => state = state.rename(name);
-
-  void add(DbElement element) => state = state.withElementAdded(element);
-
-  void removeAt(int index) => state = state.withElementRemovedAt(index);
-
-  void addRisk(RiskElement risk) => state = state.withRiskAdded(risk);
-
-  void removeRiskAt(int index) => state = state.withRiskRemovedAt(index);
-
-  void clear() => state = state.cleared();
-}

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/widgets/message_view.dart';
-import '../db_calculator_providers.dart';
+import '../../../routines/presentation/routine_controller.dart';
+import '../db_routine_providers.dart';
 import 'value_badge.dart';
 
 /// Sliver listing the elements in the routine, or an empty state.
@@ -12,7 +13,7 @@ class SelectedElementsSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final elements = ref.watch(
-      dbRoutineControllerProvider.select((routine) => routine.elements),
+      dbRoutineProvider.select((routine) => routine.elements),
     );
 
     if (elements.isEmpty) {
@@ -42,8 +43,8 @@ class SelectedElementsSection extends ConsumerWidget {
                 tooltip: 'Remove ${element.name}',
                 icon: const Icon(Icons.remove_circle_outline),
                 onPressed: () => ref
-                    .read(dbRoutineControllerProvider.notifier)
-                    .removeAt(index),
+                    .read(routineControllerProvider.notifier)
+                    .removeElementAt(index),
               ),
             ],
           ),

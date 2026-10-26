@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../routines/presentation/routine_controller.dart';
 import '../../domain/risk.dart';
 import '../db_calculator_providers.dart';
+import '../db_routine_providers.dart';
 import 'value_badge.dart';
 
 /// Bottom sheet for composing a risk from a rotation option and criteria.
@@ -38,7 +40,7 @@ class _RiskBuilderSheetState extends ConsumerState<RiskBuilderSheet> {
   );
 
   void _add() {
-    ref.read(dbRoutineControllerProvider.notifier).addRisk(_risk);
+    ref.read(routineControllerProvider.notifier).addRisk(_risk);
     Navigator.of(context).pop();
   }
 

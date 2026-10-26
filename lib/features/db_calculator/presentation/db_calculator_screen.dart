@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/widgets/sample_data_banner.dart';
 import '../../levels/presentation/count_limit_notice.dart';
 import '../../levels/presentation/level_selector.dart';
+import '../../routines/presentation/routine_controller.dart';
 import 'db_calculator_providers.dart';
+import 'db_routine_providers.dart';
 import 'widgets/catalogue_section.dart';
 import 'widgets/risks_section.dart';
 import 'widgets/routine_name_field.dart';
@@ -22,9 +24,8 @@ class DbCalculatorScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ruleset = ref.watch(dbScoringEngineProvider).ruleset;
-    final isEmpty = ref.watch(
-      dbRoutineControllerProvider.select((r) => r.isEmpty),
-    );
+    final level = ref.watch(routineControllerProvider.select((r) => r.level));
+    final isEmpty = ref.watch(dbRoutineProvider.select((r) => r.isEmpty));
 
     return DefaultTabController(
       length: 2,
@@ -53,7 +54,12 @@ class DbCalculatorScreen extends ConsumerWidget {
                     const SizedBox(height: 16),
                     const RoutineNameField(),
                     const SizedBox(height: 12),
-                    const LevelSelector(),
+                    LevelSelector(
+                      level: level,
+                      onChanged: ref
+                          .read(routineControllerProvider.notifier)
+                          .selectLevel,
+                    ),
                   ],
                 ),
               ),
@@ -104,7 +110,7 @@ class DbCalculatorScreen extends ConsumerWidget {
       ),
     );
     if (confirmed ?? false) {
-      ref.read(dbRoutineControllerProvider.notifier).clear();
+      ref.read(routineControllerProvider.notifier).clearDb();
     }
   }
 }
@@ -114,9 +120,7 @@ class _BodyTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final count = ref.watch(
-      dbRoutineControllerProvider.select((r) => r.elements.length),
-    );
+    final count = ref.watch(dbRoutineProvider.select((r) => r.elements.length));
     return _TabScrollView(
       slivers: [
         SectionHeader(title: 'Your routine', trailing: '$count selected'),
@@ -124,6 +128,9 @@ class _BodyTab extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
           sliver: SliverToBoxAdapter(
             child: CountLimitNotice(
+              level: ref.watch(
+                routineControllerProvider.select((r) => r.level),
+              ),
               category: 'DB',
               count: count,
               limitOf: (requirements) => requirements.db,
@@ -143,9 +150,7 @@ class _RisksTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final count = ref.watch(
-      dbRoutineControllerProvider.select((r) => r.risks.length),
-    );
+    final count = ref.watch(dbRoutineProvider.select((r) => r.risks.length));
     return _TabScrollView(
       slivers: [
         SectionHeader(title: 'Your risks', trailing: '$count added'),

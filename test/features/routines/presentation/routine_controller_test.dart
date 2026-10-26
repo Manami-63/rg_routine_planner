@@ -3,8 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:rg_routine_planner/core/scoring/score.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/risk.dart';
 import 'package:rg_routine_planner/features/db_calculator/presentation/db_calculator_providers.dart';
+import 'package:rg_routine_planner/features/db_calculator/presentation/db_routine_providers.dart';
+import 'package:rg_routine_planner/features/levels/data/fig_levels.dart';
+import 'package:rg_routine_planner/features/routines/presentation/routine_controller.dart';
 
-import '../test_data.dart';
+import '../../db_calculator/test_data.dart';
 
 void main() {
   late ProviderContainer container;
@@ -19,39 +22,41 @@ void main() {
     );
   });
 
-  DbRoutineController controller() =>
-      container.read(dbRoutineControllerProvider.notifier);
+  RoutineController controller() =>
+      container.read(routineControllerProvider.notifier);
 
-  test('starts empty, unnamed and on the repository ruleset', () {
-    final routine = container.read(dbRoutineControllerProvider);
+  test('starts empty, unnamed, without level, on the repository ruleset', () {
+    final routine = container.read(routineControllerProvider);
 
-    expect(routine.isEmpty, isTrue);
+    expect(routine.db.isEmpty, isTrue);
     expect(routine.name, isEmpty);
+    expect(routine.level, isNull);
     expect(routine.rulesetId, testRuleset.id);
+    expect(routine.id, isNotEmpty);
   });
 
   test('subtotal follows add, remove and clear', () {
     controller()
-      ..add(testJump)
-      ..add(testBalance);
+      ..addElement(testJump)
+      ..addElement(testBalance);
     expect(
       container.read(dbScoreResultProvider).subtotal,
       const Score.hundredths(50),
     );
 
-    controller().removeAt(0);
+    controller().removeElementAt(0);
     expect(
       container.read(dbScoreResultProvider).subtotal,
       const Score.hundredths(20),
     );
 
-    controller().clear();
+    controller().clearDb();
     expect(container.read(dbScoreResultProvider).subtotal, Score.zero);
   });
 
   test('subtotal includes risks', () {
     controller()
-      ..add(testJump)
+      ..addElement(testJump)
       ..addRisk(RiskElement(rotation: testTwoRotations));
     final result = container.read(dbScoreResultProvider);
 
@@ -63,18 +68,27 @@ void main() {
     expect(container.read(dbScoreResultProvider).riskSubtotal, Score.zero);
   });
 
-  test('clear removes risks too', () {
+  test('clearing DB content keeps name and level', () {
     controller()
-      ..add(testJump)
+      ..rename('Hoop')
+      ..selectLevel(figSenior)
+      ..addElement(testJump)
       ..addRisk(RiskElement(rotation: testTwoRotations))
-      ..clear();
+      ..clearDb();
+    final routine = container.read(routineControllerProvider);
 
-    expect(container.read(dbRoutineControllerProvider).isEmpty, isTrue);
+    expect(routine.db.isEmpty, isTrue);
+    expect(routine.name, 'Hoop');
+    expect(routine.level, figSenior);
   });
 
-  test('rename updates the name', () {
-    controller().rename('Ribbon final');
+  test('rename and selectLevel update the routine', () {
+    controller()
+      ..rename('Ribbon final')
+      ..selectLevel(figJunior);
+    final routine = container.read(routineControllerProvider);
 
-    expect(container.read(dbRoutineControllerProvider).name, 'Ribbon final');
+    expect(routine.name, 'Ribbon final');
+    expect(routine.level, figJunior);
   });
 }

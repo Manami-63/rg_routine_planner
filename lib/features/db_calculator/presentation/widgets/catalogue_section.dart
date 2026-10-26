@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/widgets/message_view.dart';
+import '../../../routines/presentation/routine_controller.dart';
 import '../../domain/db_element.dart';
 import '../db_calculator_providers.dart';
+import '../db_routine_providers.dart';
 import 'async_sliver.dart';
 import 'value_badge.dart';
 
@@ -66,8 +68,8 @@ class CatalogueSection extends ConsumerWidget {
                     tooltip: 'Add ${element.name}',
                     icon: const Icon(Icons.add_circle_outline),
                     onPressed: () => ref
-                        .read(dbRoutineControllerProvider.notifier)
-                        .add(element),
+                        .read(routineControllerProvider.notifier)
+                        .addElement(element),
                   ),
                 ],
               ),
