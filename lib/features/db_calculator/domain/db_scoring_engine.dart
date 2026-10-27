@@ -82,10 +82,10 @@ class ProvisionalDbScoringEngine implements DbScoringEngine {
   @override
   final RulesetVersion ruleset;
 
-  /// Placeholder valuation: the rotation option's value plus each
-  /// criterion's value. This additive structure is an assumption to be
-  /// verified against the official rules before any ruleset is marked
-  /// official.
+  /// The rotation option's value plus each criterion's value. This additive
+  /// structure follows the FIG Code of Points 2025-2028 (#4.2, #4.8-4.10:
+  /// base 0.20 for 2 rotations, + the value of each criterion). Validity
+  /// rules (e.g. repeated rotation groups) are not checked.
   @override
   Score riskValue(RiskElement risk) {
     _checkRuleset(risk.rotation.rulesetId, 'Rotation ${risk.rotation.id}');

@@ -1,3 +1,4 @@
+import 'package:rg_routine_planner/core/scoring/apparatus.dart';
 import 'package:rg_routine_planner/core/scoring/ruleset.dart';
 import 'package:rg_routine_planner/core/scoring/score.dart';
 import 'package:rg_routine_planner/features/db_calculator/data/db_catalogue_repository.dart';
@@ -58,6 +59,7 @@ const testCriterionA = RiskCriterion(
   name: 'Criterion A',
   value: Score.hundredths(10),
   rulesetId: 'test-v1',
+  phase: RiskPhase.throwing,
 );
 
 const testCriterionB = RiskCriterion(
@@ -65,11 +67,23 @@ const testCriterionB = RiskCriterion(
   name: 'Criterion B',
   value: Score.hundredths(20),
   rulesetId: 'test-v1',
+  phase: RiskPhase.catching,
+);
+
+/// Only offered for Ball routines.
+const testBallCriterion = RiskCriterion(
+  id: 'crit-ball',
+  name: 'Ball catch',
+  value: Score.hundredths(10),
+  rulesetId: 'test-v1',
+  phase: RiskPhase.catching,
+  apparatus: {Apparatus.ball},
+  note: 'Test note',
 );
 
 final testRiskCatalogue = RiskCatalogue(
   rotationOptions: const [testTwoRotations, testThreeRotations],
-  criteria: const [testCriterionA, testCriterionB],
+  criteria: const [testCriterionA, testCriterionB, testBallCriterion],
 );
 
 class FakeDbCatalogueRepository implements DbCatalogueRepository {

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rg_routine_planner/core/scoring/apparatus.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_element.dart';
 import 'package:rg_routine_planner/features/routines/domain/routine.dart';
 import 'package:rg_routine_planner/features/routines/presentation/routine_controller.dart';
@@ -182,7 +183,7 @@ void main() {
       await tester.tap(find.text('Build a risk'));
       await tester.pumpAndSettle();
 
-      // First rotation option is preselected.
+      // The fewest rotations are preselected.
       String previewText() => tester
           .widget<Text>(
             find.descendant(
@@ -193,7 +194,7 @@ void main() {
           .data!;
       expect(previewText(), '0.20');
 
-      await tester.tap(find.text('3 rotations'));
+      await tester.tap(find.byTooltip('More rotations'));
       await tester.tap(find.text('Criterion A'));
       await tester.pump();
       expect(previewText(), '0.40');
@@ -202,10 +203,45 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Build a risk'), findsOneWidget); // Sheet closed.
-      expect(find.text('3 rotations + Criterion A'), findsOneWidget);
+      expect(find.text('3 rotations + Throw: Criterion A'), findsOneWidget);
       expect(find.text('1 added'), findsOneWidget);
       expect(subtotalText(tester), '0.40');
       expect(breakdownText(tester), 'Body 0.00 · Risks 0.40');
+    });
+
+    testWidgets('builder shows criteria for the routine apparatus only', (
+      tester,
+    ) async {
+      await pumpDbCalculator(
+        tester,
+        routine: emptyTestRoutine().withApparatus(Apparatus.ball),
+      );
+      await openRisksTab(tester);
+      await tester.tap(find.text('Build a risk'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Ball catch'), findsOneWidget);
+      expect(find.text('Test note'), findsOneWidget);
+      expect(
+        find.text('Choose an apparatus to see its specific criteria.'),
+        findsNothing,
+      );
+    });
+
+    testWidgets('builder without an apparatus shows general criteria', (
+      tester,
+    ) async {
+      await pumpScreen(tester);
+      await openRisksTab(tester);
+      await tester.tap(find.text('Build a risk'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Criterion A'), findsOneWidget);
+      expect(find.text('Ball catch'), findsNothing);
+      expect(
+        find.text('Choose an apparatus to see its specific criteria.'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('dismissing the builder adds nothing', (tester) async {

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rg_routine_planner/core/scoring/apparatus.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/risk.dart';
 
 import '../test_data.dart';
@@ -11,7 +12,10 @@ void main() {
         criteria: const [testCriterionA, testCriterionB],
       );
 
-      expect(risk.description, '2 rotations + Criterion A + Criterion B');
+      expect(
+        risk.description,
+        '2 rotations + Throw: Criterion A + Catch: Criterion B',
+      );
     });
 
     test('describes a risk without criteria', () {
@@ -36,6 +40,27 @@ void main() {
       final risk = RiskElement(rotation: testTwoRotations);
 
       expect(() => risk.criteria.add(testCriterionA), throwsUnsupportedError);
+    });
+  });
+
+  group('RiskCatalogue', () {
+    test('filters criteria by phase and apparatus', () {
+      expect(
+        testRiskCatalogue.criteriaFor(RiskPhase.catching, Apparatus.ball),
+        [testCriterionB, testBallCriterion],
+      );
+      expect(
+        testRiskCatalogue.criteriaFor(RiskPhase.catching, Apparatus.hoop),
+        [testCriterionB],
+      );
+      expect(testRiskCatalogue.criteriaFor(RiskPhase.throwing, null), [
+        testCriterionA,
+      ]);
+    });
+
+    test('apparatus-specific criteria need a chosen apparatus', () {
+      expect(testBallCriterion.appliesTo(null), isFalse);
+      expect(testCriterionA.appliesTo(null), isTrue);
     });
   });
 }

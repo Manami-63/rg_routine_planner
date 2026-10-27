@@ -8,6 +8,7 @@ class RulesetVersion {
     required this.id,
     required this.label,
     required this.isOfficial,
+    this.detail,
   });
 
   /// Stable identifier, suitable for persistence (e.g. `sample-v0`).
@@ -20,15 +21,20 @@ class RulesetVersion {
   /// The UI warns users whenever this is `false`.
   final bool isOfficial;
 
+  /// What is (and is not) official in an unofficial ruleset, shown in the
+  /// warning banner. `null` uses a generic message.
+  final String? detail;
+
   @override
   bool operator ==(Object other) =>
       other is RulesetVersion &&
       other.id == id &&
       other.label == label &&
-      other.isOfficial == isOfficial;
+      other.isOfficial == isOfficial &&
+      other.detail == detail;
 
   @override
-  int get hashCode => Object.hash(id, label, isOfficial);
+  int get hashCode => Object.hash(id, label, isOfficial, detail);
 
   @override
   String toString() => 'RulesetVersion($id)';

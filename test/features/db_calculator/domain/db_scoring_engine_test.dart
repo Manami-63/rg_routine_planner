@@ -195,6 +195,7 @@ void main() {
         name: 'Foreign',
         value: Score.hundredths(10),
         rulesetId: 'other',
+        phase: RiskPhase.throwing,
       );
       final risk = RiskElement(rotation: testTwoRotations, criteria: [foreign]);
 
