@@ -14,6 +14,11 @@
 //   0.10, Fouetté, Sakura (3.1105) and rotations on other body parts;
 //   + 0.20 each for pivots of 0.20 or more; none for 3.2101/3.2202
 //   ("no extra value") and Illusion (performed in series instead).
+// - Series (#2.4.3, #8.10, #12.8): jumps/leaps with take-off and landing on
+//   1 leg, and pivots/illusions. Offered for every jump except those
+//   defined with take-off from 2 feet only (1.101, 1.301, 1.303), and for
+//   rotations on 1 leg except Fouetté (a Fouetté series counts as 1 DB,
+//   #12.11). The user decides whether a series is possible.
 
 import '../../../core/scoring/score.dart';
 import '../domain/db_element.dart';
@@ -27,6 +32,7 @@ DbElement _element(
   bool balanceOnFoot = false,
   bool slowTurn = false,
   int? extraRotation,
+  bool series = false,
 }) => DbElement(
   id: 'fig-$code',
   name: '$code · $description',
@@ -38,10 +44,19 @@ DbElement _element(
   extraRotationValue: extraRotation == null
       ? null
       : Score.hundredths(extraRotation),
+  canBeInSeries: series,
 );
 
-DbElement _jump(String code, int hundredths, String description) =>
-    _element(code, DbElementGroup.jump, hundredths, description);
+/// Take-off from 2 feet only: cannot be performed in series.
+const _twoFootJumps = {'1.101', '1.301', '1.303'};
+
+DbElement _jump(String code, int hundredths, String description) => _element(
+  code,
+  DbElementGroup.jump,
+  hundredths,
+  description,
+  series: !_twoFootJumps.contains(code),
+);
 
 /// A balance executed on the foot: flat foot and slow turn possible.
 DbElement _footBalance(String code, int hundredths, String description) =>
@@ -62,12 +77,14 @@ DbElement _rotation(
   int hundredths,
   String description, {
   required int? extra,
+  bool series = true,
 }) => _element(
   code,
   DbElementGroup.rotation,
   hundredths,
   description,
   extraRotation: extra,
+  series: series,
 );
 
 final figDbElements = <DbElement>[
@@ -223,13 +240,43 @@ final figDbElements = <DbElement>[
   _rotation('3.1405', 50, 'Front split, trunk backward (180°)', extra: 20),
   // p.101.
   _rotation('3.1501', 10, 'Cossack pivot', extra: 10),
-  _rotation('3.1601', 10, 'Fouetté, passé', extra: 10),
-  _rotation('3.1602', 20, 'Fouetté, straight leg horizontal', extra: 10),
+  _rotation('3.1601', 10, 'Fouetté, passé', extra: 10, series: false),
+  _rotation(
+    '3.1602',
+    20,
+    'Fouetté, straight leg horizontal',
+    extra: 10,
+    series: false,
+  ),
   _rotation('3.1704', 40, 'Illusion backward', extra: null),
   // Rotations on other parts of the body, p.101.
-  _rotation('3.1801', 10, 'Ralenkova: rotation on the back', extra: 10),
-  _rotation('3.1902', 20, 'Rotation on the stomach, legs to ring', extra: 10),
-  _rotation('3.2003', 30, 'Ashram/Kanaeva (180°)', extra: 10),
-  _rotation('3.2101', 10, 'Rotation in split, trunk forward', extra: null),
-  _rotation('3.2202', 20, 'Rotation in split, trunk backward', extra: null),
+  _rotation(
+    '3.1801',
+    10,
+    'Ralenkova: rotation on the back',
+    extra: 10,
+    series: false,
+  ),
+  _rotation(
+    '3.1902',
+    20,
+    'Rotation on the stomach, legs to ring',
+    extra: 10,
+    series: false,
+  ),
+  _rotation('3.2003', 30, 'Ashram/Kanaeva (180°)', extra: 10, series: false),
+  _rotation(
+    '3.2101',
+    10,
+    'Rotation in split, trunk forward',
+    extra: null,
+    series: false,
+  ),
+  _rotation(
+    '3.2202',
+    20,
+    'Rotation in split, trunk backward',
+    extra: null,
+    series: false,
+  ),
 ];

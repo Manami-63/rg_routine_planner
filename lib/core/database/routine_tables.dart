@@ -53,6 +53,9 @@ class RoutineBodyElements extends Table {
   BoolColumn get slowTurn => boolean().withDefault(const Constant(false))();
   IntColumn get extraRotations => integer().withDefault(const Constant(0))();
 
+  /// Identical elements performed in a series (1 = none). Added in v5.
+  IntColumn get seriesCount => integer().withDefault(const Constant(1))();
+
   /// A value entered by the user, in hundredths. Null when not set.
   IntColumn get manualValue => integer().nullable()();
 

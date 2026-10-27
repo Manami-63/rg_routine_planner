@@ -77,7 +77,11 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   additional rotations (only where the `DbElement` flags allow them) and a
   `manualValue` that replaces the calculated value.
   `DbScoringEngine.elementValue` applies them (CoP #10.3, #10.9,
-  #12.2.5-12.2.8); counting ranks by these values. Users can add custom
+  #12.2.5-12.2.8); counting ranks by these values. `seriesCount` makes one
+  entry a series of identical DB, each counting as 1 DB (#2.4.3, #8.10,
+  #12.8; only where `canBeInSeries`). Repeating an element (same id, not
+  custom) is not valid and worth nothing (#2.4.2), unless the entry has a
+  manual value, which is how users handle levels with other rules. Users can add custom
   elements (`DbElement.custom`, id `custom`) with a manual value, e.g. a DB
   newly approved by FIG.
 - Risks (R) are part of DB but modelled separately (`domain/risk.dart`): a

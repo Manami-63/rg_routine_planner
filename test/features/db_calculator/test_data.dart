@@ -20,6 +20,7 @@ const testJump = DbElement(
   group: DbElementGroup.jump,
   value: Score.hundredths(30),
   rulesetId: 'test-v1',
+  canBeInSeries: true,
 );
 
 const testBalance = DbElement(

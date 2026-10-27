@@ -19,7 +19,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'rg_routine_planner'));
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -60,6 +60,9 @@ class AppDatabase extends _$AppDatabase {
         await customStatement(
           "DELETE FROM routines WHERE ruleset_id = 'sample-v0'",
         );
+      }
+      if (from < 5) {
+        await m.addColumn(routineBodyElements, routineBodyElements.seriesCount);
       }
     },
     // SQLite does not enforce foreign keys (and cascades) unless asked.

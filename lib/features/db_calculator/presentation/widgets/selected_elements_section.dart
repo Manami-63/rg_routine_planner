@@ -21,10 +21,7 @@ class SelectedElementsSection extends ConsumerWidget {
     final options = ref.watch(
       dbRoutineProvider(routineId).select((routine) => routine.elementOptions),
     );
-    final (counting, values) = ref.watch(
-      dbScoreResultProvider(routineId)
-          .select((result) => (result.counting, result.elementValues)),
-    );
+    final result = ref.watch(dbScoreResultProvider(routineId));
     final muted = Theme.of(context).colorScheme.onSurface
         .withValues(alpha: 0.5);
 
@@ -42,17 +39,23 @@ class SelectedElementsSection extends ConsumerWidget {
       itemCount: elements.length,
       itemBuilder: (context, index) {
         final element = elements[index];
-        final counted = counting.isElementCounted(index);
+        final dbs = result.dbPerElement[index];
+        final counted = result.counting.countedPerElement[index];
         final details = [
           element.group.label,
           ?describeOptions(element, options[index]),
-          if (!counted) 'Not counted',
+          if (result.repeatedElements.contains(index))
+            'Not valid: repetition'
+          else if (counted == 0)
+            'Not counted'
+          else if (counted < dbs)
+            '$counted of $dbs counted',
         ].join(' · ');
         return ListTile(
           key: ValueKey('selected-$index'),
           // Greyed out (but still adjustable and removable) when it does
           // not count.
-          textColor: counted ? null : muted,
+          textColor: counted > 0 ? null : muted,
           leading: CircleAvatar(child: Text('${index + 1}')),
           title: Text(element.name),
           subtitle: Text(details),
@@ -66,7 +69,8 @@ class SelectedElementsSection extends ConsumerWidget {
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              ValueBadge(value: values[index]),
+              // A series shows its total; a repetition is worth nothing.
+              ValueBadge(value: result.elementValues[index] * dbs),
               IconButton(
                 tooltip: 'Remove ${element.name}',
                 icon: const Icon(Icons.remove_circle_outline),

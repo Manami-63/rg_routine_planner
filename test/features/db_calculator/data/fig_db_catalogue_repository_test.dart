@@ -52,6 +52,25 @@ void main() {
       }
     });
 
+    test('series for jumps (not 2-foot take-off) and pivots only', () {
+      DbElement byCode(String code) =>
+          elements.singleWhere((e) => e.id == 'fig-$code');
+
+      for (final code in ['1.101', '1.301', '1.303']) {
+        expect(byCode(code).canBeInSeries, isFalse, reason: code);
+      }
+      expect(byCode('1.2103').canBeInSeries, isTrue);
+      expect(byCode('3.101').canBeInSeries, isTrue);
+      expect(byCode('3.1704').canBeInSeries, isTrue); // Illusion.
+      expect(byCode('3.1601').canBeInSeries, isFalse); // Fouetté.
+      expect(byCode('3.1801').canBeInSeries, isFalse); // On the back.
+      for (final balance in elements.where(
+        (e) => e.group == DbElementGroup.balance,
+      )) {
+        expect(balance.canBeInSeries, isFalse, reason: balance.id);
+      }
+    });
+
     test('options only on the kinds of element that allow them', () {
       for (final element in elements) {
         if (element.canBeOnFlatFoot || element.canSlowTurn) {

@@ -138,4 +138,54 @@ void main() {
     expect(db.elements.single.group, DbElementGroup.rotation);
     expect(db.elementOptions.single.manualValue, const Score.hundredths(60));
   });
+
+  testWidgets('a jump can be performed in a series', (tester) async {
+    final routines = await pumpDbCalculator(tester);
+    await add(tester, 'Test Jump');
+    await openAdjust(tester, 0);
+
+    expect(find.text('Performed in a series of'), findsOneWidget);
+    await tester.tap(find.byTooltip('Longer series'));
+    await tester.tap(find.byTooltip('Longer series'));
+    await tester.pump();
+    expect(find.text('Value (3 × 0.30)'), findsOneWidget);
+    expect(preview(tester), '0.90');
+    await save(tester);
+
+    expect(find.text('Jumps / Leaps · Series of 3'), findsOneWidget);
+    expect(subtotal(tester), '0.90');
+    expect(
+      routines.routines[testRoutineId]!.db.elementOptions.single.seriesCount,
+      3,
+    );
+  });
+
+  testWidgets('a balance has no series option', (tester) async {
+    await pumpDbCalculator(tester);
+    await add(tester, 'Test Balance');
+    await openAdjust(tester, 0);
+
+    expect(find.text('Performed in a series of'), findsNothing);
+  });
+
+  testWidgets('a repeated element is marked not valid', (tester) async {
+    await pumpDbCalculator(tester);
+    await add(tester, 'Test Jump');
+    await add(tester, 'Test Jump');
+
+    expect(find.text('Jumps / Leaps · Not valid: repetition'), findsOneWidget);
+    expect(subtotal(tester), '0.30');
+
+    // A manual value makes it count, for levels that allow repetitions.
+    await openAdjust(tester, 1);
+    expect(find.byKey(const ValueKey('repetition-note')), findsOneWidget);
+    await tester.tap(find.text('Set value manually'));
+    await tester.pump();
+    await tester.enterText(find.byType(TextField).last, '0.30');
+    await tester.pump();
+    await save(tester);
+
+    expect(find.textContaining('repetition'), findsNothing);
+    expect(subtotal(tester), '0.60');
+  });
 }

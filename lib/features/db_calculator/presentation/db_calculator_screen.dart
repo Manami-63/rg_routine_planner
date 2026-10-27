@@ -293,6 +293,10 @@ class _BodyTab extends ConsumerWidget {
     final count = ref.watch(
       dbRoutineProvider(routineId).select((r) => r.elements.length),
     );
+    // Series count as several DB, repetitions as none.
+    final dbCount = ref.watch(
+      dbScoreResultProvider(routineId).select((r) => r.elementCount),
+    );
     final (level, apparatus) = ref.watch(
       routineProvider(routineId).select((r) => (r.level, r.apparatus)),
     );
@@ -310,7 +314,7 @@ class _BodyTab extends ConsumerWidget {
                 level: level,
                 apparatus: apparatus,
                 category: DifficultyCategory.db,
-                count: count,
+                count: dbCount,
               ),
               BodyGroupsNotice(
                 requirements: ref.watch(routineRequirementsProvider(routineId)),

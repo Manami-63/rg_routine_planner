@@ -966,6 +966,18 @@ class $RoutineBodyElementsTable extends RoutineBodyElements
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _seriesCountMeta = const VerificationMeta(
+    'seriesCount',
+  );
+  @override
+  late final GeneratedColumn<int> seriesCount = GeneratedColumn<int>(
+    'series_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
   static const VerificationMeta _manualValueMeta = const VerificationMeta(
     'manualValue',
   );
@@ -1008,6 +1020,7 @@ class $RoutineBodyElementsTable extends RoutineBodyElements
     flatFoot,
     slowTurn,
     extraRotations,
+    seriesCount,
     manualValue,
     customName,
     customGroup,
@@ -1072,6 +1085,15 @@ class $RoutineBodyElementsTable extends RoutineBodyElements
         ),
       );
     }
+    if (data.containsKey('series_count')) {
+      context.handle(
+        _seriesCountMeta,
+        seriesCount.isAcceptableOrUnknown(
+          data['series_count']!,
+          _seriesCountMeta,
+        ),
+      );
+    }
     if (data.containsKey('manual_value')) {
       context.handle(
         _manualValueMeta,
@@ -1133,6 +1155,10 @@ class $RoutineBodyElementsTable extends RoutineBodyElements
         DriftSqlType.int,
         data['${effectivePrefix}extra_rotations'],
       )!,
+      seriesCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}series_count'],
+      )!,
       manualValue: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}manual_value'],
@@ -1166,6 +1192,9 @@ class RoutineBodyElementRow extends DataClass
   final bool slowTurn;
   final int extraRotations;
 
+  /// Identical elements performed in a series (1 = none). Added in v5.
+  final int seriesCount;
+
   /// A value entered by the user, in hundredths. Null when not set.
   final int? manualValue;
   final String? customName;
@@ -1178,6 +1207,7 @@ class RoutineBodyElementRow extends DataClass
     required this.flatFoot,
     required this.slowTurn,
     required this.extraRotations,
+    required this.seriesCount,
     this.manualValue,
     this.customName,
     this.customGroup,
@@ -1192,6 +1222,7 @@ class RoutineBodyElementRow extends DataClass
     map['flat_foot'] = Variable<bool>(flatFoot);
     map['slow_turn'] = Variable<bool>(slowTurn);
     map['extra_rotations'] = Variable<int>(extraRotations);
+    map['series_count'] = Variable<int>(seriesCount);
     if (!nullToAbsent || manualValue != null) {
       map['manual_value'] = Variable<int>(manualValue);
     }
@@ -1213,6 +1244,7 @@ class RoutineBodyElementRow extends DataClass
       flatFoot: Value(flatFoot),
       slowTurn: Value(slowTurn),
       extraRotations: Value(extraRotations),
+      seriesCount: Value(seriesCount),
       manualValue: manualValue == null && nullToAbsent
           ? const Value.absent()
           : Value(manualValue),
@@ -1238,6 +1270,7 @@ class RoutineBodyElementRow extends DataClass
       flatFoot: serializer.fromJson<bool>(json['flatFoot']),
       slowTurn: serializer.fromJson<bool>(json['slowTurn']),
       extraRotations: serializer.fromJson<int>(json['extraRotations']),
+      seriesCount: serializer.fromJson<int>(json['seriesCount']),
       manualValue: serializer.fromJson<int?>(json['manualValue']),
       customName: serializer.fromJson<String?>(json['customName']),
       customGroup: serializer.fromJson<String?>(json['customGroup']),
@@ -1254,6 +1287,7 @@ class RoutineBodyElementRow extends DataClass
       'flatFoot': serializer.toJson<bool>(flatFoot),
       'slowTurn': serializer.toJson<bool>(slowTurn),
       'extraRotations': serializer.toJson<int>(extraRotations),
+      'seriesCount': serializer.toJson<int>(seriesCount),
       'manualValue': serializer.toJson<int?>(manualValue),
       'customName': serializer.toJson<String?>(customName),
       'customGroup': serializer.toJson<String?>(customGroup),
@@ -1268,6 +1302,7 @@ class RoutineBodyElementRow extends DataClass
     bool? flatFoot,
     bool? slowTurn,
     int? extraRotations,
+    int? seriesCount,
     Value<int?> manualValue = const Value.absent(),
     Value<String?> customName = const Value.absent(),
     Value<String?> customGroup = const Value.absent(),
@@ -1279,6 +1314,7 @@ class RoutineBodyElementRow extends DataClass
     flatFoot: flatFoot ?? this.flatFoot,
     slowTurn: slowTurn ?? this.slowTurn,
     extraRotations: extraRotations ?? this.extraRotations,
+    seriesCount: seriesCount ?? this.seriesCount,
     manualValue: manualValue.present ? manualValue.value : this.manualValue,
     customName: customName.present ? customName.value : this.customName,
     customGroup: customGroup.present ? customGroup.value : this.customGroup,
@@ -1294,6 +1330,9 @@ class RoutineBodyElementRow extends DataClass
       extraRotations: data.extraRotations.present
           ? data.extraRotations.value
           : this.extraRotations,
+      seriesCount: data.seriesCount.present
+          ? data.seriesCount.value
+          : this.seriesCount,
       manualValue: data.manualValue.present
           ? data.manualValue.value
           : this.manualValue,
@@ -1316,6 +1355,7 @@ class RoutineBodyElementRow extends DataClass
           ..write('flatFoot: $flatFoot, ')
           ..write('slowTurn: $slowTurn, ')
           ..write('extraRotations: $extraRotations, ')
+          ..write('seriesCount: $seriesCount, ')
           ..write('manualValue: $manualValue, ')
           ..write('customName: $customName, ')
           ..write('customGroup: $customGroup')
@@ -1332,6 +1372,7 @@ class RoutineBodyElementRow extends DataClass
     flatFoot,
     slowTurn,
     extraRotations,
+    seriesCount,
     manualValue,
     customName,
     customGroup,
@@ -1347,6 +1388,7 @@ class RoutineBodyElementRow extends DataClass
           other.flatFoot == this.flatFoot &&
           other.slowTurn == this.slowTurn &&
           other.extraRotations == this.extraRotations &&
+          other.seriesCount == this.seriesCount &&
           other.manualValue == this.manualValue &&
           other.customName == this.customName &&
           other.customGroup == this.customGroup);
@@ -1361,6 +1403,7 @@ class RoutineBodyElementsCompanion
   final Value<bool> flatFoot;
   final Value<bool> slowTurn;
   final Value<int> extraRotations;
+  final Value<int> seriesCount;
   final Value<int?> manualValue;
   final Value<String?> customName;
   final Value<String?> customGroup;
@@ -1372,6 +1415,7 @@ class RoutineBodyElementsCompanion
     this.flatFoot = const Value.absent(),
     this.slowTurn = const Value.absent(),
     this.extraRotations = const Value.absent(),
+    this.seriesCount = const Value.absent(),
     this.manualValue = const Value.absent(),
     this.customName = const Value.absent(),
     this.customGroup = const Value.absent(),
@@ -1384,6 +1428,7 @@ class RoutineBodyElementsCompanion
     this.flatFoot = const Value.absent(),
     this.slowTurn = const Value.absent(),
     this.extraRotations = const Value.absent(),
+    this.seriesCount = const Value.absent(),
     this.manualValue = const Value.absent(),
     this.customName = const Value.absent(),
     this.customGroup = const Value.absent(),
@@ -1398,6 +1443,7 @@ class RoutineBodyElementsCompanion
     Expression<bool>? flatFoot,
     Expression<bool>? slowTurn,
     Expression<int>? extraRotations,
+    Expression<int>? seriesCount,
     Expression<int>? manualValue,
     Expression<String>? customName,
     Expression<String>? customGroup,
@@ -1410,6 +1456,7 @@ class RoutineBodyElementsCompanion
       if (flatFoot != null) 'flat_foot': flatFoot,
       if (slowTurn != null) 'slow_turn': slowTurn,
       if (extraRotations != null) 'extra_rotations': extraRotations,
+      if (seriesCount != null) 'series_count': seriesCount,
       if (manualValue != null) 'manual_value': manualValue,
       if (customName != null) 'custom_name': customName,
       if (customGroup != null) 'custom_group': customGroup,
@@ -1424,6 +1471,7 @@ class RoutineBodyElementsCompanion
     Value<bool>? flatFoot,
     Value<bool>? slowTurn,
     Value<int>? extraRotations,
+    Value<int>? seriesCount,
     Value<int?>? manualValue,
     Value<String?>? customName,
     Value<String?>? customGroup,
@@ -1436,6 +1484,7 @@ class RoutineBodyElementsCompanion
       flatFoot: flatFoot ?? this.flatFoot,
       slowTurn: slowTurn ?? this.slowTurn,
       extraRotations: extraRotations ?? this.extraRotations,
+      seriesCount: seriesCount ?? this.seriesCount,
       manualValue: manualValue ?? this.manualValue,
       customName: customName ?? this.customName,
       customGroup: customGroup ?? this.customGroup,
@@ -1466,6 +1515,9 @@ class RoutineBodyElementsCompanion
     if (extraRotations.present) {
       map['extra_rotations'] = Variable<int>(extraRotations.value);
     }
+    if (seriesCount.present) {
+      map['series_count'] = Variable<int>(seriesCount.value);
+    }
     if (manualValue.present) {
       map['manual_value'] = Variable<int>(manualValue.value);
     }
@@ -1488,6 +1540,7 @@ class RoutineBodyElementsCompanion
           ..write('flatFoot: $flatFoot, ')
           ..write('slowTurn: $slowTurn, ')
           ..write('extraRotations: $extraRotations, ')
+          ..write('seriesCount: $seriesCount, ')
           ..write('manualValue: $manualValue, ')
           ..write('customName: $customName, ')
           ..write('customGroup: $customGroup')
@@ -2779,6 +2832,7 @@ typedef $$RoutineBodyElementsTableCreateCompanionBuilder =
       Value<bool> flatFoot,
       Value<bool> slowTurn,
       Value<int> extraRotations,
+      Value<int> seriesCount,
       Value<int?> manualValue,
       Value<String?> customName,
       Value<String?> customGroup,
@@ -2792,6 +2846,7 @@ typedef $$RoutineBodyElementsTableUpdateCompanionBuilder =
       Value<bool> flatFoot,
       Value<bool> slowTurn,
       Value<int> extraRotations,
+      Value<int> seriesCount,
       Value<int?> manualValue,
       Value<String?> customName,
       Value<String?> customGroup,
@@ -2864,6 +2919,11 @@ class $$RoutineBodyElementsTableFilterComposer
 
   ColumnFilters<int> get extraRotations => $composableBuilder(
     column: $table.extraRotations,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get seriesCount => $composableBuilder(
+    column: $table.seriesCount,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2945,6 +3005,11 @@ class $$RoutineBodyElementsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get seriesCount => $composableBuilder(
+    column: $table.seriesCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get manualValue => $composableBuilder(
     column: $table.manualValue,
     builder: (column) => ColumnOrderings(column),
@@ -3010,6 +3075,11 @@ class $$RoutineBodyElementsTableAnnotationComposer
 
   GeneratedColumn<int> get extraRotations => $composableBuilder(
     column: $table.extraRotations,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get seriesCount => $composableBuilder(
+    column: $table.seriesCount,
     builder: (column) => column,
   );
 
@@ -3095,6 +3165,7 @@ class $$RoutineBodyElementsTableTableManager
                 Value<bool> flatFoot = const Value.absent(),
                 Value<bool> slowTurn = const Value.absent(),
                 Value<int> extraRotations = const Value.absent(),
+                Value<int> seriesCount = const Value.absent(),
                 Value<int?> manualValue = const Value.absent(),
                 Value<String?> customName = const Value.absent(),
                 Value<String?> customGroup = const Value.absent(),
@@ -3106,6 +3177,7 @@ class $$RoutineBodyElementsTableTableManager
                 flatFoot: flatFoot,
                 slowTurn: slowTurn,
                 extraRotations: extraRotations,
+                seriesCount: seriesCount,
                 manualValue: manualValue,
                 customName: customName,
                 customGroup: customGroup,
@@ -3119,6 +3191,7 @@ class $$RoutineBodyElementsTableTableManager
                 Value<bool> flatFoot = const Value.absent(),
                 Value<bool> slowTurn = const Value.absent(),
                 Value<int> extraRotations = const Value.absent(),
+                Value<int> seriesCount = const Value.absent(),
                 Value<int?> manualValue = const Value.absent(),
                 Value<String?> customName = const Value.absent(),
                 Value<String?> customGroup = const Value.absent(),
@@ -3130,6 +3203,7 @@ class $$RoutineBodyElementsTableTableManager
                 flatFoot: flatFoot,
                 slowTurn: slowTurn,
                 extraRotations: extraRotations,
+                seriesCount: seriesCount,
                 manualValue: manualValue,
                 customName: customName,
                 customGroup: customGroup,

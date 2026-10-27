@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rg_routine_planner/core/scoring/apparatus.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_element.dart';
+import 'package:rg_routine_planner/features/db_calculator/domain/db_element_options.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_routine.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/risk.dart';
 import 'package:rg_routine_planner/features/levels/domain/competition_level.dart';
@@ -116,5 +117,30 @@ void main() {
     // The existing risk is kept, but not counted.
     expect(find.text('Not counted'), findsOneWidget);
     expect(text(tester, 'db-breakdown'), 'Body 0.00 · Risks 0.00 (0 of 1)');
+  });
+
+  testWidgets('part of a series can be left out by the maximum', (
+    tester,
+  ) async {
+    final base = routineWith(
+      requirements: const LevelRequirements(db: CountLimit(max: 2)),
+    );
+    await pumpDbCalculator(
+      tester,
+      routine: base.withDb(
+        DbRoutine(
+          rulesetId: testRuleset.id,
+          elements: const [testJump],
+          elementOptions: const [DbElementOptions(seriesCount: 3)],
+        ),
+      ),
+    );
+
+    expect(
+      find.text('Jumps / Leaps · Series of 3 · 2 of 3 counted'),
+      findsOneWidget,
+    );
+    expect(text(tester, 'db-breakdown'), 'Body 0.60 (2 of 3) · Risks 0.00');
+    expect(find.text('3 DB · 1 not counted (highest 2 count)'), findsOneWidget);
   });
 }

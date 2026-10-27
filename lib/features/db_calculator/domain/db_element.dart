@@ -14,6 +14,7 @@ class DbElement {
     this.canBeOnFlatFoot = false,
     this.canSlowTurn = false,
     this.extraRotationValue,
+    this.canBeInSeries = false,
   }) : isCustom = false;
 
   /// An element the user entered themselves, e.g. a DB newly approved by
@@ -28,6 +29,8 @@ class DbElement {
        canBeOnFlatFoot = false,
        canSlowTurn = false,
        extraRotationValue = null,
+       // The user decides; balances never form series (#10.9.6).
+       canBeInSeries = group != DbElementGroup.balance,
        isCustom = true;
 
   /// The id stored for every custom element.
@@ -42,6 +45,7 @@ class DbElement {
       canBeOnFlatFoot = false,
       canSlowTurn = false,
       extraRotationValue = null,
+      canBeInSeries = false,
       isCustom = false;
 
   final String id;
@@ -63,6 +67,10 @@ class DbElement {
   /// have additional rotations. `null` when not possible.
   final Score? extraRotationValue;
 
+  /// A jump/leap or pivot/illusion that may be performed in a series of
+  /// identical elements, each counting as 1 DB (#2.4.3, #8.10, #12.8).
+  final bool canBeInSeries;
+
   final bool isCustom;
 
   bool get isUnknown => group == DbElementGroup.unknown;
@@ -78,6 +86,7 @@ class DbElement {
       other.canBeOnFlatFoot == canBeOnFlatFoot &&
       other.canSlowTurn == canSlowTurn &&
       other.extraRotationValue == extraRotationValue &&
+      other.canBeInSeries == canBeInSeries &&
       other.isCustom == isCustom;
 
   @override
@@ -90,6 +99,7 @@ class DbElement {
     canBeOnFlatFoot,
     canSlowTurn,
     extraRotationValue,
+    canBeInSeries,
     isCustom,
   );
 

@@ -13,14 +13,16 @@ import 'value_badge.dart';
 /// Short summary of how an element is performed, e.g. "Flat foot · Slow
 /// turn", or `null` when it uses the catalogue value as is.
 String? describeOptions(DbElement element, DbElementOptions options) {
-  if (element.isCustom) return 'Custom element';
   final parts = [
-    if (options.manualValue != null) 'Manual value',
+    if (element.isCustom) 'Custom element',
+    if (options.manualValue != null && !element.isCustom) 'Manual value',
     if (options.flatFoot) 'Flat foot',
     if (options.slowTurn) 'Slow turn',
     if (options.extraRotations > 0)
       '+${options.extraRotations} '
           '${options.extraRotations == 1 ? 'rotation' : 'rotations'}',
+    if (element.canBeInSeries && options.seriesCount > 1)
+      'Series of ${options.seriesCount}',
   ];
   return parts.isEmpty ? null : parts.join(' · ');
 }
@@ -74,6 +76,7 @@ class _AdjustElementSheetState extends ConsumerState<AdjustElementSheet> {
   late bool _flatFoot = widget.options.flatFoot;
   late bool _slowTurn = widget.options.slowTurn;
   late int _extraRotations = widget.options.extraRotations;
+  late int _seriesCount = widget.options.seriesCount;
 
   // Custom elements always use a manual value.
   late bool _manual =
@@ -83,6 +86,7 @@ class _AdjustElementSheetState extends ConsumerState<AdjustElementSheet> {
   );
 
   static const _maxExtraRotations = 10;
+  static const _maxSeries = 10;
 
   DbElement get _element => widget.element;
 
@@ -95,6 +99,7 @@ class _AdjustElementSheetState extends ConsumerState<AdjustElementSheet> {
         flatFoot: flatFoot ?? _flatFoot,
         slowTurn: slowTurn ?? _slowTurn,
         extraRotations: _extraRotations,
+        seriesCount: _seriesCount,
         manualValue: _manual ? _manualValue : null,
       );
 
@@ -127,6 +132,11 @@ class _AdjustElementSheetState extends ConsumerState<AdjustElementSheet> {
 
     final value = _canSave ? valueOf(_options()) : null;
     final structured = !_manual;
+    final series = _element.canBeInSeries ? _seriesCount : 1;
+    final isRepetition = ref.watch(
+      dbScoreResultProvider(widget.routineId)
+          .select((r) => r.repeatedElements.contains(widget.index)),
+    );
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -145,6 +155,17 @@ class _AdjustElementSheetState extends ConsumerState<AdjustElementSheet> {
                 'Catalogue value ${_element.value.format()}',
                 style: theme.textTheme.bodySmall,
               ),
+            if (isRepetition && !_manual) ...[
+              const SizedBox(height: 12),
+              Text(
+                'Not valid: this element repeats an earlier one. Set a value '
+                'manually if your level allows repetitions.',
+                key: const ValueKey('repetition-note'),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ],
             if (_element.canBeOnFlatFoot && structured) ...[
               const SizedBox(height: 16),
               SegmentedButton<bool>(
@@ -199,6 +220,37 @@ class _AdjustElementSheetState extends ConsumerState<AdjustElementSheet> {
                   ),
                 ],
               ),
+            if (_element.canBeInSeries)
+              Row(
+                children: [
+                  const Expanded(
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text('Performed in a series of'),
+                      subtitle: Text('Each one counts as 1 DB'),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Shorter series',
+                    icon: const Icon(Icons.remove),
+                    onPressed: _seriesCount == 1
+                        ? null
+                        : () => setState(() => _seriesCount--),
+                  ),
+                  Text(
+                    '$_seriesCount',
+                    key: const ValueKey('series-count'),
+                    style: theme.textTheme.titleMedium,
+                  ),
+                  IconButton(
+                    tooltip: 'Longer series',
+                    icon: const Icon(Icons.add),
+                    onPressed: _seriesCount == _maxSeries
+                        ? null
+                        : () => setState(() => _seriesCount++),
+                  ),
+                ],
+              ),
             if (!_element.isCustom)
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
@@ -221,12 +273,17 @@ class _AdjustElementSheetState extends ConsumerState<AdjustElementSheet> {
             Row(
               children: [
                 Expanded(
-                  child: Text('Value', style: theme.textTheme.titleMedium),
+                  child: Text(
+                    series > 1 && value != null
+                        ? 'Value ($series × ${value.format()})'
+                        : 'Value',
+                    style: theme.textTheme.titleMedium,
+                  ),
                 ),
                 if (value != null)
                   ValueBadge(
                     key: const ValueKey('adjust-preview-value'),
-                    value: value,
+                    value: value * series,
                   ),
               ],
             ),
