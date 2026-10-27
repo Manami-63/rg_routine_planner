@@ -59,10 +59,17 @@ Future<void> openElementPicker(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
-/// Adds the element named [name] through the picker (found by searching)
-/// and closes the picker again.
+/// Adds the test element named [name] through the picker (its group, then
+/// a search) and closes the picker again.
 Future<void> addFromCatalogue(WidgetTester tester, String name) async {
+  final element = [
+    testJump,
+    testBalance,
+    testRotation,
+  ].singleWhere((e) => e.name == name);
   await openElementPicker(tester);
+  await tester.tap(find.text(element.group.label));
+  await tester.pumpAndSettle();
   await tester.enterText(
     find.descendant(
       of: find.byType(ElementPickerScreen),

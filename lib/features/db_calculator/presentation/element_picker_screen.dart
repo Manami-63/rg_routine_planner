@@ -22,7 +22,7 @@ bool matchesQuery(DbElement element, String query) {
 }
 
 /// Full-screen catalogue for adding DB to a routine: one body group at a
-/// time (or search across all), sectioned by catalogue row. Stays open so
+/// time, narrowed by a search, sectioned by catalogue row. Stays open so
 /// several elements can be added in a row.
 class ElementPickerScreen extends ConsumerStatefulWidget {
   const ElementPickerScreen({super.key, required this.routineId});
@@ -110,24 +110,23 @@ class _ElementPickerScreenState extends ConsumerState<ElementPickerScreen> {
               onChanged: (_) => setState(() {}),
             ),
           ),
-          // Searching looks in every group, so the group choice is hidden.
-          if (_query.isEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: SizedBox(
-                width: double.infinity,
-                child: SegmentedButton<DbElementGroup>(
-                  showSelectedIcon: false,
-                  segments: [
-                    for (final group in DbElementGroup.requirable)
-                      ButtonSegment(value: group, label: Text(group.label)),
-                  ],
-                  selected: {_group},
-                  onSelectionChanged: (selection) =>
-                      setState(() => _group = selection.single),
-                ),
+          // Search narrows the selected group; it does not replace it.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: SizedBox(
+              width: double.infinity,
+              child: SegmentedButton<DbElementGroup>(
+                showSelectedIcon: false,
+                segments: [
+                  for (final group in DbElementGroup.requirable)
+                    ButtonSegment(value: group, label: Text(group.label)),
+                ],
+                selected: {_group},
+                onSelectionChanged: (selection) =>
+                    setState(() => _group = selection.single),
               ),
             ),
+          ),
           const Divider(height: 1),
           Expanded(
             child: CustomScrollView(
@@ -172,19 +171,30 @@ class _ElementPickerScreenState extends ConsumerState<ElementPickerScreen> {
     }
 
     final query = _query;
-    final shown = [
+    final matching = [
       for (final element in catalogue)
-        if (query.isEmpty
-            ? element.group == _group
-            : matchesQuery(element, query))
-          element,
+        if (matchesQuery(element, query)) element,
+    ];
+    final shown = [
+      for (final element in matching)
+        if (element.group == _group) element,
     ];
     if (shown.isEmpty) {
+      // Point to the groups that do have matches, so a search is not a
+      // dead end.
+      final elsewhere = [
+        for (final group in DbElementGroup.requirable)
+          if (matching.where((e) => e.group == group).length case final count
+              when count > 0)
+            '${group.label} ($count)',
+      ];
       return SliverToBoxAdapter(
         child: MessageView(
           icon: Icons.search_off,
-          title: 'No matching elements',
-          message: 'Try another word or code, or add it yourself below.',
+          title: 'No matches in ${_group.label}',
+          message: elsewhere.isEmpty
+              ? 'Try another word or code, or add it yourself below.'
+              : 'Found in: ${elsewhere.join(', ')}',
         ),
       );
     }

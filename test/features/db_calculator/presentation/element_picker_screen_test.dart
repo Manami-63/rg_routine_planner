@@ -43,17 +43,34 @@ void main() {
     expect(find.text('Test Jump'), findsNothing);
   });
 
-  testWidgets('search looks in every group', (tester) async {
+  testWidgets('search narrows the selected group', (tester) async {
     await pumpDbCalculator(tester);
     await openElementPicker(tester);
 
-    await search(tester, 'rotation');
+    // "t" matches every test element, but only jumps are shown.
+    await search(tester, 't');
+    expect(find.text('Test Jump'), findsOneWidget);
+    expect(find.text('Test Rotation'), findsNothing);
+
+    await tester.tap(find.text('Rotations'));
+    await tester.pumpAndSettle();
     expect(find.text('Test Rotation'), findsOneWidget);
-    // The group choice is hidden while searching.
-    expect(find.text('Balances'), findsNothing);
+    expect(find.text('Test Jump'), findsNothing);
+  });
+
+  testWidgets('no match in the group points to other groups', (tester) async {
+    await pumpDbCalculator(tester);
+    await openElementPicker(tester);
+
+    await search(tester, 'balance');
+    expect(find.text('No matches in Jumps / Leaps'), findsOneWidget);
+    expect(find.text('Found in: Balances (1)'), findsOneWidget);
 
     await search(tester, 'nothing like this');
-    expect(find.text('No matching elements'), findsOneWidget);
+    expect(
+      find.text('Try another word or code, or add it yourself below.'),
+      findsOneWidget,
+    );
 
     await tester.tap(find.byTooltip('Clear search'));
     await tester.pump();
