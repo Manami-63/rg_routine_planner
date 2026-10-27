@@ -25,5 +25,28 @@ void main() {
       );
       expect(const Score.hundredths(10), const Score.hundredths(10));
     });
+
+    test('subtracts and multiplies', () {
+      expect(
+        const Score.hundredths(30) - const Score.hundredths(10),
+        const Score.hundredths(20),
+      );
+      expect(const Score.hundredths(20) * 3, const Score.hundredths(60));
+    });
+
+    test('parses typed values', () {
+      expect(Score.tryParse('0.4'), const Score.hundredths(40));
+      expect(Score.tryParse('0.45'), const Score.hundredths(45));
+      expect(Score.tryParse('.4'), const Score.hundredths(40));
+      expect(Score.tryParse('1'), const Score.hundredths(100));
+      expect(Score.tryParse(' 0,3 '), const Score.hundredths(30));
+      expect(Score.tryParse('1.'), const Score.hundredths(100));
+    });
+
+    test('rejects invalid values', () {
+      for (final text in ['', '.', 'abc', '0.455', '-0.1', '1.2.3']) {
+        expect(Score.tryParse(text), isNull, reason: text);
+      }
+    });
   });
 }

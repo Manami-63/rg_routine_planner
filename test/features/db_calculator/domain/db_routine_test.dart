@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rg_routine_planner/core/scoring/score.dart';
+import 'package:rg_routine_planner/features/db_calculator/domain/db_element_options.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_routine.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/risk.dart';
 
@@ -31,6 +33,38 @@ void main() {
           .withElementRemovedAt(0);
 
       expect(routine.elements, [testBalance, testJump]);
+    });
+
+    test('keeps options with their element when removing', () {
+      const flat = DbElementOptions(flatFoot: true);
+      final routine = empty
+          .withElementAdded(testJump)
+          .withElementAdded(testBalance, flat)
+          .withElementRemovedAt(0);
+
+      expect(routine.elements, [testBalance]);
+      expect(routine.elementOptions, [flat]);
+    });
+
+    test('new elements get default options; options can be changed', () {
+      const manual = DbElementOptions(manualValue: Score.hundredths(50));
+      final routine = empty
+          .withElementAdded(testJump)
+          .withElementAdded(testBalance)
+          .withElementOptionsAt(1, manual);
+
+      expect(routine.elementOptions, [DbElementOptions.none, manual]);
+    });
+
+    test('options must match the elements', () {
+      expect(
+        () => DbRoutine(
+          rulesetId: 'test-v1',
+          elements: const [testJump],
+          elementOptions: const [],
+        ),
+        throwsArgumentError,
+      );
     });
 
     test('adds and removes risks by position', () {

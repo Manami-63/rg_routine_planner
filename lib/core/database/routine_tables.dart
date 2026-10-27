@@ -43,8 +43,22 @@ class RoutineBodyElements extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get routineId =>
       text().references(Routines, #id, onDelete: KeyAction.cascade)();
+
+  /// Catalogue id, or `custom` for an element the user entered.
   TextColumn get elementId => text()();
   IntColumn get position => integer()();
+
+  // How the element is performed. Added in v3.
+  BoolColumn get flatFoot => boolean().withDefault(const Constant(false))();
+  BoolColumn get slowTurn => boolean().withDefault(const Constant(false))();
+  IntColumn get extraRotations => integer().withDefault(const Constant(0))();
+
+  /// A value entered by the user, in hundredths. Null when not set.
+  IntColumn get manualValue => integer().nullable()();
+
+  // Name and `DbElementGroup.name` of a custom element. Null otherwise.
+  TextColumn get customName => text().nullable()();
+  TextColumn get customGroup => text().nullable()();
 }
 
 @DataClassName('RoutineRiskRow')

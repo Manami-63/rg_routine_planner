@@ -3,6 +3,7 @@ import 'package:rg_routine_planner/core/scoring/ruleset.dart';
 import 'package:rg_routine_planner/core/scoring/score.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_counting.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_element.dart';
+import 'package:rg_routine_planner/features/db_calculator/domain/db_element_options.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_routine.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_scoring_engine.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/risk.dart';
@@ -84,6 +85,90 @@ void main() {
             engine.calculate(routine, limits: const DbCountLimits(maxRisks: 0)),
         throwsArgumentError,
       );
+    });
+
+    group('element options', () {
+      Score valueOf(DbElement element, DbElementOptions options) =>
+          engine.elementValue(element, options);
+
+      test('flat foot reduces a balance by 0.10', () {
+        expect(
+          valueOf(testBalance, const DbElementOptions(flatFoot: true)),
+          const Score.hundredths(10),
+        );
+      });
+
+      test('slow turn adds 0.20 on relevé and 0.10 on flat foot', () {
+        expect(
+          valueOf(testBalance, const DbElementOptions(slowTurn: true)),
+          const Score.hundredths(40),
+        );
+        expect(
+          valueOf(
+            testBalance,
+            const DbElementOptions(flatFoot: true, slowTurn: true),
+          ),
+          const Score.hundredths(20),
+        );
+      });
+
+      test('additional rotations add the element value each', () {
+        expect(
+          valueOf(testRotation, const DbElementOptions(extraRotations: 2)),
+          const Score.hundredths(30),
+        );
+      });
+
+      test('options the element does not allow are ignored', () {
+        expect(
+          valueOf(
+            testJump,
+            const DbElementOptions(
+              flatFoot: true,
+              slowTurn: true,
+              extraRotations: 3,
+            ),
+          ),
+          testJump.value,
+        );
+      });
+
+      test('a manual value replaces everything', () {
+        expect(
+          valueOf(
+            testBalance,
+            const DbElementOptions(
+              flatFoot: true,
+              manualValue: Score.hundredths(70),
+            ),
+          ),
+          const Score.hundredths(70),
+        );
+      });
+
+      test('counting uses the adjusted values', () {
+        // Balance 0.20 + slow turn = 0.40 beats the jump (0.30).
+        final routine = DbRoutine(
+          rulesetId: 'test-v1',
+          elements: const [testJump, testBalance],
+          elementOptions: const [
+            DbElementOptions.none,
+            DbElementOptions(slowTurn: true),
+          ],
+        );
+
+        final result = engine.calculate(
+          routine,
+          limits: const DbCountLimits(maxElements: 1),
+        );
+
+        expect(result.elementValues, const [
+          Score.hundredths(30),
+          Score.hundredths(40),
+        ]);
+        expect(result.counting.countedElements, {1});
+        expect(result.bodySubtotal, const Score.hundredths(40));
+      });
     });
 
     test('reports the ruleset used', () {

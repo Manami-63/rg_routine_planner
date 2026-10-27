@@ -44,7 +44,8 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
 - Routines store catalogue ids, never values; values resolve from the
   current catalogue on load. Missing ids, or a different ruleset, load as
   `.unknown(...)` placeholders that keep the id so re-saving loses nothing.
-- `DbRoutine` is only the DB content (ruleset, elements, risks). Name,
+- `DbRoutine` is only the DB content (ruleset, elements with matching
+  `elementOptions`, risks). Name,
   apparatus and level live on `Routine`. Edit via
   `routineControllerProvider`; DB helpers are the `DbRoutineEditing`
   extension in `db_routine_providers.dart`.
@@ -73,6 +74,13 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
 - `ProvisionalDbScoringEngine` only sums the values of what counts. Real
   rules go in a new `DbScoringEngine` implementation, swapped in via
   `dbScoringEngineProvider`.
+- Each DB in a routine has `DbElementOptions`: flat foot, slow turn,
+  additional rotations (only where the `DbElement` flags allow them) and a
+  `manualValue` that replaces the calculated value.
+  `DbScoringEngine.elementValue` applies them (CoP #10.3, #10.9,
+  #12.2.5-12.2.8); counting ranks by these values. Users can add custom
+  elements (`DbElement.custom`, id `custom`) with a manual value, e.g. a DB
+  newly approved by FIG.
 - Risks (R) are part of DB but modelled separately (`domain/risk.dart`): a
   rotation option (2 rotations 0.20, + 0.10 each) plus criteria, valued
   additively by `DbScoringEngine.riskValue` (CoP #4.2, #4.8-4.10). Each

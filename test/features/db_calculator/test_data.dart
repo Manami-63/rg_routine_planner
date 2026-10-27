@@ -28,6 +28,8 @@ const testBalance = DbElement(
   group: DbElementGroup.balance,
   value: Score.hundredths(20),
   rulesetId: 'test-v1',
+  canBeOnFlatFoot: true,
+  canSlowTurn: true,
 );
 
 const testRotation = DbElement(
@@ -36,6 +38,7 @@ const testRotation = DbElement(
   group: DbElementGroup.rotation,
   value: Score.hundredths(10),
   rulesetId: 'test-v1',
+  extraRotationValue: Score.hundredths(10),
 );
 
 const testTwoRotations = RiskRotationOption(

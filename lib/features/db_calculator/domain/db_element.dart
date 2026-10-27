@@ -11,14 +11,38 @@ class DbElement {
     required this.group,
     required this.value,
     required this.rulesetId,
-  });
+    this.canBeOnFlatFoot = false,
+    this.canSlowTurn = false,
+    this.extraRotationValue,
+  }) : isCustom = false;
+
+  /// An element the user entered themselves, e.g. a DB newly approved by
+  /// FIG that is not in the catalogue yet. Its value is the routine's
+  /// manual value (see `DbElementOptions.manualValue`).
+  const DbElement.custom({
+    required this.name,
+    required this.group,
+    required this.rulesetId,
+  }) : id = customId,
+       value = Score.zero,
+       canBeOnFlatFoot = false,
+       canSlowTurn = false,
+       extraRotationValue = null,
+       isCustom = true;
+
+  /// The id stored for every custom element.
+  static const customId = 'custom';
 
   /// A saved reference whose id is not in the current catalogue (e.g. the
   /// catalogue changed). Keeps the id so re-saving does not lose it.
   const DbElement.unknown({required this.id, required this.rulesetId})
     : name = 'Unknown element',
       group = DbElementGroup.unknown,
-      value = Score.zero;
+      value = Score.zero,
+      canBeOnFlatFoot = false,
+      canSlowTurn = false,
+      extraRotationValue = null,
+      isCustom = false;
 
   final String id;
   final String name;
@@ -27,6 +51,19 @@ class DbElement {
 
   /// The [RulesetVersion.id] this element's value belongs to.
   final String rulesetId;
+
+  /// A balance on the foot whose listed value is on relevé, so it can also
+  /// be performed on flat foot.
+  final bool canBeOnFlatFoot;
+
+  /// A balance that may be performed with a "slow turn".
+  final bool canSlowTurn;
+
+  /// The value of each rotation above the base, for rotation DB that can
+  /// have additional rotations. `null` when not possible.
+  final Score? extraRotationValue;
+
+  final bool isCustom;
 
   bool get isUnknown => group == DbElementGroup.unknown;
 
@@ -37,10 +74,24 @@ class DbElement {
       other.name == name &&
       other.group == group &&
       other.value == value &&
-      other.rulesetId == rulesetId;
+      other.rulesetId == rulesetId &&
+      other.canBeOnFlatFoot == canBeOnFlatFoot &&
+      other.canSlowTurn == canSlowTurn &&
+      other.extraRotationValue == extraRotationValue &&
+      other.isCustom == isCustom;
 
   @override
-  int get hashCode => Object.hash(id, name, group, value, rulesetId);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    group,
+    value,
+    rulesetId,
+    canBeOnFlatFoot,
+    canSlowTurn,
+    extraRotationValue,
+    isCustom,
+  );
 
   @override
   String toString() => 'DbElement($id, ${value.format()})';

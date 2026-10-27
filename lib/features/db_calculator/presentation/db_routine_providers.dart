@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/scoring/apparatus.dart';
 import '../../routines/presentation/routine_controller.dart';
 import '../domain/db_counting.dart';
+import '../../../core/scoring/score.dart';
 import '../domain/db_element.dart';
+import '../domain/db_element_options.dart';
 import '../domain/db_routine.dart';
 import '../domain/db_scoring_engine.dart';
 import '../domain/risk.dart';
@@ -48,6 +50,14 @@ extension DbRoutineEditing on RoutineController {
 
   void removeElementAt(int index) =>
       updateDb((db) => db.withElementRemovedAt(index));
+
+  void setElementOptionsAt(int index, DbElementOptions options) =>
+      updateDb((db) => db.withElementOptionsAt(index, options));
+
+  /// Adds an element the user entered, valued at [value].
+  void addCustomElement(DbElement element, Score value) => updateDb(
+    (db) => db.withElementAdded(element, DbElementOptions(manualValue: value)),
+  );
 
   void addRisk(RiskElement risk) => updateDb((db) => db.withRiskAdded(risk));
 

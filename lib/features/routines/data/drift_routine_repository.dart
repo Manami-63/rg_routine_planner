@@ -3,7 +3,9 @@ import 'package:drift/drift.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/scoring/apparatus.dart';
 import '../../db_calculator/data/db_catalogue_repository.dart';
+import '../../../core/scoring/score.dart';
 import '../../db_calculator/domain/db_element.dart';
+import '../../db_calculator/domain/db_element_options.dart';
 import '../../db_calculator/domain/db_routine.dart';
 import '../../db_calculator/domain/risk.dart';
 import '../../levels/domain/competition_level.dart';
@@ -115,8 +117,27 @@ class DriftRoutineRepository implements RoutineRepository {
         rulesetId: row.rulesetId,
         elements: [
           for (final e in elementRows)
-            elements[e.elementId] ??
-                DbElement.unknown(id: e.elementId, rulesetId: row.rulesetId),
+            if (e.elementId == DbElement.customId)
+              DbElement.custom(
+                name: e.customName ?? '',
+                group: _parseGroup(e.customGroup),
+                rulesetId: row.rulesetId,
+              )
+            else
+              elements[e.elementId] ??
+                  DbElement.unknown(id: e.elementId, rulesetId: row.rulesetId),
+        ],
+        elementOptions: [
+          for (final e in elementRows)
+            DbElementOptions(
+              flatFoot: e.flatFoot,
+              slowTurn: e.slowTurn,
+              extraRotations: e.extraRotations,
+              manualValue: switch (e.manualValue) {
+                final hundredths? => Score.hundredths(hundredths),
+                null => null,
+              },
+            ),
         ],
         risks: [
           for (final r in riskRows)
@@ -162,6 +183,9 @@ class DriftRoutineRepository implements RoutineRepository {
     // A preset that no longer exists: keep the id so it is not lost.
     return CompetitionLevel(id: levelId, label: 'Unknown level', isFig: false);
   }
+
+  static DbElementGroup _parseGroup(String? name) => DbElementGroup.values
+      .firstWhere((g) => g.name == name, orElse: () => DbElementGroup.unknown);
 
   static Set<DbElementGroup> _parseGroups(String? text) => {
     for (final name in (text ?? '').split(','))
@@ -218,11 +242,7 @@ class DriftRoutineRepository implements RoutineRepository {
     await _db.batch((batch) {
       batch.insertAll(_db.routineBodyElements, [
         for (final (i, element) in routine.db.elements.indexed)
-          RoutineBodyElementsCompanion.insert(
-            routineId: routine.id,
-            elementId: element.id,
-            position: i,
-          ),
+          _elementRow(routine.id, i, element, routine.db.elementOptions[i]),
       ]);
     });
 
@@ -248,6 +268,23 @@ class DriftRoutineRepository implements RoutineRepository {
       });
     }
   });
+
+  static RoutineBodyElementsCompanion _elementRow(
+    String routineId,
+    int position,
+    DbElement element,
+    DbElementOptions options,
+  ) => RoutineBodyElementsCompanion.insert(
+    routineId: routineId,
+    elementId: element.id,
+    position: position,
+    flatFoot: Value(options.flatFoot),
+    slowTurn: Value(options.slowTurn),
+    extraRotations: Value(options.extraRotations),
+    manualValue: Value(options.manualValue?.hundredths),
+    customName: Value(element.isCustom ? element.name : null),
+    customGroup: Value(element.isCustom ? element.group.name : null),
+  );
 
   @override
   Future<void> deleteRoutine(String id) =>

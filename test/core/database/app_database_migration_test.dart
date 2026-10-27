@@ -2,6 +2,7 @@ import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rg_routine_planner/core/database/app_database.dart';
+import 'package:rg_routine_planner/features/db_calculator/domain/db_element_options.dart';
 import 'package:rg_routine_planner/features/levels/data/fig_levels.dart';
 import 'package:rg_routine_planner/features/levels/domain/competition_level.dart';
 import 'package:rg_routine_planner/features/levels/domain/count_limit.dart';
@@ -34,7 +35,7 @@ const _v1Schema = [
 ];
 
 void main() {
-  test('v1 routines load after upgrading to v2', () async {
+  test('v1 routines load after upgrading to the latest schema', () async {
     driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
     final db = AppDatabase(
       NativeDatabase.memory(
@@ -57,6 +58,7 @@ void main() {
     expect(routine!.name, 'Old hoop');
     expect(routine.apparatus, isNull);
     expect(routine.db.elements, [testJump]);
+    expect(routine.db.elementOptions, [DbElementOptions.none]);
     expect(
       routine.level,
       const CompetitionLevel.custom(
