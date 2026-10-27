@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rg_routine_planner/core/scoring/ruleset.dart';
 import 'package:rg_routine_planner/core/scoring/score.dart';
+import 'package:rg_routine_planner/features/db_calculator/domain/db_counting.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_element.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_routine.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_scoring_engine.dart';
@@ -31,6 +32,58 @@ void main() {
       expect(result.subtotal, const Score.hundredths(90));
       expect(result.subtotal.format(), '0.90');
       expect(result.elementCount, 4);
+    });
+
+    test('only counted elements and risks add to the subtotal', () {
+      final routine = DbRoutine(
+        rulesetId: 'test-v1',
+        elements: const [testRotation, testJump, testBalance],
+        risks: [
+          RiskElement(rotation: testTwoRotations),
+          RiskElement(rotation: testThreeRotations),
+        ],
+      );
+
+      final result = engine.calculate(
+        routine,
+        limits: const DbCountLimits(maxElements: 2, maxRisks: 1),
+      );
+
+      // Highest two DB: 0.30 + 0.20. First risk: 0.20.
+      expect(result.bodySubtotal, const Score.hundredths(50));
+      expect(result.riskSubtotal, const Score.hundredths(20));
+      expect(result.elementCount, 3);
+      expect(result.countedElementCount, 2);
+      expect(result.riskCount, 2);
+      expect(result.countedRiskCount, 1);
+      expect(result.countLimitsApplied, isTrue);
+    });
+
+    test('without limits nothing is left out', () {
+      final result = engine.calculate(routineOf([testJump, testBalance]));
+
+      expect(result.countedElementCount, 2);
+      expect(result.countLimitsApplied, isFalse);
+    });
+
+    test('rejects an uncounted risk from another ruleset', () {
+      const otherRotation = RiskRotationOption(
+        id: 'rot-x',
+        label: 'Other',
+        rotations: 2,
+        value: Score.hundredths(10),
+        rulesetId: 'other',
+      );
+      final routine = DbRoutine(
+        rulesetId: 'test-v1',
+        risks: [RiskElement(rotation: otherRotation)],
+      );
+
+      expect(
+        () =>
+            engine.calculate(routine, limits: const DbCountLimits(maxRisks: 0)),
+        throwsArgumentError,
+      );
     });
 
     test('reports the ruleset used', () {

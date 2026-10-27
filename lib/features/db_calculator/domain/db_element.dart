@@ -1,18 +1,7 @@
+import '../../../core/scoring/db_element_group.dart';
 import '../../../core/scoring/score.dart';
 
-/// The body-difficulty families an element can belong to.
-enum DbElementGroup {
-  jump('Jumps / Leaps'),
-  balance('Balances'),
-  rotation('Rotations'),
-
-  /// Only for [DbElement.unknown]; never used in a catalogue.
-  unknown('Unknown');
-
-  const DbElementGroup(this.label);
-
-  final String label;
-}
+export '../../../core/scoring/db_element_group.dart';
 
 /// A single Difficulty of Body element in a catalogue.
 class DbElement {

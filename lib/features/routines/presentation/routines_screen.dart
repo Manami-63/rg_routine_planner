@@ -95,6 +95,7 @@ class _RoutineTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final details = [
+      ?summary.apparatus?.label,
       summary.level?.label ?? 'No level',
       '${summary.elementCount} DB',
       '${summary.riskCount} ${summary.riskCount == 1 ? 'risk' : 'risks'}',

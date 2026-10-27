@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../../../core/database/app_database.dart';
+import '../../../core/scoring/apparatus.dart';
 import '../../db_calculator/data/db_catalogue_repository.dart';
 import '../../db_calculator/domain/db_element.dart';
 import '../../db_calculator/domain/db_routine.dart';
@@ -56,6 +57,7 @@ class DriftRoutineRepository implements RoutineRepository {
   }) => RoutineSummary(
     id: row.id,
     name: row.name,
+    apparatus: Apparatus.fromName(row.apparatus),
     level: _resolveLevel(row),
     elementCount: elementCount,
     riskCount: riskCount,
@@ -105,6 +107,7 @@ class DriftRoutineRepository implements RoutineRepository {
     return Routine(
       id: row.id,
       name: row.name,
+      apparatus: Apparatus.fromName(row.apparatus),
       level: _resolveLevel(row),
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
@@ -147,7 +150,9 @@ class DriftRoutineRepository implements RoutineRepository {
       return CompetitionLevel.custom(
         LevelRequirements(
           db: CountLimit(min: row.customDbMin, max: row.customDbMax),
+          risk: CountLimit(min: row.customRiskMin, max: row.customRiskMax),
           da: CountLimit(min: row.customDaMin, max: row.customDaMax),
+          requiredBodyGroups: _parseGroups(row.customRequiredBodyGroups),
         ),
       );
     }
@@ -157,6 +162,19 @@ class DriftRoutineRepository implements RoutineRepository {
     // A preset that no longer exists: keep the id so it is not lost.
     return CompetitionLevel(id: levelId, label: 'Unknown level', isFig: false);
   }
+
+  static Set<DbElementGroup> _parseGroups(String? text) => {
+    for (final name in (text ?? '').split(','))
+      for (final group in DbElementGroup.requirable)
+        if (group.name == name) group,
+  };
+
+  static String? _formatGroups(Set<DbElementGroup> groups) => groups.isEmpty
+      ? null
+      : [
+          for (final group in DbElementGroup.requirable)
+            if (groups.contains(group)) group.name,
+        ].join(',');
 
   @override
   Future<void> saveRoutine(Routine routine) => _db.transaction(() async {
@@ -170,11 +188,17 @@ class DriftRoutineRepository implements RoutineRepository {
             id: routine.id,
             name: routine.name,
             rulesetId: routine.rulesetId,
+            apparatus: Value(routine.apparatus?.name),
             levelId: Value(level?.id),
             customDbMin: Value(custom?.db.min),
             customDbMax: Value(custom?.db.max),
+            customRiskMin: Value(custom?.risk.min),
+            customRiskMax: Value(custom?.risk.max),
             customDaMin: Value(custom?.da.min),
             customDaMax: Value(custom?.da.max),
+            customRequiredBodyGroups: Value(
+              custom == null ? null : _formatGroups(custom.requiredBodyGroups),
+            ),
             // Always stored in UTC (shown in local time by the UI), so data
             // from devices in different time zones sorts and syncs cleanly.
             createdAt: routine.createdAt.toUtc(),

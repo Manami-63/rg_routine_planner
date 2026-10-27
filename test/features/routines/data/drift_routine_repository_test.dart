@@ -2,6 +2,7 @@ import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rg_routine_planner/core/database/app_database.dart';
+import 'package:rg_routine_planner/core/scoring/apparatus.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_element.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_routine.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/risk.dart';
@@ -34,6 +35,7 @@ void main() {
   Routine routine({
     String id = 'r1',
     String name = 'Hoop',
+    Apparatus? apparatus,
     CompetitionLevel? level,
     List<DbElement> elements = const [],
     List<RiskElement> risks = const [],
@@ -41,6 +43,7 @@ void main() {
   }) => Routine(
     id: id,
     name: name,
+    apparatus: apparatus,
     level: level,
     db: DbRoutine(rulesetId: 'test-v1', elements: elements, risks: risks),
     createdAt: created,
@@ -53,6 +56,7 @@ void main() {
 
   test('round-trips a full routine', () async {
     final original = routine(
+      apparatus: Apparatus.ribbon,
       level: figSenior,
       elements: const [testJump, testBalance, testJump],
       risks: [
@@ -94,7 +98,12 @@ void main() {
 
   test('round-trips a custom level', () async {
     const custom = CompetitionLevel.custom(
-      LevelRequirements(db: CountLimit(min: 1, max: 4), da: CountLimit(max: 3)),
+      LevelRequirements(
+        db: CountLimit(min: 1, max: 4),
+        risk: CountLimit(min: 1, max: 2),
+        da: CountLimit(max: 3),
+        requiredBodyGroups: {DbElementGroup.rotation, DbElementGroup.jump},
+      ),
     );
 
     await repository.saveRoutine(routine(level: custom));
@@ -208,6 +217,13 @@ void main() {
     expect(loaded.rulesetId, 'old-ruleset');
   });
 
+  test('unknown apparatus loads as none', () async {
+    await repository.saveRoutine(routine());
+    await db.customStatement("UPDATE routines SET apparatus = 'trampoline'");
+
+    expect((await repository.fetchRoutine('r1'))!.apparatus, isNull);
+  });
+
   test('unknown preset level id is kept', () async {
     await repository.saveRoutine(
       routine(
@@ -232,6 +248,7 @@ void main() {
       routine(
         id: 'newer',
         name: 'Newer',
+        apparatus: Apparatus.clubs,
         level: figJunior,
         elements: const [testJump, testBalance],
         risks: [RiskElement(rotation: testTwoRotations)],
@@ -245,7 +262,9 @@ void main() {
     expect(summaries.first.elementCount, 2);
     expect(summaries.first.riskCount, 1);
     expect(summaries.first.level, figJunior);
+    expect(summaries.first.apparatus, Apparatus.clubs);
     expect(summaries.last.elementCount, 1);
+    expect(summaries.last.apparatus, isNull);
     expect(summaries.last.level, isNull);
   });
 

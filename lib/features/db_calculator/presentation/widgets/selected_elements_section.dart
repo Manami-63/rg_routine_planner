@@ -17,6 +17,9 @@ class SelectedElementsSection extends ConsumerWidget {
     final elements = ref.watch(
       dbRoutineProvider(routineId).select((routine) => routine.elements),
     );
+    final counting = ref.watch(
+      dbScoreResultProvider(routineId).select((result) => result.counting),
+    );
 
     if (elements.isEmpty) {
       return const SliverToBoxAdapter(
@@ -32,11 +35,18 @@ class SelectedElementsSection extends ConsumerWidget {
       itemCount: elements.length,
       itemBuilder: (context, index) {
         final element = elements[index];
+        final counted = counting.isElementCounted(index);
         return ListTile(
           key: ValueKey('selected-$index'),
+          // Greyed out (but still removable) when it does not count.
+          enabled: counted,
           leading: CircleAvatar(child: Text('${index + 1}')),
           title: Text(element.name),
-          subtitle: Text(element.group.label),
+          subtitle: Text(
+            counted
+                ? element.group.label
+                : '${element.group.label} · Not counted',
+          ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [

@@ -36,15 +36,18 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
 - `lib/core/database/`: Drift `AppDatabase` and tables. Table/column names
   mirror a future MySQL schema. Dates are stored as ISO-8601 text
   (`build.yaml`), always in UTC (the repository converts); the UI shows
-  local time. Bump `schemaVersion` and add a migration on any change.
-- `features/routines/`: `Routine` (id = UUID, name, level, timestamps, `db`
-  content) and `RoutineRepository` (`DriftRoutineRepository`).
+  local time. Bump `schemaVersion` and add a migration on any change, with a
+  test in `test/core/database/` that upgrades a hand-written old schema.
+- `features/routines/`: `Routine` (id = UUID, name, apparatus, level,
+  timestamps, `db` content) and `RoutineRepository`
+  (`DriftRoutineRepository`).
 - Routines store catalogue ids, never values; values resolve from the
   current catalogue on load. Missing ids, or a different ruleset, load as
   `.unknown(...)` placeholders that keep the id so re-saving loses nothing.
-- `DbRoutine` is only the DB content (ruleset, elements, risks). Name and
-  level live on `Routine`. Edit via `routineControllerProvider`; DB helpers
-  are the `DbRoutineEditing` extension in `db_routine_providers.dart`.
+- `DbRoutine` is only the DB content (ruleset, elements, risks). Name,
+  apparatus and level live on `Routine`. Edit via
+  `routineControllerProvider`; DB helpers are the `DbRoutineEditing`
+  extension in `db_routine_providers.dart`.
 - Flow: Home -> `/routines` (My routines) -> `/routines/:id/db` (calculator).
 - `routineControllerProvider(id)` is an auto-disposing async family: loads
   by id, saves every change (name debounced 500 ms), flushes a pending save
@@ -64,8 +67,9 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
 - Scores use `Score` (integer hundredths), never `double`.
 - Every element, routine and engine carries a ruleset id; engines reject
   mismatched data.
-- `ProvisionalDbScoringEngine` only sums values. Real rules go in a new
-  `DbScoringEngine` implementation, swapped in via `dbScoringEngineProvider`.
+- `ProvisionalDbScoringEngine` only sums the values of what counts. Real
+  rules go in a new `DbScoringEngine` implementation, swapped in via
+  `dbScoringEngineProvider`.
 - Risks (R) are part of DB but modelled separately (`domain/risk.dart`): a
   rotation option plus criteria, valued by `DbScoringEngine.riskValue`. The
   additive risk valuation is a placeholder assumption, not a verified rule.
@@ -73,11 +77,24 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
 - `DbCatalogueRepository` serves both element and risk catalogues so they
   always share one ruleset.
 - Keep DB and DA logic in separate features.
-- Competition levels live in `features/levels/` (shared by DB and DA). FIG
-  Senior/Junior presets have `requirements: null` until official counts are
-  verified from the Code of Points; never fill them with guessed numbers.
-  "Non-FIG level" lets users enter their own DB/DA min/max (e.g. national
-  levels). Count checks are advisory warnings, never blocking.
+- Competition levels live in `features/levels/` (shared by DB and DA).
+  `LevelRequirements` has DB, risk (R) and DA `CountLimit`s plus
+  `requiredBodyGroups`. FIG Senior/Junior presets (`fig_levels.dart`) set
+  maximums only, from the FIG CoP 2025-2028 (confirmed by the user; also in
+  the Gymnastics Victoria 2026 handbook p.60). Never add other official
+  numbers without a source. "Non-FIG level" lets users enter their own
+  maximums, optional minimums and required body groups.
+- A maximum means "only this many count", never "cannot add more":
+  highest-valued N DB, first N risks, first N DA (`DifficultyCategory`).
+  `DbCounting` picks what counts; the engine sums only that. Uncounted items
+  stay in the routine, greyed out as "Not counted".
+- Count checks and missing body groups are advisory notices, never
+  blocking. Penalties are never calculated or deducted (too many causes the
+  app cannot see); the UI only warns "you may get a penalty".
+- A routine has an optional `Apparatus` (Freehand, Rope, Hoop, Ball, Clubs,
+  Ribbon). Levels can have separate `freehandRequirements`
+  (`requirementsFor(apparatus)`). Freehand has no risks or DA: risks cannot
+  be built and existing ones are not counted.
 - The UI must label totals as provisional while any notice is present.
 
 ## Tests

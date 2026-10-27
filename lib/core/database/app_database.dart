@@ -19,10 +19,19 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'rg_routine_planner'));
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        // Apparatus, custom risk limits and required body groups.
+        await m.addColumn(routines, routines.apparatus);
+        await m.addColumn(routines, routines.customRiskMin);
+        await m.addColumn(routines, routines.customRiskMax);
+        await m.addColumn(routines, routines.customRequiredBodyGroups);
+      }
+    },
     // SQLite does not enforce foreign keys (and cascades) unless asked.
     beforeOpen: (details) => customStatement('PRAGMA foreign_keys = ON'),
   );

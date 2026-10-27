@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/scoring/apparatus.dart';
+import '../../../core/scoring/db_element_group.dart';
 import '../domain/competition_level.dart';
 import '../domain/count_limit.dart';
+import '../domain/difficulty_category.dart';
 import 'level_providers.dart';
 import 'limit_text.dart';
 
@@ -14,10 +17,14 @@ class LevelSelector extends StatelessWidget {
   const LevelSelector({
     super.key,
     required this.level,
+    required this.apparatus,
     required this.onChanged,
   });
 
   final CompetitionLevel? level;
+
+  /// The routine's apparatus; freehand routines show freehand limits.
+  final Apparatus? apparatus;
   final ValueChanged<CompetitionLevel?> onChanged;
 
   @override
@@ -30,13 +37,14 @@ class LevelSelector extends StatelessWidget {
         title: Text(level?.label ?? 'Select a level'),
         subtitle: Text(
           level == null
-              ? 'Used to check the number of DB and DA'
-              : describeRequirements(level.requirements),
+              ? 'Used to decide which difficulties count'
+              : describeLevel(level, apparatus),
         ),
         trailing: const Icon(Icons.chevron_right),
         onTap: () => LevelPickerSheet.show(
           context,
           initialLevel: level,
+          apparatus: apparatus,
           onApply: onChanged,
         ),
       ),
@@ -52,10 +60,12 @@ class LevelPickerSheet extends ConsumerStatefulWidget {
   const LevelPickerSheet({
     super.key,
     required this.initialLevel,
+    required this.apparatus,
     required this.onApply,
   });
 
   final CompetitionLevel? initialLevel;
+  final Apparatus? apparatus;
 
   /// Called with the chosen level, or `null` when the level is removed.
   final ValueChanged<CompetitionLevel?> onApply;
@@ -63,14 +73,18 @@ class LevelPickerSheet extends ConsumerStatefulWidget {
   static Future<void> show(
     BuildContext context, {
     required CompetitionLevel? initialLevel,
+    required Apparatus? apparatus,
     required ValueChanged<CompetitionLevel?> onApply,
   }) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (context) =>
-          LevelPickerSheet(initialLevel: initialLevel, onApply: onApply),
+      builder: (context) => LevelPickerSheet(
+        initialLevel: initialLevel,
+        apparatus: apparatus,
+        onApply: onApply,
+      ),
     );
   }
 
@@ -84,6 +98,12 @@ class _LevelPickerSheetState extends ConsumerState<LevelPickerSheet> {
   late LevelRequirements _custom = (_current?.isCustom ?? false)
       ? _current!.requirements!
       : const LevelRequirements();
+
+  /// Minimums are rarely needed, so they stay hidden until asked for.
+  late bool _showMinimums =
+      _custom.db.min != null ||
+      _custom.risk.min != null ||
+      _custom.da.min != null;
 
   bool get _isCustom => _selectedId == CompetitionLevel.customId;
 
@@ -129,7 +149,7 @@ class _LevelPickerSheetState extends ConsumerState<LevelPickerSheet> {
                     RadioListTile<String>(
                       value: level.id,
                       title: Text(level.label),
-                      subtitle: Text(describeRequirements(level.requirements)),
+                      subtitle: Text(describeLevel(level, widget.apparatus)),
                     ),
                   const RadioListTile<String>(
                     value: CompetitionLevel.customId,
@@ -144,22 +164,22 @@ class _LevelPickerSheetState extends ConsumerState<LevelPickerSheet> {
             if (_isCustom)
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-                child: Column(
-                  children: [
-                    _LimitEditor(
-                      category: 'DB',
-                      limit: _custom.db,
-                      onChanged: (db) =>
-                          setState(() => _custom = _custom.copyWith(db: db)),
-                    ),
-                    const SizedBox(height: 12),
-                    _LimitEditor(
-                      category: 'DA',
-                      limit: _custom.da,
-                      onChanged: (da) =>
-                          setState(() => _custom = _custom.copyWith(da: da)),
-                    ),
-                  ],
+                child: _CustomRequirementsEditor(
+                  requirements: _custom,
+                  categories: categoriesFor(widget.apparatus),
+                  showMinimums: _showMinimums,
+                  onChanged: (custom) => setState(() => _custom = custom),
+                  onShowMinimumsChanged: (show) => setState(() {
+                    _showMinimums = show;
+                    // Hidden minimums would still be checked, so clear them.
+                    if (!show) {
+                      _custom = _custom.copyWith(
+                        db: _custom.db.withMin(null),
+                        risk: _custom.risk.withMin(null),
+                        da: _custom.da.withMin(null),
+                      );
+                    }
+                  }),
                 ),
               ),
             const SizedBox(height: 16),
@@ -187,45 +207,158 @@ class _LevelPickerSheetState extends ConsumerState<LevelPickerSheet> {
   }
 }
 
-/// Minimum and maximum steppers for one category (DB or DA).
-class _LimitEditor extends StatelessWidget {
-  const _LimitEditor({
-    required this.category,
-    required this.limit,
+/// The numbers and required body groups of a non-FIG level.
+class _CustomRequirementsEditor extends StatelessWidget {
+  const _CustomRequirementsEditor({
+    required this.requirements,
+    required this.categories,
+    required this.showMinimums,
     required this.onChanged,
+    required this.onShowMinimumsChanged,
   });
 
-  final String category;
-  final CountLimit limit;
-  final ValueChanged<CountLimit> onChanged;
+  final LevelRequirements requirements;
+
+  /// The categories that apply to the routine (freehand has only DB).
+  final List<DifficultyCategory> categories;
+  final bool showMinimums;
+  final ValueChanged<LevelRequirements> onChanged;
+  final ValueChanged<bool> onShowMinimumsChanged;
+
+  LevelRequirements _withLimit(DifficultyCategory category, CountLimit limit) =>
+      switch (category) {
+        DifficultyCategory.db => requirements.copyWith(db: limit),
+        DifficultyCategory.risk => requirements.copyWith(risk: limit),
+        DifficultyCategory.da => requirements.copyWith(da: limit),
+      };
+
+  void _toggleGroup(DbElementGroup group, bool selected) => onChanged(
+    requirements.copyWith(
+      requiredBodyGroups: selected
+          ? {...requirements.requiredBodyGroups, group}
+          : ({...requirements.requiredBodyGroups}..remove(group)),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(12),
-      ),
+    final colors = theme.colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: colors.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Counted per routine', style: theme.textTheme.titleSmall),
+              Text(
+                'More can be performed; the extra ones do not count.',
+                style: theme.textTheme.bodySmall,
+              ),
+              for (final category in categories)
+                _LimitRow(
+                  category: category,
+                  limit: category.limitOf(requirements),
+                  showMinimum: showMinimums,
+                  onChanged: (limit) => onChanged(_withLimit(category, limit)),
+                ),
+              TextButton.icon(
+                onPressed: () => onShowMinimumsChanged(!showMinimums),
+                icon: Icon(showMinimums ? Icons.remove : Icons.add),
+                label: Text(showMinimums ? 'Remove minimums' : 'Add minimums'),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text('Required body groups', style: theme.textTheme.titleSmall),
+        const SizedBox(height: 4),
+        Wrap(
+          spacing: 8,
+          children: [
+            for (final group in DbElementGroup.requirable)
+              FilterChip(
+                label: Text(group.label),
+                selected: requirements.requiredBodyGroups.contains(group),
+                onSelected: (selected) => _toggleGroup(group, selected),
+              ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.info_outline, size: 18, color: colors.onSurfaceVariant),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                "Levels can have other requirements too (e.g. split line, "
+                "value limits). Check your level's rules.",
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// Maximum (and optionally minimum) steppers for one category.
+class _LimitRow extends StatelessWidget {
+  const _LimitRow({
+    required this.category,
+    required this.limit,
+    required this.showMinimum,
+    required this.onChanged,
+  });
+
+  final DifficultyCategory category;
+  final CountLimit limit;
+  final bool showMinimum;
+  final ValueChanged<CountLimit> onChanged;
+
+  String get _title => switch (category) {
+    DifficultyCategory.db => 'Body difficulties (DB)',
+    DifficultyCategory.risk => 'Risks (R)',
+    DifficultyCategory.da => 'Apparatus difficulties (DA)',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final max = limit.max;
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Number of $category', style: theme.textTheme.titleSmall),
+          Text(_title, style: theme.textTheme.bodyMedium),
+          if (max != null)
+            Text(category.countedRule(max), style: theme.textTheme.bodySmall),
           Row(
             children: [
-              Expanded(
-                child: _OptionalCountStepper(
-                  label: 'Minimum',
-                  semanticName: '$category minimum',
-                  value: limit.min,
-                  onChanged: (min) => onChanged(limit.withMin(min)),
+              if (showMinimum)
+                Expanded(
+                  child: _OptionalCountStepper(
+                    label: 'Minimum',
+                    semanticName: '${category.noun} minimum',
+                    value: limit.min,
+                    onChanged: (min) => onChanged(limit.withMin(min)),
+                  ),
                 ),
-              ),
               Expanded(
                 child: _OptionalCountStepper(
                   label: 'Maximum',
-                  semanticName: '$category maximum',
+                  semanticName: '${category.noun} maximum',
                   value: limit.max,
                   onChanged: (max) => onChanged(limit.withMax(max)),
                 ),

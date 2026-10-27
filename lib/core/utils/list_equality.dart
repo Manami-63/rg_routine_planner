@@ -10,3 +10,7 @@ bool listEqual<T>(List<T> a, List<T> b) {
   }
   return true;
 }
+
+/// Set equality, for `==` on immutable models.
+bool setEqual<T>(Set<T> a, Set<T> b) =>
+    identical(a, b) || (a.length == b.length && a.containsAll(b));

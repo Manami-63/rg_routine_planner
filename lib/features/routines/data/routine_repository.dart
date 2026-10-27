@@ -1,3 +1,4 @@
+import '../../../core/scoring/apparatus.dart';
 import '../../levels/domain/competition_level.dart';
 import '../domain/routine.dart';
 
@@ -6,6 +7,7 @@ class RoutineSummary {
   const RoutineSummary({
     required this.id,
     required this.name,
+    required this.apparatus,
     required this.level,
     required this.elementCount,
     required this.riskCount,
@@ -14,6 +16,7 @@ class RoutineSummary {
 
   final String id;
   final String name;
+  final Apparatus? apparatus;
   final CompetitionLevel? level;
   final int elementCount;
   final int riskCount;
