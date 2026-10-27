@@ -45,7 +45,112 @@ DbElement _element(
       ? null
       : Score.hundredths(extraRotation),
   canBeInSeries: series,
+  family: _familyOf(code),
 );
+
+/// "23 · Switch split leap, straight legs" for code 1.2305: the table row
+/// is the code without its group prefix and its last two digits.
+String _familyOf(String code) {
+  final digits = code.substring(2);
+  final row = int.parse(digits.substring(0, digits.length - 2));
+  final title = switch (code[0]) {
+    '1' => _jumpRows[row],
+    '2' => _balanceRows[row],
+    _ => _rotationRows[row],
+  };
+  return '$row · $title';
+}
+
+// Table row titles, shortened from the "Types of ..." column.
+const _jumpRows = [
+  '', // Rows start at 1.
+  'Tuck jump, 360° turn',
+  'Cat leap',
+  'Vertical jump, straight legs, with turn',
+  'Vertical jump, passé, with turn',
+  'Vertical jump, free leg forward, with turn',
+  'Vertical jump, free leg side, with turn',
+  'Vertical jump, free leg backward, with turn',
+  'Vertical jump, attitude, with turn',
+  'Cabriole forward',
+  'Cabriole to the side',
+  'Cabriole backward',
+  'Scissors leap forward',
+  'Scissors leap backward',
+  'Pike jump',
+  'Cossack jump, leg forward horizontal',
+  'Cossack jump, leg forward high, with help',
+  'Cossack jump, leg forward high, without help',
+  'Cossack jump, leg side high, with help (Zhukova)',
+  'Cossack jump, leg side high, without help',
+  'Ring jump (Kabaeva)',
+  'Split leap (also ring/back bend, Zaripova)',
+  '2 or 3 consecutive split leaps',
+  'Switch split leap, straight legs',
+  'Switch split leap, bent leg',
+  'Side split leap',
+  'Switch side split leap',
+  'Stag leap',
+  'Stag leap with turn (Bessonova)',
+  'Switch stag leap',
+  'Fouetté leap',
+  'Fouetté with cabriole, stag or ring',
+  'Entrelacé',
+  'Turning stag leap',
+  'Turning stag leap with switch',
+  'Turning split leap (Agiurgiuculese)',
+  'Turning split leap with switch',
+  'Butterfly jump',
+];
+
+const _balanceRows = [
+  '',
+  'Passé forward or side',
+  'Free leg forward',
+  'Front split',
+  'Front split, trunk backward at the horizontal',
+  'Front split, trunk backward below horizontal',
+  'Free leg to the side',
+  'Side split',
+  'Side split, trunk to the side',
+  'Arabesque',
+  'Back split with help, foot above head',
+  'Back split, trunk forward, ring without help',
+  'Attitude, ring',
+  'Cossack, free leg horizontal',
+  'Cossack, foot higher than head',
+  'Lying, Kabaeva on the chest',
+  'Passing from lying to the chest',
+  'Dynamic balance, kneeling to standing',
+  'Fouetté balance',
+  'Utyascheva',
+];
+
+const _rotationRows = [
+  '',
+  'Passé',
+  'Spiral turn (Tonneau)',
+  'Free leg forward',
+  'Front split',
+  'Elkatib',
+  'Free leg to the side',
+  'Side split',
+  'Side split, trunk to the side (Raffaeli)',
+  'Arabesque',
+  'Back split with help, foot above head',
+  'Back split, trunk forward (Sakura)',
+  'Attitude, ring without help',
+  'Ring with help, leg on the shoulder',
+  'Front split, trunk backward (Kabaeva, Kramarenko)',
+  'Cossack',
+  'Fouetté',
+  'Illusion backward',
+  'Ralenkova: on the back',
+  'On the stomach, legs to ring',
+  'Ashram, Kanaeva',
+  'Rotation in split, trunk forward',
+  'Rotation in split, trunk backward',
+];
 
 /// Take-off from 2 feet only: cannot be performed in series.
 const _twoFootJumps = {'1.101', '1.301', '1.303'};

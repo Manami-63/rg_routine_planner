@@ -30,7 +30,7 @@ class SelectedElementsSection extends ConsumerWidget {
         child: MessageView(
           icon: Icons.playlist_add,
           title: 'No elements yet',
-          message: 'Add elements from the catalogue below.',
+          message: 'Tap "Add element" to choose from the catalogue.',
         ),
       );
     }

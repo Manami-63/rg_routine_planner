@@ -21,6 +21,7 @@ const testJump = DbElement(
   value: Score.hundredths(30),
   rulesetId: 'test-v1',
   canBeInSeries: true,
+  family: '1 · Test jumps',
 );
 
 const testBalance = DbElement(
@@ -31,6 +32,7 @@ const testBalance = DbElement(
   rulesetId: 'test-v1',
   canBeOnFlatFoot: true,
   canSlowTurn: true,
+  family: '1 · Test balances',
 );
 
 const testRotation = DbElement(
@@ -40,6 +42,7 @@ const testRotation = DbElement(
   value: Score.hundredths(10),
   rulesetId: 'test-v1',
   extraRotationValue: Score.hundredths(10),
+  family: '1 · Test rotations',
 );
 
 const testTwoRotations = RiskRotationOption(

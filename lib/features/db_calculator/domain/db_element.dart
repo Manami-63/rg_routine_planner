@@ -15,6 +15,7 @@ class DbElement {
     this.canSlowTurn = false,
     this.extraRotationValue,
     this.canBeInSeries = false,
+    this.family,
   }) : isCustom = false;
 
   /// An element the user entered themselves, e.g. a DB newly approved by
@@ -31,6 +32,7 @@ class DbElement {
        extraRotationValue = null,
        // The user decides; balances never form series (#10.9.6).
        canBeInSeries = group != DbElementGroup.balance,
+       family = null,
        isCustom = true;
 
   /// The id stored for every custom element.
@@ -46,6 +48,7 @@ class DbElement {
       canSlowTurn = false,
       extraRotationValue = null,
       canBeInSeries = false,
+      family = null,
       isCustom = false;
 
   final String id;
@@ -71,6 +74,11 @@ class DbElement {
   /// identical elements, each counting as 1 DB (#2.4.3, #8.10, #12.8).
   final bool canBeInSeries;
 
+  /// The catalogue row this element belongs to (e.g. a table row of the
+  /// Code of Points), used to group elements when choosing them. `null`
+  /// when ungrouped.
+  final String? family;
+
   final bool isCustom;
 
   bool get isUnknown => group == DbElementGroup.unknown;
@@ -87,6 +95,7 @@ class DbElement {
       other.canSlowTurn == canSlowTurn &&
       other.extraRotationValue == extraRotationValue &&
       other.canBeInSeries == canBeInSeries &&
+      other.family == family &&
       other.isCustom == isCustom;
 
   @override
@@ -100,6 +109,7 @@ class DbElement {
     canSlowTurn,
     extraRotationValue,
     canBeInSeries,
+    family,
     isCustom,
   );
 

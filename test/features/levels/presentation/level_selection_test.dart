@@ -40,8 +40,7 @@ void main() {
       routineControllerProvider(testRoutineId).notifier,
     );
     if (index == -1) {
-      await tester.tap(find.byTooltip('Add Test Jump'));
-      await tester.pump();
+      await addFromCatalogue(tester, 'Test Jump');
       if (times > 1) {
         controller.setElementOptionsAt(
           db.elements.length,
@@ -66,8 +65,7 @@ void main() {
   }
 
   Future<void> addBalance(WidgetTester tester) async {
-    await tester.tap(find.byTooltip('Add Test Balance'));
-    await tester.pump();
+    await addFromCatalogue(tester, 'Test Balance');
   }
 
   Future<void> selectCustomLevel(

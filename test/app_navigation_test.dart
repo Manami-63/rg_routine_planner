@@ -5,6 +5,7 @@ import 'package:rg_routine_planner/app/app.dart';
 import 'package:rg_routine_planner/features/db_calculator/presentation/db_calculator_providers.dart';
 import 'package:rg_routine_planner/features/routines/presentation/routine_providers.dart';
 
+import 'features/db_calculator/pump_db_calculator.dart';
 import 'features/db_calculator/test_data.dart';
 import 'features/routines/fake_routine_repository.dart';
 
@@ -44,8 +45,7 @@ void main() {
     expect(routines.routines, hasLength(1));
 
     await tester.enterText(find.byType(TextField), 'Ball final');
-    await tester.tap(find.byTooltip('Add Test Jump'));
-    await tester.pumpAndSettle();
+    await addFromCatalogue(tester, 'Test Jump');
 
     // Leaving straight away still saves the (debounced) name.
     await tester.tap(find.byTooltip('Back'));

@@ -20,8 +20,7 @@ void main() {
       .data!;
 
   Future<void> add(WidgetTester tester, String name) async {
-    await tester.tap(find.byTooltip('Add $name'));
-    await tester.pump();
+    await addFromCatalogue(tester, name);
   }
 
   Future<void> openAdjust(WidgetTester tester, int index) async {
@@ -118,6 +117,7 @@ void main() {
   testWidgets('an element not in the list can be added', (tester) async {
     final routines = await pumpDbCalculator(tester);
 
+    await openElementPicker(tester);
     await tester.tap(find.text('Add an element not in the list'));
     await tester.pumpAndSettle();
     final addButton = find.widgetWithText(FilledButton, 'Add element');
@@ -128,6 +128,9 @@ void main() {
     await tester.enterText(find.widgetWithText(TextField, 'Value'), '0.6');
     await tester.pump();
     await tester.tap(addButton);
+    await tester.pumpAndSettle();
+    // The picker stays open for more elements.
+    await tester.tap(find.text('Done'));
     await tester.pumpAndSettle();
 
     expect(find.text('New pivot'), findsOneWidget);

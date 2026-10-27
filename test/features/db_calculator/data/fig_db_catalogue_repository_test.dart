@@ -71,6 +71,16 @@ void main() {
       }
     });
 
+    test('every element belongs to a numbered table row', () {
+      for (final element in elements) {
+        final code = element.id.substring('fig-'.length);
+        final digits = code.substring(2);
+        final row = digits.substring(0, digits.length - 2);
+        expect(element.family, startsWith('$row · '), reason: code);
+        expect(element.family!.length, greaterThan('$row · '.length));
+      }
+    });
+
     test('options only on the kinds of element that allow them', () {
       for (final element in elements) {
         if (element.canBeOnFlatFoot || element.canSlowTurn) {

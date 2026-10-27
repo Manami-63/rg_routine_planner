@@ -6,7 +6,6 @@ import '../../../routines/presentation/routine_controller.dart';
 import '../db_calculator_providers.dart';
 import '../db_routine_providers.dart';
 import 'async_sliver.dart';
-import 'risk_builder_sheet.dart';
 import 'value_badge.dart';
 
 /// Sliver listing the risks in the routine, or an empty state.
@@ -65,9 +64,11 @@ class SelectedRisksSection extends ConsumerWidget {
   }
 }
 
-/// Sliver with the "Build a risk" action, once the risk catalogue loads.
-class BuildRiskAction extends ConsumerWidget {
-  const BuildRiskAction({super.key, required this.routineId});
+/// Sliver showing the risk options' loading, error and empty states. Once
+/// they have loaded it shows nothing: risks are built from the floating
+/// "Build a risk" button.
+class RiskOptionsStatus extends ConsumerWidget {
+  const RiskOptionsStatus({super.key, required this.routineId});
 
   final String routineId;
 
@@ -78,31 +79,15 @@ class BuildRiskAction extends ConsumerWidget {
       loadingLabel: 'Loading risk options',
       errorTitle: 'Could not load risk options',
       onRetry: () => ref.invalidate(riskCatalogueProvider),
-      data: (catalogue) {
-        if (catalogue.isEmpty) {
-          return const SliverToBoxAdapter(
-            child: MessageView(
-              icon: Icons.inventory_2_outlined,
-              title: 'No risk options',
-              message: 'No risk options are available for this ruleset.',
-            ),
-          );
-        }
-        return SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: FilledButton.tonalIcon(
-              onPressed: () => RiskBuilderSheet.show(
-                context,
-                routineId: routineId,
-                catalogue: catalogue,
+      data: (catalogue) => catalogue.isEmpty
+          ? const SliverToBoxAdapter(
+              child: MessageView(
+                icon: Icons.inventory_2_outlined,
+                title: 'No risk options',
+                message: 'No risk options are available for this ruleset.',
               ),
-              icon: const Icon(Icons.add),
-              label: const Text('Build a risk'),
-            ),
-          ),
-        );
-      },
+            )
+          : const SliverToBoxAdapter(child: SizedBox.shrink()),
     );
   }
 }
