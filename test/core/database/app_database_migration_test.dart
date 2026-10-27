@@ -34,18 +34,22 @@ const _v1Schema = [
   'PRAGMA user_version = 1',
 ];
 
+AppDatabase _v1Database(List<String> extra) {
+  driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
+  return AppDatabase(
+    NativeDatabase.memory(
+      setup: (raw) {
+        for (final statement in [..._v1Schema, ...extra]) {
+          raw.execute(statement);
+        }
+      },
+    ),
+  );
+}
+
 void main() {
   test('v1 routines load after upgrading to the latest schema', () async {
-    driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
-    final db = AppDatabase(
-      NativeDatabase.memory(
-        setup: (raw) {
-          for (final statement in _v1Schema) {
-            raw.execute(statement);
-          }
-        },
-      ),
-    );
+    final db = _v1Database(const []);
     addTearDown(db.close);
     final repository = DriftRoutineRepository(
       db,
@@ -68,5 +72,42 @@ void main() {
         ),
       ),
     );
+  });
+
+  test('routines planned with sample data are deleted on upgrade', () async {
+    final db = _v1Database([
+      "INSERT INTO routines VALUES ('s1', 'Sample', 'sample-v0', NULL, NULL, "
+          "NULL, NULL, NULL, '2026-10-26T09:00:00.000Z', "
+          "'2026-10-26T09:00:00.000Z')",
+      "INSERT INTO routine_body_elements (routine_id, element_id, position) "
+          "VALUES ('s1', 'sample-jump-a', 0)",
+      "INSERT INTO routine_risks (routine_id, rotation_option_id, position) "
+          "VALUES ('s1', 'sample-rotations-2', 0)",
+      "INSERT INTO routine_risk_criteria (routine_risk_id, criterion_id, "
+          "position) VALUES (1, 'sample-criterion-a', 0)",
+    ]);
+    addTearDown(db.close);
+    final repository = DriftRoutineRepository(
+      db,
+      catalogue: FakeDbCatalogueRepository(),
+      presetLevels: figLevels,
+    );
+
+    expect(await repository.fetchRoutine('s1'), isNull);
+    // The other routine is kept, and no orphan rows remain.
+    expect(await repository.fetchRoutine('r1'), isNotNull);
+    for (final table in [
+      'routine_body_elements',
+      'routine_risks',
+      'routine_risk_criteria',
+    ]) {
+      final rows = await db
+          .customSelect(
+            "SELECT COUNT(*) AS n FROM $table WHERE "
+            "${table == 'routine_risk_criteria' ? 'routine_risk_id = 1' : "routine_id = 's1'"}",
+          )
+          .getSingle();
+      expect(rows.read<int>('n'), 0, reason: table);
+    }
   });
 }

@@ -11,7 +11,7 @@ class RulesetVersion {
     this.detail,
   });
 
-  /// Stable identifier, suitable for persistence (e.g. `sample-v0`).
+  /// Stable identifier, suitable for persistence (e.g. `fig-2025`).
   final String id;
 
   /// Human-readable name shown in the UI.

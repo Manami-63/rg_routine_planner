@@ -19,7 +19,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'rg_routine_planner'));
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -40,6 +40,26 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(elements, elements.manualValue);
         await m.addColumn(elements, elements.customName);
         await m.addColumn(elements, elements.customGroup);
+      }
+      if (from < 4) {
+        // The sample catalogue was replaced by the FIG one; routines planned
+        // with sample data are deleted (agreed: they were only test data).
+        // Children are deleted explicitly because foreign keys (and their
+        // cascades) are only switched on in `beforeOpen`.
+        const sample = "SELECT id FROM routines WHERE ruleset_id = 'sample-v0'";
+        await customStatement(
+          'DELETE FROM routine_risk_criteria WHERE routine_risk_id IN '
+          '(SELECT id FROM routine_risks WHERE routine_id IN ($sample))',
+        );
+        await customStatement(
+          'DELETE FROM routine_risks WHERE routine_id IN ($sample)',
+        );
+        await customStatement(
+          'DELETE FROM routine_body_elements WHERE routine_id IN ($sample)',
+        );
+        await customStatement(
+          "DELETE FROM routines WHERE ruleset_id = 'sample-v0'",
+        );
       }
     },
     // SQLite does not enforce foreign keys (and cascades) unless asked.

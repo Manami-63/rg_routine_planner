@@ -3,7 +3,7 @@ import 'package:drift/drift.dart';
 // Routine storage. Table and column names (snake_case in SQL) mirror what a
 // future Laravel/MySQL schema would use, so syncing later is a 1:1 mapping.
 //
-// Rows store catalogue ids (e.g. `sample-jump-a`), never values: values are
+// Rows store catalogue ids (e.g. `fig-2.203`), never values: values are
 // looked up from the current catalogue when a routine is loaded.
 
 @DataClassName('RoutineRow')

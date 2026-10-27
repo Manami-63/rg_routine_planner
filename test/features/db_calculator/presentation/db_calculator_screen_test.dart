@@ -19,7 +19,7 @@ void main() {
   String subtotalText(WidgetTester tester) =>
       tester.widget<Text>(find.byKey(const ValueKey('db-subtotal'))).data!;
 
-  testWidgets('shows sample-data warning and empty routine initially', (
+  testWidgets('shows unofficial-data warning and empty routine initially', (
     tester,
   ) async {
     await pumpScreen(tester);

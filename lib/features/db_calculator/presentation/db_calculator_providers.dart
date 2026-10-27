@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/db_catalogue_repository.dart';
-import '../data/sample_db_catalogue_repository.dart';
+import '../data/fig_db_catalogue_repository.dart';
 import '../domain/db_element.dart';
 import '../domain/db_scoring_engine.dart';
 import '../domain/risk.dart';
@@ -11,7 +11,7 @@ import '../domain/risk.dart';
 // `dbCatalogueRepositoryProvider` to supply their own data.
 
 final dbCatalogueRepositoryProvider = Provider<DbCatalogueRepository>(
-  (ref) => const SampleDbCatalogueRepository(),
+  (ref) => const FigDbCatalogueRepository(),
 );
 
 /// The engine always matches the repository's ruleset, so catalogue values

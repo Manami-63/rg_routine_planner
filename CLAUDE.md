@@ -62,12 +62,11 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
 ## Scoring rules (important)
 
 - Never invent official FIG element values or competition rules.
-- DB element data is **sample data** (`sample-v0`, `isOfficial: false`),
-  with names starting `Sample `, in `data/sample_*.dart`. Risk data
-  (`data/fig_risks.dart`) is transcribed from the FIG CoP 2025-2028 with
-  section references, but served under `sample-v0` until a FIG DB catalogue
-  exists (then both move to one FIG ruleset). Keep data separate from
-  engines.
+- Catalogue data is the FIG Code of Points 2025-2028 (`fig-2025`,
+  `data/fig_*.dart`), transcribed from the CoP tables with page/section
+  references. It stays `isOfficial: false` until the user has checked the
+  transcription. Element names are "code · short description" (the CoP has
+  no names). Keep data separate from engines.
 - Scores use `Score` (integer hundredths), never `double`.
 - Every element, routine and engine carries a ruleset id; engines reject
   mismatched data.
@@ -115,4 +114,4 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
 ## Tests
 
 Mirror `lib/` under `test/`. Widget tests use fixtures from
-`test/features/db_calculator/test_data.dart` rather than sample data.
+`test/features/db_calculator/test_data.dart` rather than catalogue data.

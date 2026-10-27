@@ -5,8 +5,8 @@ import 'package:rg_routine_planner/features/db_calculator/data/db_catalogue_repo
 import 'package:rg_routine_planner/features/db_calculator/domain/db_element.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/risk.dart';
 
-// Test fixtures, independent of the app's sample catalogue so tests do not
-// break when sample values change.
+// Test fixtures, independent of the app's FIG catalogue so tests do not
+// break when catalogue data changes.
 
 const testRuleset = RulesetVersion(
   id: 'test-v1',
