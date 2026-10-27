@@ -77,7 +77,7 @@ class CountLimitNotice extends StatelessWidget {
   }
 }
 
-/// Alerts about body groups the level requires but the counted DB lack.
+/// Alerts about body groups the level requires but the routine lacks.
 ///
 /// Only a reminder: penalties have many causes the app cannot see, so it
 /// never deducts anything from the score.
@@ -85,21 +85,22 @@ class BodyGroupsNotice extends StatelessWidget {
   const BodyGroupsNotice({
     super.key,
     required this.requirements,
-    required this.countedGroups,
+    required this.presentGroups,
   });
 
   /// The level's requirements for the routine, or `null` if none.
   final LevelRequirements? requirements;
 
-  /// Groups present among the counted DB.
-  final Set<DbElementGroup> countedGroups;
+  /// Groups present among all the routine's DB, counted or not: the rules
+  /// only require each group to be performed.
+  final Set<DbElementGroup> presentGroups;
 
   @override
   Widget build(BuildContext context) {
     final missing = [
       for (final group in DbElementGroup.requirable)
         if ((requirements?.requiredBodyGroups.contains(group) ?? false) &&
-            !countedGroups.contains(group))
+            !presentGroups.contains(group))
           group,
     ];
     if (missing.isEmpty) return const SizedBox.shrink();
@@ -109,15 +110,21 @@ class BodyGroupsNotice extends StatelessWidget {
     final list = names.length == 1
         ? names.single
         : '${names.sublist(0, names.length - 1).join(', ')} or ${names.last}';
+    final penalty = requirements?.missingBodyGroupPenalty;
+    final consequence = switch ((penalty, missing.length)) {
+      (null, _) => 'you may get a penalty',
+      (final penalty?, 1) => 'you may get a ${penalty.format()} penalty',
+      (final penalty?, _) =>
+        'you may get a ${penalty.format()} penalty for each',
+    };
     return LevelNotice(
       key: const ValueKey('body-groups-notice'),
       icon: Icons.warning_amber_rounded,
       background: colors.errorContainer,
       foreground: colors.onErrorContainer,
       message:
-          'No counted $list. Your level requires '
-          '${missing.length == 1 ? 'one' : 'one of each'}: '
-          'you may get a penalty.',
+          'No $list in the routine. Your level requires '
+          '${missing.length == 1 ? 'one' : 'one of each'}: $consequence.',
     );
   }
 }

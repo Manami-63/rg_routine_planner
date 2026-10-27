@@ -1,5 +1,6 @@
 import '../../../core/scoring/apparatus.dart';
 import '../../../core/scoring/db_element_group.dart';
+import '../../../core/scoring/score.dart';
 import '../../../core/utils/list_equality.dart';
 import 'count_limit.dart';
 
@@ -14,15 +15,21 @@ class LevelRequirements {
     this.risk = CountLimit.none,
     this.da = CountLimit.none,
     this.requiredBodyGroups = const {},
+    this.missingBodyGroupPenalty,
   });
 
   final CountLimit db;
   final CountLimit risk;
   final CountLimit da;
 
-  /// Body groups the counted DB must include (e.g. one leap, one balance).
-  /// Missing ones only produce an advisory alert; no penalty is calculated.
+  /// Body groups the routine must include (e.g. one leap, one balance),
+  /// among all its DB, counted or not. Missing ones only produce an
+  /// advisory alert; no penalty is calculated.
   final Set<DbElementGroup> requiredBodyGroups;
+
+  /// The penalty for each missing body group, when the level's rules state
+  /// it (shown in the alert only). `null` when unknown.
+  final Score? missingBodyGroupPenalty;
 
   bool get isValid => db.isValid && risk.isValid && da.isValid;
 
@@ -36,6 +43,7 @@ class LevelRequirements {
     risk: risk ?? this.risk,
     da: da ?? this.da,
     requiredBodyGroups: requiredBodyGroups ?? this.requiredBodyGroups,
+    missingBodyGroupPenalty: missingBodyGroupPenalty,
   );
 
   @override
@@ -44,11 +52,17 @@ class LevelRequirements {
       other.db == db &&
       other.risk == risk &&
       other.da == da &&
-      setEqual(other.requiredBodyGroups, requiredBodyGroups);
+      setEqual(other.requiredBodyGroups, requiredBodyGroups) &&
+      other.missingBodyGroupPenalty == missingBodyGroupPenalty;
 
   @override
-  int get hashCode =>
-      Object.hash(db, risk, da, Object.hashAllUnordered(requiredBodyGroups));
+  int get hashCode => Object.hash(
+    db,
+    risk,
+    da,
+    Object.hashAllUnordered(requiredBodyGroups),
+    missingBodyGroupPenalty,
+  );
 
   @override
   String toString() =>

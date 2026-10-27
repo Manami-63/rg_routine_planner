@@ -88,6 +88,8 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   highest-valued N DB, first N risks, first N DA (`DifficultyCategory`).
   `DbCounting` picks what counts; the engine sums only that. Uncounted items
   stay in the routine, greyed out as "Not counted".
+- Body groups are required among all DB, counted or not (CoP #2.3.2);
+  FIG presets require all three, 0.30 per missing group.
 - Count checks and missing body groups are advisory notices, never
   blocking. Penalties are never calculated or deducted (too many causes the
   app cannot see); the UI only warns "you may get a penalty".

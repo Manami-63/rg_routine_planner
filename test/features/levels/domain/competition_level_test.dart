@@ -1,18 +1,27 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rg_routine_planner/core/scoring/apparatus.dart';
 import 'package:rg_routine_planner/core/scoring/db_element_group.dart';
+import 'package:rg_routine_planner/core/scoring/score.dart';
 import 'package:rg_routine_planner/features/levels/data/fig_levels.dart';
 import 'package:rg_routine_planner/features/levels/domain/competition_level.dart';
 import 'package:rg_routine_planner/features/levels/domain/count_limit.dart';
 
 void main() {
-  test('FIG levels set only maximums', () {
+  const allGroups = {
+    DbElementGroup.jump,
+    DbElementGroup.balance,
+    DbElementGroup.rotation,
+  };
+
+  test('FIG levels set only maximums and require every body group', () {
     expect(
       figJunior.requirements,
       const LevelRequirements(
         db: CountLimit(max: 6),
         risk: CountLimit(max: 3),
         da: CountLimit(max: 12),
+        requiredBodyGroups: allGroups,
+        missingBodyGroupPenalty: Score.hundredths(30),
       ),
     );
     expect(
@@ -21,6 +30,8 @@ void main() {
         db: CountLimit(max: 8),
         risk: CountLimit(max: 4),
         da: CountLimit(max: 15),
+        requiredBodyGroups: allGroups,
+        missingBodyGroupPenalty: Score.hundredths(30),
       ),
     );
   });
