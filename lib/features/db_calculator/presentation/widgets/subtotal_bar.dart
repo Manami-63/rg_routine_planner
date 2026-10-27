@@ -39,7 +39,9 @@ class SubtotalBar extends ConsumerWidget {
                     ),
                     Text(
                       'Body ${result.bodySubtotal.format()}'
-                      ' · Risks ${result.riskSubtotal.format()}',
+                      '${_countedOf(result.countedElementCount, result.elementCount)}'
+                      ' · Risks ${result.riskSubtotal.format()}'
+                      '${_countedOf(result.countedRiskCount, result.riskCount)}',
                       key: const ValueKey('db-breakdown'),
                       style: detailStyle,
                     ),
@@ -49,7 +51,9 @@ class SubtotalBar extends ConsumerWidget {
                         if (result.notices.contains(
                           DbScoreNotice.rulesNotValidated,
                         ))
-                          'No rule checks applied',
+                          result.countLimitsApplied
+                              ? 'Only count limits applied'
+                              : 'No rule checks applied',
                       ].join(' · '),
                       style: detailStyle,
                     ),
@@ -72,3 +76,7 @@ class SubtotalBar extends ConsumerWidget {
     );
   }
 }
+
+/// e.g. " (6 of 8)" when some are not counted, otherwise nothing.
+String _countedOf(int counted, int total) =>
+    counted == total ? '' : ' ($counted of $total)';

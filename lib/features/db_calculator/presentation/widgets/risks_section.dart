@@ -21,6 +21,9 @@ class SelectedRisksSection extends ConsumerWidget {
       dbRoutineProvider(routineId).select((routine) => routine.risks),
     );
     final engine = ref.watch(dbScoringEngineProvider);
+    final counting = ref.watch(
+      dbScoreResultProvider(routineId).select((result) => result.counting),
+    );
 
     if (risks.isEmpty) {
       return const SliverToBoxAdapter(
@@ -36,10 +39,13 @@ class SelectedRisksSection extends ConsumerWidget {
       itemCount: risks.length,
       itemBuilder: (context, index) {
         final risk = risks[index];
+        final counted = counting.isRiskCounted(index);
         return ListTile(
           key: ValueKey('risk-$index'),
+          enabled: counted,
           leading: CircleAvatar(child: Text('R${index + 1}')),
           title: Text(risk.description),
+          subtitle: counted ? null : const Text('Not counted'),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [

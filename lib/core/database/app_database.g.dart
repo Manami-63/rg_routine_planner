@@ -38,6 +38,17 @@ class $RoutinesTable extends Routines
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _apparatusMeta = const VerificationMeta(
+    'apparatus',
+  );
+  @override
+  late final GeneratedColumn<String> apparatus = GeneratedColumn<String>(
+    'apparatus',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _levelIdMeta = const VerificationMeta(
     'levelId',
   );
@@ -71,6 +82,28 @@ class $RoutinesTable extends Routines
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _customRiskMinMeta = const VerificationMeta(
+    'customRiskMin',
+  );
+  @override
+  late final GeneratedColumn<int> customRiskMin = GeneratedColumn<int>(
+    'custom_risk_min',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _customRiskMaxMeta = const VerificationMeta(
+    'customRiskMax',
+  );
+  @override
+  late final GeneratedColumn<int> customRiskMax = GeneratedColumn<int>(
+    'custom_risk_max',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _customDaMinMeta = const VerificationMeta(
     'customDaMin',
   );
@@ -93,6 +126,17 @@ class $RoutinesTable extends Routines
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _customRequiredBodyGroupsMeta =
+      const VerificationMeta('customRequiredBodyGroups');
+  @override
+  late final GeneratedColumn<String> customRequiredBodyGroups =
+      GeneratedColumn<String>(
+        'custom_required_body_groups',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -120,11 +164,15 @@ class $RoutinesTable extends Routines
     id,
     name,
     rulesetId,
+    apparatus,
     levelId,
     customDbMin,
     customDbMax,
+    customRiskMin,
+    customRiskMax,
     customDaMin,
     customDaMax,
+    customRequiredBodyGroups,
     createdAt,
     updatedAt,
   ];
@@ -161,6 +209,12 @@ class $RoutinesTable extends Routines
     } else if (isInserting) {
       context.missing(_rulesetIdMeta);
     }
+    if (data.containsKey('apparatus')) {
+      context.handle(
+        _apparatusMeta,
+        apparatus.isAcceptableOrUnknown(data['apparatus']!, _apparatusMeta),
+      );
+    }
     if (data.containsKey('level_id')) {
       context.handle(
         _levelIdMeta,
@@ -185,6 +239,24 @@ class $RoutinesTable extends Routines
         ),
       );
     }
+    if (data.containsKey('custom_risk_min')) {
+      context.handle(
+        _customRiskMinMeta,
+        customRiskMin.isAcceptableOrUnknown(
+          data['custom_risk_min']!,
+          _customRiskMinMeta,
+        ),
+      );
+    }
+    if (data.containsKey('custom_risk_max')) {
+      context.handle(
+        _customRiskMaxMeta,
+        customRiskMax.isAcceptableOrUnknown(
+          data['custom_risk_max']!,
+          _customRiskMaxMeta,
+        ),
+      );
+    }
     if (data.containsKey('custom_da_min')) {
       context.handle(
         _customDaMinMeta,
@@ -200,6 +272,15 @@ class $RoutinesTable extends Routines
         customDaMax.isAcceptableOrUnknown(
           data['custom_da_max']!,
           _customDaMaxMeta,
+        ),
+      );
+    }
+    if (data.containsKey('custom_required_body_groups')) {
+      context.handle(
+        _customRequiredBodyGroupsMeta,
+        customRequiredBodyGroups.isAcceptableOrUnknown(
+          data['custom_required_body_groups']!,
+          _customRequiredBodyGroupsMeta,
         ),
       );
     }
@@ -240,6 +321,10 @@ class $RoutinesTable extends Routines
         DriftSqlType.string,
         data['${effectivePrefix}ruleset_id'],
       )!,
+      apparatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}apparatus'],
+      ),
       levelId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}level_id'],
@@ -252,6 +337,14 @@ class $RoutinesTable extends Routines
         DriftSqlType.int,
         data['${effectivePrefix}custom_db_max'],
       ),
+      customRiskMin: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}custom_risk_min'],
+      ),
+      customRiskMax: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}custom_risk_max'],
+      ),
       customDaMin: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}custom_da_min'],
@@ -259,6 +352,10 @@ class $RoutinesTable extends Routines
       customDaMax: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}custom_da_max'],
+      ),
+      customRequiredBodyGroups: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}custom_required_body_groups'],
       ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
@@ -283,23 +380,36 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
   final String name;
   final String rulesetId;
 
+  /// `Apparatus.name` (e.g. `hoop`), or null if none chosen. Added in v2.
+  final String? apparatus;
+
   /// Preset level id (e.g. `fig-senior`), `custom`, or null for no level.
   final String? levelId;
   final int? customDbMin;
   final int? customDbMax;
+  final int? customRiskMin;
+  final int? customRiskMax;
   final int? customDaMin;
   final int? customDaMax;
+
+  /// Required body groups, as comma-separated `DbElementGroup.name`s (e.g.
+  /// `jump,balance`). Null or empty for none. Added in v2.
+  final String? customRequiredBodyGroups;
   final DateTime createdAt;
   final DateTime updatedAt;
   const RoutineRow({
     required this.id,
     required this.name,
     required this.rulesetId,
+    this.apparatus,
     this.levelId,
     this.customDbMin,
     this.customDbMax,
+    this.customRiskMin,
+    this.customRiskMax,
     this.customDaMin,
     this.customDaMax,
+    this.customRequiredBodyGroups,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -309,6 +419,9 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
     map['id'] = Variable<String>(id);
     map['name'] = Variable<String>(name);
     map['ruleset_id'] = Variable<String>(rulesetId);
+    if (!nullToAbsent || apparatus != null) {
+      map['apparatus'] = Variable<String>(apparatus);
+    }
     if (!nullToAbsent || levelId != null) {
       map['level_id'] = Variable<String>(levelId);
     }
@@ -318,11 +431,22 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
     if (!nullToAbsent || customDbMax != null) {
       map['custom_db_max'] = Variable<int>(customDbMax);
     }
+    if (!nullToAbsent || customRiskMin != null) {
+      map['custom_risk_min'] = Variable<int>(customRiskMin);
+    }
+    if (!nullToAbsent || customRiskMax != null) {
+      map['custom_risk_max'] = Variable<int>(customRiskMax);
+    }
     if (!nullToAbsent || customDaMin != null) {
       map['custom_da_min'] = Variable<int>(customDaMin);
     }
     if (!nullToAbsent || customDaMax != null) {
       map['custom_da_max'] = Variable<int>(customDaMax);
+    }
+    if (!nullToAbsent || customRequiredBodyGroups != null) {
+      map['custom_required_body_groups'] = Variable<String>(
+        customRequiredBodyGroups,
+      );
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -334,6 +458,9 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
       id: Value(id),
       name: Value(name),
       rulesetId: Value(rulesetId),
+      apparatus: apparatus == null && nullToAbsent
+          ? const Value.absent()
+          : Value(apparatus),
       levelId: levelId == null && nullToAbsent
           ? const Value.absent()
           : Value(levelId),
@@ -343,12 +470,21 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
       customDbMax: customDbMax == null && nullToAbsent
           ? const Value.absent()
           : Value(customDbMax),
+      customRiskMin: customRiskMin == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customRiskMin),
+      customRiskMax: customRiskMax == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customRiskMax),
       customDaMin: customDaMin == null && nullToAbsent
           ? const Value.absent()
           : Value(customDaMin),
       customDaMax: customDaMax == null && nullToAbsent
           ? const Value.absent()
           : Value(customDaMax),
+      customRequiredBodyGroups: customRequiredBodyGroups == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customRequiredBodyGroups),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -363,11 +499,17 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
       id: serializer.fromJson<String>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       rulesetId: serializer.fromJson<String>(json['rulesetId']),
+      apparatus: serializer.fromJson<String?>(json['apparatus']),
       levelId: serializer.fromJson<String?>(json['levelId']),
       customDbMin: serializer.fromJson<int?>(json['customDbMin']),
       customDbMax: serializer.fromJson<int?>(json['customDbMax']),
+      customRiskMin: serializer.fromJson<int?>(json['customRiskMin']),
+      customRiskMax: serializer.fromJson<int?>(json['customRiskMax']),
       customDaMin: serializer.fromJson<int?>(json['customDaMin']),
       customDaMax: serializer.fromJson<int?>(json['customDaMax']),
+      customRequiredBodyGroups: serializer.fromJson<String?>(
+        json['customRequiredBodyGroups'],
+      ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -379,11 +521,17 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
       'id': serializer.toJson<String>(id),
       'name': serializer.toJson<String>(name),
       'rulesetId': serializer.toJson<String>(rulesetId),
+      'apparatus': serializer.toJson<String?>(apparatus),
       'levelId': serializer.toJson<String?>(levelId),
       'customDbMin': serializer.toJson<int?>(customDbMin),
       'customDbMax': serializer.toJson<int?>(customDbMax),
+      'customRiskMin': serializer.toJson<int?>(customRiskMin),
+      'customRiskMax': serializer.toJson<int?>(customRiskMax),
       'customDaMin': serializer.toJson<int?>(customDaMin),
       'customDaMax': serializer.toJson<int?>(customDaMax),
+      'customRequiredBodyGroups': serializer.toJson<String?>(
+        customRequiredBodyGroups,
+      ),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -393,22 +541,36 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
     String? id,
     String? name,
     String? rulesetId,
+    Value<String?> apparatus = const Value.absent(),
     Value<String?> levelId = const Value.absent(),
     Value<int?> customDbMin = const Value.absent(),
     Value<int?> customDbMax = const Value.absent(),
+    Value<int?> customRiskMin = const Value.absent(),
+    Value<int?> customRiskMax = const Value.absent(),
     Value<int?> customDaMin = const Value.absent(),
     Value<int?> customDaMax = const Value.absent(),
+    Value<String?> customRequiredBodyGroups = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => RoutineRow(
     id: id ?? this.id,
     name: name ?? this.name,
     rulesetId: rulesetId ?? this.rulesetId,
+    apparatus: apparatus.present ? apparatus.value : this.apparatus,
     levelId: levelId.present ? levelId.value : this.levelId,
     customDbMin: customDbMin.present ? customDbMin.value : this.customDbMin,
     customDbMax: customDbMax.present ? customDbMax.value : this.customDbMax,
+    customRiskMin: customRiskMin.present
+        ? customRiskMin.value
+        : this.customRiskMin,
+    customRiskMax: customRiskMax.present
+        ? customRiskMax.value
+        : this.customRiskMax,
     customDaMin: customDaMin.present ? customDaMin.value : this.customDaMin,
     customDaMax: customDaMax.present ? customDaMax.value : this.customDaMax,
+    customRequiredBodyGroups: customRequiredBodyGroups.present
+        ? customRequiredBodyGroups.value
+        : this.customRequiredBodyGroups,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -417,6 +579,7 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
       rulesetId: data.rulesetId.present ? data.rulesetId.value : this.rulesetId,
+      apparatus: data.apparatus.present ? data.apparatus.value : this.apparatus,
       levelId: data.levelId.present ? data.levelId.value : this.levelId,
       customDbMin: data.customDbMin.present
           ? data.customDbMin.value
@@ -424,12 +587,21 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
       customDbMax: data.customDbMax.present
           ? data.customDbMax.value
           : this.customDbMax,
+      customRiskMin: data.customRiskMin.present
+          ? data.customRiskMin.value
+          : this.customRiskMin,
+      customRiskMax: data.customRiskMax.present
+          ? data.customRiskMax.value
+          : this.customRiskMax,
       customDaMin: data.customDaMin.present
           ? data.customDaMin.value
           : this.customDaMin,
       customDaMax: data.customDaMax.present
           ? data.customDaMax.value
           : this.customDaMax,
+      customRequiredBodyGroups: data.customRequiredBodyGroups.present
+          ? data.customRequiredBodyGroups.value
+          : this.customRequiredBodyGroups,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -441,11 +613,15 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('rulesetId: $rulesetId, ')
+          ..write('apparatus: $apparatus, ')
           ..write('levelId: $levelId, ')
           ..write('customDbMin: $customDbMin, ')
           ..write('customDbMax: $customDbMax, ')
+          ..write('customRiskMin: $customRiskMin, ')
+          ..write('customRiskMax: $customRiskMax, ')
           ..write('customDaMin: $customDaMin, ')
           ..write('customDaMax: $customDaMax, ')
+          ..write('customRequiredBodyGroups: $customRequiredBodyGroups, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -457,11 +633,15 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
     id,
     name,
     rulesetId,
+    apparatus,
     levelId,
     customDbMin,
     customDbMax,
+    customRiskMin,
+    customRiskMax,
     customDaMin,
     customDaMax,
+    customRequiredBodyGroups,
     createdAt,
     updatedAt,
   );
@@ -472,11 +652,15 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
           other.id == this.id &&
           other.name == this.name &&
           other.rulesetId == this.rulesetId &&
+          other.apparatus == this.apparatus &&
           other.levelId == this.levelId &&
           other.customDbMin == this.customDbMin &&
           other.customDbMax == this.customDbMax &&
+          other.customRiskMin == this.customRiskMin &&
+          other.customRiskMax == this.customRiskMax &&
           other.customDaMin == this.customDaMin &&
           other.customDaMax == this.customDaMax &&
+          other.customRequiredBodyGroups == this.customRequiredBodyGroups &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -485,11 +669,15 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
   final Value<String> id;
   final Value<String> name;
   final Value<String> rulesetId;
+  final Value<String?> apparatus;
   final Value<String?> levelId;
   final Value<int?> customDbMin;
   final Value<int?> customDbMax;
+  final Value<int?> customRiskMin;
+  final Value<int?> customRiskMax;
   final Value<int?> customDaMin;
   final Value<int?> customDaMax;
+  final Value<String?> customRequiredBodyGroups;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -497,11 +685,15 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.rulesetId = const Value.absent(),
+    this.apparatus = const Value.absent(),
     this.levelId = const Value.absent(),
     this.customDbMin = const Value.absent(),
     this.customDbMax = const Value.absent(),
+    this.customRiskMin = const Value.absent(),
+    this.customRiskMax = const Value.absent(),
     this.customDaMin = const Value.absent(),
     this.customDaMax = const Value.absent(),
+    this.customRequiredBodyGroups = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -510,11 +702,15 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
     required String id,
     required String name,
     required String rulesetId,
+    this.apparatus = const Value.absent(),
     this.levelId = const Value.absent(),
     this.customDbMin = const Value.absent(),
     this.customDbMax = const Value.absent(),
+    this.customRiskMin = const Value.absent(),
+    this.customRiskMax = const Value.absent(),
     this.customDaMin = const Value.absent(),
     this.customDaMax = const Value.absent(),
+    this.customRequiredBodyGroups = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -527,11 +723,15 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
     Expression<String>? id,
     Expression<String>? name,
     Expression<String>? rulesetId,
+    Expression<String>? apparatus,
     Expression<String>? levelId,
     Expression<int>? customDbMin,
     Expression<int>? customDbMax,
+    Expression<int>? customRiskMin,
+    Expression<int>? customRiskMax,
     Expression<int>? customDaMin,
     Expression<int>? customDaMax,
+    Expression<String>? customRequiredBodyGroups,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -540,11 +740,16 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (rulesetId != null) 'ruleset_id': rulesetId,
+      if (apparatus != null) 'apparatus': apparatus,
       if (levelId != null) 'level_id': levelId,
       if (customDbMin != null) 'custom_db_min': customDbMin,
       if (customDbMax != null) 'custom_db_max': customDbMax,
+      if (customRiskMin != null) 'custom_risk_min': customRiskMin,
+      if (customRiskMax != null) 'custom_risk_max': customRiskMax,
       if (customDaMin != null) 'custom_da_min': customDaMin,
       if (customDaMax != null) 'custom_da_max': customDaMax,
+      if (customRequiredBodyGroups != null)
+        'custom_required_body_groups': customRequiredBodyGroups,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -555,11 +760,15 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
     Value<String>? id,
     Value<String>? name,
     Value<String>? rulesetId,
+    Value<String?>? apparatus,
     Value<String?>? levelId,
     Value<int?>? customDbMin,
     Value<int?>? customDbMax,
+    Value<int?>? customRiskMin,
+    Value<int?>? customRiskMax,
     Value<int?>? customDaMin,
     Value<int?>? customDaMax,
+    Value<String?>? customRequiredBodyGroups,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -568,11 +777,16 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
       id: id ?? this.id,
       name: name ?? this.name,
       rulesetId: rulesetId ?? this.rulesetId,
+      apparatus: apparatus ?? this.apparatus,
       levelId: levelId ?? this.levelId,
       customDbMin: customDbMin ?? this.customDbMin,
       customDbMax: customDbMax ?? this.customDbMax,
+      customRiskMin: customRiskMin ?? this.customRiskMin,
+      customRiskMax: customRiskMax ?? this.customRiskMax,
       customDaMin: customDaMin ?? this.customDaMin,
       customDaMax: customDaMax ?? this.customDaMax,
+      customRequiredBodyGroups:
+          customRequiredBodyGroups ?? this.customRequiredBodyGroups,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -591,6 +805,9 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
     if (rulesetId.present) {
       map['ruleset_id'] = Variable<String>(rulesetId.value);
     }
+    if (apparatus.present) {
+      map['apparatus'] = Variable<String>(apparatus.value);
+    }
     if (levelId.present) {
       map['level_id'] = Variable<String>(levelId.value);
     }
@@ -600,11 +817,22 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
     if (customDbMax.present) {
       map['custom_db_max'] = Variable<int>(customDbMax.value);
     }
+    if (customRiskMin.present) {
+      map['custom_risk_min'] = Variable<int>(customRiskMin.value);
+    }
+    if (customRiskMax.present) {
+      map['custom_risk_max'] = Variable<int>(customRiskMax.value);
+    }
     if (customDaMin.present) {
       map['custom_da_min'] = Variable<int>(customDaMin.value);
     }
     if (customDaMax.present) {
       map['custom_da_max'] = Variable<int>(customDaMax.value);
+    }
+    if (customRequiredBodyGroups.present) {
+      map['custom_required_body_groups'] = Variable<String>(
+        customRequiredBodyGroups.value,
+      );
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -624,11 +852,15 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
           ..write('id: $id, ')
           ..write('name: $name, ')
           ..write('rulesetId: $rulesetId, ')
+          ..write('apparatus: $apparatus, ')
           ..write('levelId: $levelId, ')
           ..write('customDbMin: $customDbMin, ')
           ..write('customDbMax: $customDbMax, ')
+          ..write('customRiskMin: $customRiskMin, ')
+          ..write('customRiskMax: $customRiskMax, ')
           ..write('customDaMin: $customDaMin, ')
           ..write('customDaMax: $customDaMax, ')
+          ..write('customRequiredBodyGroups: $customRequiredBodyGroups, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -692,8 +924,94 @@ class $RoutineBodyElementsTable extends RoutineBodyElements
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _flatFootMeta = const VerificationMeta(
+    'flatFoot',
+  );
   @override
-  List<GeneratedColumn> get $columns => [id, routineId, elementId, position];
+  late final GeneratedColumn<bool> flatFoot = GeneratedColumn<bool>(
+    'flat_foot',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("flat_foot" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _slowTurnMeta = const VerificationMeta(
+    'slowTurn',
+  );
+  @override
+  late final GeneratedColumn<bool> slowTurn = GeneratedColumn<bool>(
+    'slow_turn',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("slow_turn" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _extraRotationsMeta = const VerificationMeta(
+    'extraRotations',
+  );
+  @override
+  late final GeneratedColumn<int> extraRotations = GeneratedColumn<int>(
+    'extra_rotations',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _manualValueMeta = const VerificationMeta(
+    'manualValue',
+  );
+  @override
+  late final GeneratedColumn<int> manualValue = GeneratedColumn<int>(
+    'manual_value',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _customNameMeta = const VerificationMeta(
+    'customName',
+  );
+  @override
+  late final GeneratedColumn<String> customName = GeneratedColumn<String>(
+    'custom_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _customGroupMeta = const VerificationMeta(
+    'customGroup',
+  );
+  @override
+  late final GeneratedColumn<String> customGroup = GeneratedColumn<String>(
+    'custom_group',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    routineId,
+    elementId,
+    position,
+    flatFoot,
+    slowTurn,
+    extraRotations,
+    manualValue,
+    customName,
+    customGroup,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -733,6 +1051,51 @@ class $RoutineBodyElementsTable extends RoutineBodyElements
     } else if (isInserting) {
       context.missing(_positionMeta);
     }
+    if (data.containsKey('flat_foot')) {
+      context.handle(
+        _flatFootMeta,
+        flatFoot.isAcceptableOrUnknown(data['flat_foot']!, _flatFootMeta),
+      );
+    }
+    if (data.containsKey('slow_turn')) {
+      context.handle(
+        _slowTurnMeta,
+        slowTurn.isAcceptableOrUnknown(data['slow_turn']!, _slowTurnMeta),
+      );
+    }
+    if (data.containsKey('extra_rotations')) {
+      context.handle(
+        _extraRotationsMeta,
+        extraRotations.isAcceptableOrUnknown(
+          data['extra_rotations']!,
+          _extraRotationsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('manual_value')) {
+      context.handle(
+        _manualValueMeta,
+        manualValue.isAcceptableOrUnknown(
+          data['manual_value']!,
+          _manualValueMeta,
+        ),
+      );
+    }
+    if (data.containsKey('custom_name')) {
+      context.handle(
+        _customNameMeta,
+        customName.isAcceptableOrUnknown(data['custom_name']!, _customNameMeta),
+      );
+    }
+    if (data.containsKey('custom_group')) {
+      context.handle(
+        _customGroupMeta,
+        customGroup.isAcceptableOrUnknown(
+          data['custom_group']!,
+          _customGroupMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -758,6 +1121,30 @@ class $RoutineBodyElementsTable extends RoutineBodyElements
         DriftSqlType.int,
         data['${effectivePrefix}position'],
       )!,
+      flatFoot: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}flat_foot'],
+      )!,
+      slowTurn: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}slow_turn'],
+      )!,
+      extraRotations: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}extra_rotations'],
+      )!,
+      manualValue: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}manual_value'],
+      ),
+      customName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}custom_name'],
+      ),
+      customGroup: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}custom_group'],
+      ),
     );
   }
 
@@ -771,13 +1158,29 @@ class RoutineBodyElementRow extends DataClass
     implements Insertable<RoutineBodyElementRow> {
   final int id;
   final String routineId;
+
+  /// Catalogue id, or `custom` for an element the user entered.
   final String elementId;
   final int position;
+  final bool flatFoot;
+  final bool slowTurn;
+  final int extraRotations;
+
+  /// A value entered by the user, in hundredths. Null when not set.
+  final int? manualValue;
+  final String? customName;
+  final String? customGroup;
   const RoutineBodyElementRow({
     required this.id,
     required this.routineId,
     required this.elementId,
     required this.position,
+    required this.flatFoot,
+    required this.slowTurn,
+    required this.extraRotations,
+    this.manualValue,
+    this.customName,
+    this.customGroup,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -786,6 +1189,18 @@ class RoutineBodyElementRow extends DataClass
     map['routine_id'] = Variable<String>(routineId);
     map['element_id'] = Variable<String>(elementId);
     map['position'] = Variable<int>(position);
+    map['flat_foot'] = Variable<bool>(flatFoot);
+    map['slow_turn'] = Variable<bool>(slowTurn);
+    map['extra_rotations'] = Variable<int>(extraRotations);
+    if (!nullToAbsent || manualValue != null) {
+      map['manual_value'] = Variable<int>(manualValue);
+    }
+    if (!nullToAbsent || customName != null) {
+      map['custom_name'] = Variable<String>(customName);
+    }
+    if (!nullToAbsent || customGroup != null) {
+      map['custom_group'] = Variable<String>(customGroup);
+    }
     return map;
   }
 
@@ -795,6 +1210,18 @@ class RoutineBodyElementRow extends DataClass
       routineId: Value(routineId),
       elementId: Value(elementId),
       position: Value(position),
+      flatFoot: Value(flatFoot),
+      slowTurn: Value(slowTurn),
+      extraRotations: Value(extraRotations),
+      manualValue: manualValue == null && nullToAbsent
+          ? const Value.absent()
+          : Value(manualValue),
+      customName: customName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customName),
+      customGroup: customGroup == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customGroup),
     );
   }
 
@@ -808,6 +1235,12 @@ class RoutineBodyElementRow extends DataClass
       routineId: serializer.fromJson<String>(json['routineId']),
       elementId: serializer.fromJson<String>(json['elementId']),
       position: serializer.fromJson<int>(json['position']),
+      flatFoot: serializer.fromJson<bool>(json['flatFoot']),
+      slowTurn: serializer.fromJson<bool>(json['slowTurn']),
+      extraRotations: serializer.fromJson<int>(json['extraRotations']),
+      manualValue: serializer.fromJson<int?>(json['manualValue']),
+      customName: serializer.fromJson<String?>(json['customName']),
+      customGroup: serializer.fromJson<String?>(json['customGroup']),
     );
   }
   @override
@@ -818,6 +1251,12 @@ class RoutineBodyElementRow extends DataClass
       'routineId': serializer.toJson<String>(routineId),
       'elementId': serializer.toJson<String>(elementId),
       'position': serializer.toJson<int>(position),
+      'flatFoot': serializer.toJson<bool>(flatFoot),
+      'slowTurn': serializer.toJson<bool>(slowTurn),
+      'extraRotations': serializer.toJson<int>(extraRotations),
+      'manualValue': serializer.toJson<int?>(manualValue),
+      'customName': serializer.toJson<String?>(customName),
+      'customGroup': serializer.toJson<String?>(customGroup),
     };
   }
 
@@ -826,11 +1265,23 @@ class RoutineBodyElementRow extends DataClass
     String? routineId,
     String? elementId,
     int? position,
+    bool? flatFoot,
+    bool? slowTurn,
+    int? extraRotations,
+    Value<int?> manualValue = const Value.absent(),
+    Value<String?> customName = const Value.absent(),
+    Value<String?> customGroup = const Value.absent(),
   }) => RoutineBodyElementRow(
     id: id ?? this.id,
     routineId: routineId ?? this.routineId,
     elementId: elementId ?? this.elementId,
     position: position ?? this.position,
+    flatFoot: flatFoot ?? this.flatFoot,
+    slowTurn: slowTurn ?? this.slowTurn,
+    extraRotations: extraRotations ?? this.extraRotations,
+    manualValue: manualValue.present ? manualValue.value : this.manualValue,
+    customName: customName.present ? customName.value : this.customName,
+    customGroup: customGroup.present ? customGroup.value : this.customGroup,
   );
   RoutineBodyElementRow copyWithCompanion(RoutineBodyElementsCompanion data) {
     return RoutineBodyElementRow(
@@ -838,6 +1289,20 @@ class RoutineBodyElementRow extends DataClass
       routineId: data.routineId.present ? data.routineId.value : this.routineId,
       elementId: data.elementId.present ? data.elementId.value : this.elementId,
       position: data.position.present ? data.position.value : this.position,
+      flatFoot: data.flatFoot.present ? data.flatFoot.value : this.flatFoot,
+      slowTurn: data.slowTurn.present ? data.slowTurn.value : this.slowTurn,
+      extraRotations: data.extraRotations.present
+          ? data.extraRotations.value
+          : this.extraRotations,
+      manualValue: data.manualValue.present
+          ? data.manualValue.value
+          : this.manualValue,
+      customName: data.customName.present
+          ? data.customName.value
+          : this.customName,
+      customGroup: data.customGroup.present
+          ? data.customGroup.value
+          : this.customGroup,
     );
   }
 
@@ -847,13 +1312,30 @@ class RoutineBodyElementRow extends DataClass
           ..write('id: $id, ')
           ..write('routineId: $routineId, ')
           ..write('elementId: $elementId, ')
-          ..write('position: $position')
+          ..write('position: $position, ')
+          ..write('flatFoot: $flatFoot, ')
+          ..write('slowTurn: $slowTurn, ')
+          ..write('extraRotations: $extraRotations, ')
+          ..write('manualValue: $manualValue, ')
+          ..write('customName: $customName, ')
+          ..write('customGroup: $customGroup')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, routineId, elementId, position);
+  int get hashCode => Object.hash(
+    id,
+    routineId,
+    elementId,
+    position,
+    flatFoot,
+    slowTurn,
+    extraRotations,
+    manualValue,
+    customName,
+    customGroup,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -861,7 +1343,13 @@ class RoutineBodyElementRow extends DataClass
           other.id == this.id &&
           other.routineId == this.routineId &&
           other.elementId == this.elementId &&
-          other.position == this.position);
+          other.position == this.position &&
+          other.flatFoot == this.flatFoot &&
+          other.slowTurn == this.slowTurn &&
+          other.extraRotations == this.extraRotations &&
+          other.manualValue == this.manualValue &&
+          other.customName == this.customName &&
+          other.customGroup == this.customGroup);
 }
 
 class RoutineBodyElementsCompanion
@@ -870,17 +1358,35 @@ class RoutineBodyElementsCompanion
   final Value<String> routineId;
   final Value<String> elementId;
   final Value<int> position;
+  final Value<bool> flatFoot;
+  final Value<bool> slowTurn;
+  final Value<int> extraRotations;
+  final Value<int?> manualValue;
+  final Value<String?> customName;
+  final Value<String?> customGroup;
   const RoutineBodyElementsCompanion({
     this.id = const Value.absent(),
     this.routineId = const Value.absent(),
     this.elementId = const Value.absent(),
     this.position = const Value.absent(),
+    this.flatFoot = const Value.absent(),
+    this.slowTurn = const Value.absent(),
+    this.extraRotations = const Value.absent(),
+    this.manualValue = const Value.absent(),
+    this.customName = const Value.absent(),
+    this.customGroup = const Value.absent(),
   });
   RoutineBodyElementsCompanion.insert({
     this.id = const Value.absent(),
     required String routineId,
     required String elementId,
     required int position,
+    this.flatFoot = const Value.absent(),
+    this.slowTurn = const Value.absent(),
+    this.extraRotations = const Value.absent(),
+    this.manualValue = const Value.absent(),
+    this.customName = const Value.absent(),
+    this.customGroup = const Value.absent(),
   }) : routineId = Value(routineId),
        elementId = Value(elementId),
        position = Value(position);
@@ -889,12 +1395,24 @@ class RoutineBodyElementsCompanion
     Expression<String>? routineId,
     Expression<String>? elementId,
     Expression<int>? position,
+    Expression<bool>? flatFoot,
+    Expression<bool>? slowTurn,
+    Expression<int>? extraRotations,
+    Expression<int>? manualValue,
+    Expression<String>? customName,
+    Expression<String>? customGroup,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (routineId != null) 'routine_id': routineId,
       if (elementId != null) 'element_id': elementId,
       if (position != null) 'position': position,
+      if (flatFoot != null) 'flat_foot': flatFoot,
+      if (slowTurn != null) 'slow_turn': slowTurn,
+      if (extraRotations != null) 'extra_rotations': extraRotations,
+      if (manualValue != null) 'manual_value': manualValue,
+      if (customName != null) 'custom_name': customName,
+      if (customGroup != null) 'custom_group': customGroup,
     });
   }
 
@@ -903,12 +1421,24 @@ class RoutineBodyElementsCompanion
     Value<String>? routineId,
     Value<String>? elementId,
     Value<int>? position,
+    Value<bool>? flatFoot,
+    Value<bool>? slowTurn,
+    Value<int>? extraRotations,
+    Value<int?>? manualValue,
+    Value<String?>? customName,
+    Value<String?>? customGroup,
   }) {
     return RoutineBodyElementsCompanion(
       id: id ?? this.id,
       routineId: routineId ?? this.routineId,
       elementId: elementId ?? this.elementId,
       position: position ?? this.position,
+      flatFoot: flatFoot ?? this.flatFoot,
+      slowTurn: slowTurn ?? this.slowTurn,
+      extraRotations: extraRotations ?? this.extraRotations,
+      manualValue: manualValue ?? this.manualValue,
+      customName: customName ?? this.customName,
+      customGroup: customGroup ?? this.customGroup,
     );
   }
 
@@ -927,6 +1457,24 @@ class RoutineBodyElementsCompanion
     if (position.present) {
       map['position'] = Variable<int>(position.value);
     }
+    if (flatFoot.present) {
+      map['flat_foot'] = Variable<bool>(flatFoot.value);
+    }
+    if (slowTurn.present) {
+      map['slow_turn'] = Variable<bool>(slowTurn.value);
+    }
+    if (extraRotations.present) {
+      map['extra_rotations'] = Variable<int>(extraRotations.value);
+    }
+    if (manualValue.present) {
+      map['manual_value'] = Variable<int>(manualValue.value);
+    }
+    if (customName.present) {
+      map['custom_name'] = Variable<String>(customName.value);
+    }
+    if (customGroup.present) {
+      map['custom_group'] = Variable<String>(customGroup.value);
+    }
     return map;
   }
 
@@ -936,7 +1484,13 @@ class RoutineBodyElementsCompanion
           ..write('id: $id, ')
           ..write('routineId: $routineId, ')
           ..write('elementId: $elementId, ')
-          ..write('position: $position')
+          ..write('position: $position, ')
+          ..write('flatFoot: $flatFoot, ')
+          ..write('slowTurn: $slowTurn, ')
+          ..write('extraRotations: $extraRotations, ')
+          ..write('manualValue: $manualValue, ')
+          ..write('customName: $customName, ')
+          ..write('customGroup: $customGroup')
           ..write(')'))
         .toString();
   }
@@ -1630,11 +2184,15 @@ typedef $$RoutinesTableCreateCompanionBuilder = RoutinesCompanion Function({
   required String id,
   required String name,
   required String rulesetId,
+  Value<String?> apparatus,
   Value<String?> levelId,
   Value<int?> customDbMin,
   Value<int?> customDbMax,
+  Value<int?> customRiskMin,
+  Value<int?> customRiskMax,
   Value<int?> customDaMin,
   Value<int?> customDaMax,
+  Value<String?> customRequiredBodyGroups,
   required DateTime createdAt,
   required DateTime updatedAt,
   Value<int> rowid,
@@ -1643,11 +2201,15 @@ typedef $$RoutinesTableUpdateCompanionBuilder = RoutinesCompanion Function({
   Value<String> id,
   Value<String> name,
   Value<String> rulesetId,
+  Value<String?> apparatus,
   Value<String?> levelId,
   Value<int?> customDbMin,
   Value<int?> customDbMax,
+  Value<int?> customRiskMin,
+  Value<int?> customRiskMax,
   Value<int?> customDaMin,
   Value<int?> customDaMax,
+  Value<String?> customRequiredBodyGroups,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<int> rowid,
@@ -1724,6 +2286,11 @@ class $$RoutinesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get apparatus => $composableBuilder(
+    column: $table.apparatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get levelId => $composableBuilder(
     column: $table.levelId,
     builder: (column) => ColumnFilters(column),
@@ -1739,6 +2306,16 @@ class $$RoutinesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<int> get customRiskMin => $composableBuilder(
+    column: $table.customRiskMin,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get customRiskMax => $composableBuilder(
+    column: $table.customRiskMax,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<int> get customDaMin => $composableBuilder(
     column: $table.customDaMin,
     builder: (column) => ColumnFilters(column),
@@ -1746,6 +2323,11 @@ class $$RoutinesTableFilterComposer
 
   ColumnFilters<int> get customDaMax => $composableBuilder(
     column: $table.customDaMax,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get customRequiredBodyGroups => $composableBuilder(
+    column: $table.customRequiredBodyGroups,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1834,6 +2416,11 @@ class $$RoutinesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get apparatus => $composableBuilder(
+    column: $table.apparatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get levelId => $composableBuilder(
     column: $table.levelId,
     builder: (column) => ColumnOrderings(column),
@@ -1849,6 +2436,16 @@ class $$RoutinesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get customRiskMin => $composableBuilder(
+    column: $table.customRiskMin,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get customRiskMax => $composableBuilder(
+    column: $table.customRiskMax,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get customDaMin => $composableBuilder(
     column: $table.customDaMin,
     builder: (column) => ColumnOrderings(column),
@@ -1856,6 +2453,11 @@ class $$RoutinesTableOrderingComposer
 
   ColumnOrderings<int> get customDaMax => $composableBuilder(
     column: $table.customDaMax,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get customRequiredBodyGroups => $composableBuilder(
+    column: $table.customRequiredBodyGroups,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -1888,6 +2490,9 @@ class $$RoutinesTableAnnotationComposer
   GeneratedColumn<String> get rulesetId =>
       $composableBuilder(column: $table.rulesetId, builder: (column) => column);
 
+  GeneratedColumn<String> get apparatus =>
+      $composableBuilder(column: $table.apparatus, builder: (column) => column);
+
   GeneratedColumn<String> get levelId =>
       $composableBuilder(column: $table.levelId, builder: (column) => column);
 
@@ -1901,6 +2506,16 @@ class $$RoutinesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get customRiskMin => $composableBuilder(
+    column: $table.customRiskMin,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get customRiskMax => $composableBuilder(
+    column: $table.customRiskMax,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<int> get customDaMin => $composableBuilder(
     column: $table.customDaMin,
     builder: (column) => column,
@@ -1908,6 +2523,11 @@ class $$RoutinesTableAnnotationComposer
 
   GeneratedColumn<int> get customDaMax => $composableBuilder(
     column: $table.customDaMax,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get customRequiredBodyGroups => $composableBuilder(
+    column: $table.customRequiredBodyGroups,
     builder: (column) => column,
   );
 
@@ -2003,11 +2623,15 @@ class $$RoutinesTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String> rulesetId = const Value.absent(),
+                Value<String?> apparatus = const Value.absent(),
                 Value<String?> levelId = const Value.absent(),
                 Value<int?> customDbMin = const Value.absent(),
                 Value<int?> customDbMax = const Value.absent(),
+                Value<int?> customRiskMin = const Value.absent(),
+                Value<int?> customRiskMax = const Value.absent(),
                 Value<int?> customDaMin = const Value.absent(),
                 Value<int?> customDaMax = const Value.absent(),
+                Value<String?> customRequiredBodyGroups = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -2015,11 +2639,15 @@ class $$RoutinesTableTableManager
                 id: id,
                 name: name,
                 rulesetId: rulesetId,
+                apparatus: apparatus,
                 levelId: levelId,
                 customDbMin: customDbMin,
                 customDbMax: customDbMax,
+                customRiskMin: customRiskMin,
+                customRiskMax: customRiskMax,
                 customDaMin: customDaMin,
                 customDaMax: customDaMax,
+                customRequiredBodyGroups: customRequiredBodyGroups,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -2029,11 +2657,15 @@ class $$RoutinesTableTableManager
                 required String id,
                 required String name,
                 required String rulesetId,
+                Value<String?> apparatus = const Value.absent(),
                 Value<String?> levelId = const Value.absent(),
                 Value<int?> customDbMin = const Value.absent(),
                 Value<int?> customDbMax = const Value.absent(),
+                Value<int?> customRiskMin = const Value.absent(),
+                Value<int?> customRiskMax = const Value.absent(),
                 Value<int?> customDaMin = const Value.absent(),
                 Value<int?> customDaMax = const Value.absent(),
+                Value<String?> customRequiredBodyGroups = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -2041,11 +2673,15 @@ class $$RoutinesTableTableManager
                 id: id,
                 name: name,
                 rulesetId: rulesetId,
+                apparatus: apparatus,
                 levelId: levelId,
                 customDbMin: customDbMin,
                 customDbMax: customDbMax,
+                customRiskMin: customRiskMin,
+                customRiskMax: customRiskMax,
                 customDaMin: customDaMin,
                 customDaMax: customDaMax,
+                customRequiredBodyGroups: customRequiredBodyGroups,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -2140,6 +2776,12 @@ typedef $$RoutineBodyElementsTableCreateCompanionBuilder =
       required String routineId,
       required String elementId,
       required int position,
+      Value<bool> flatFoot,
+      Value<bool> slowTurn,
+      Value<int> extraRotations,
+      Value<int?> manualValue,
+      Value<String?> customName,
+      Value<String?> customGroup,
     });
 typedef $$RoutineBodyElementsTableUpdateCompanionBuilder =
     RoutineBodyElementsCompanion Function({
@@ -2147,6 +2789,12 @@ typedef $$RoutineBodyElementsTableUpdateCompanionBuilder =
       Value<String> routineId,
       Value<String> elementId,
       Value<int> position,
+      Value<bool> flatFoot,
+      Value<bool> slowTurn,
+      Value<int> extraRotations,
+      Value<int?> manualValue,
+      Value<String?> customName,
+      Value<String?> customGroup,
     });
 
 final class $$RoutineBodyElementsTableReferences
@@ -2204,6 +2852,36 @@ class $$RoutineBodyElementsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<bool> get flatFoot => $composableBuilder(
+    column: $table.flatFoot,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get slowTurn => $composableBuilder(
+    column: $table.slowTurn,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get extraRotations => $composableBuilder(
+    column: $table.extraRotations,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get manualValue => $composableBuilder(
+    column: $table.manualValue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get customName => $composableBuilder(
+    column: $table.customName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get customGroup => $composableBuilder(
+    column: $table.customGroup,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$RoutinesTableFilterComposer get routineId {
     final $$RoutinesTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -2252,6 +2930,36 @@ class $$RoutineBodyElementsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get flatFoot => $composableBuilder(
+    column: $table.flatFoot,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get slowTurn => $composableBuilder(
+    column: $table.slowTurn,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get extraRotations => $composableBuilder(
+    column: $table.extraRotations,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get manualValue => $composableBuilder(
+    column: $table.manualValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get customName => $composableBuilder(
+    column: $table.customName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get customGroup => $composableBuilder(
+    column: $table.customGroup,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$RoutinesTableOrderingComposer get routineId {
     final $$RoutinesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -2293,6 +3001,32 @@ class $$RoutineBodyElementsTableAnnotationComposer
 
   GeneratedColumn<int> get position =>
       $composableBuilder(column: $table.position, builder: (column) => column);
+
+  GeneratedColumn<bool> get flatFoot =>
+      $composableBuilder(column: $table.flatFoot, builder: (column) => column);
+
+  GeneratedColumn<bool> get slowTurn =>
+      $composableBuilder(column: $table.slowTurn, builder: (column) => column);
+
+  GeneratedColumn<int> get extraRotations => $composableBuilder(
+    column: $table.extraRotations,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get manualValue => $composableBuilder(
+    column: $table.manualValue,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get customName => $composableBuilder(
+    column: $table.customName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get customGroup => $composableBuilder(
+    column: $table.customGroup,
+    builder: (column) => column,
+  );
 
   $$RoutinesTableAnnotationComposer get routineId {
     final $$RoutinesTableAnnotationComposer composer = $composerBuilder(
@@ -2358,11 +3092,23 @@ class $$RoutineBodyElementsTableTableManager
                 Value<String> routineId = const Value.absent(),
                 Value<String> elementId = const Value.absent(),
                 Value<int> position = const Value.absent(),
+                Value<bool> flatFoot = const Value.absent(),
+                Value<bool> slowTurn = const Value.absent(),
+                Value<int> extraRotations = const Value.absent(),
+                Value<int?> manualValue = const Value.absent(),
+                Value<String?> customName = const Value.absent(),
+                Value<String?> customGroup = const Value.absent(),
               }) => RoutineBodyElementsCompanion(
                 id: id,
                 routineId: routineId,
                 elementId: elementId,
                 position: position,
+                flatFoot: flatFoot,
+                slowTurn: slowTurn,
+                extraRotations: extraRotations,
+                manualValue: manualValue,
+                customName: customName,
+                customGroup: customGroup,
               ),
           createCompanionCallback:
               ({
@@ -2370,11 +3116,23 @@ class $$RoutineBodyElementsTableTableManager
                 required String routineId,
                 required String elementId,
                 required int position,
+                Value<bool> flatFoot = const Value.absent(),
+                Value<bool> slowTurn = const Value.absent(),
+                Value<int> extraRotations = const Value.absent(),
+                Value<int?> manualValue = const Value.absent(),
+                Value<String?> customName = const Value.absent(),
+                Value<String?> customGroup = const Value.absent(),
               }) => RoutineBodyElementsCompanion.insert(
                 id: id,
                 routineId: routineId,
                 elementId: elementId,
                 position: position,
+                flatFoot: flatFoot,
+                slowTurn: slowTurn,
+                extraRotations: extraRotations,
+                manualValue: manualValue,
+                customName: customName,
+                customGroup: customGroup,
               ),
           withReferenceMapper: (p0) => p0
               .map(

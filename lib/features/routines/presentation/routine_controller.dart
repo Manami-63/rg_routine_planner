@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/scoring/apparatus.dart';
 import '../../db_calculator/domain/db_routine.dart';
 import '../../levels/domain/competition_level.dart';
 import '../domain/routine.dart';
@@ -36,6 +37,16 @@ final routineControllerProvider = AsyncNotifierProvider.autoDispose
 final routineProvider = Provider.autoDispose.family<Routine, String>(
   (ref, id) => ref.watch(routineControllerProvider(id)).requireValue,
 );
+
+/// The level's requirements for this routine's apparatus, or `null` when
+/// no level is chosen or its requirements are not in the app.
+final routineRequirementsProvider = Provider.autoDispose
+    .family<LevelRequirements?, String>(
+      (ref, id) => ref.watch(
+        routineProvider(id)
+            .select((r) => r.level?.requirementsFor(r.apparatus)),
+      ),
+    );
 
 /// Shown in the app bar so users can trust automatic saving.
 final routineSaveStatusProvider = NotifierProvider.autoDispose
@@ -89,6 +100,9 @@ class RoutineController extends AsyncNotifier<Routine> {
 
   void rename(String name) =>
       _update((routine) => routine.rename(name), debounce: true);
+
+  void selectApparatus(Apparatus? apparatus) =>
+      _update((routine) => routine.withApparatus(apparatus));
 
   void selectLevel(CompetitionLevel? level) =>
       _update((routine) => routine.withLevel(level));

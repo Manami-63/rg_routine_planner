@@ -10,4 +10,7 @@ const sampleRuleset = RulesetVersion(
   id: sampleRulesetId,
   label: 'Sample data (unofficial)',
   isOfficial: false,
+  detail:
+      'Body difficulty names and values are placeholders, not official '
+      'rules. Risk values follow the FIG Code of Points 2025-2028.',
 );

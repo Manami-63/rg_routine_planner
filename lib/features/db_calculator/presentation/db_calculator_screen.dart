@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/scoring/apparatus.dart';
 import '../../../core/widgets/message_view.dart';
 import '../../../core/widgets/sample_data_banner.dart';
 import '../../levels/presentation/count_limit_notice.dart';
+import '../../levels/domain/difficulty_category.dart';
 import '../../levels/presentation/level_selector.dart';
+import '../../routines/presentation/apparatus_selector.dart';
 import '../../routines/presentation/routine_controller.dart';
 import '../domain/db_routine.dart';
 import 'db_calculator_providers.dart';
@@ -93,6 +96,9 @@ class _DbCalculatorContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final ruleset = ref.watch(dbScoringEngineProvider).ruleset;
     final level = ref.watch(routineProvider(routineId).select((r) => r.level));
+    final apparatus = ref.watch(
+      routineProvider(routineId).select((r) => r.apparatus),
+    );
     final isEmpty = ref.watch(
       dbRoutineProvider(routineId).select((r) => r.isEmpty),
     );
@@ -135,8 +141,14 @@ class _DbCalculatorContent extends ConsumerWidget {
                     const SizedBox(height: 16),
                     RoutineNameField(routineId: routineId),
                     const SizedBox(height: 12),
+                    ApparatusSelector(
+                      apparatus: apparatus,
+                      onChanged: controller.selectApparatus,
+                    ),
+                    const SizedBox(height: 12),
                     LevelSelector(
                       level: level,
+                      apparatus: apparatus,
                       onChanged: controller.selectLevel,
                     ),
                   ],
@@ -281,20 +293,30 @@ class _BodyTab extends ConsumerWidget {
     final count = ref.watch(
       dbRoutineProvider(routineId).select((r) => r.elements.length),
     );
+    final (level, apparatus) = ref.watch(
+      routineProvider(routineId).select((r) => (r.level, r.apparatus)),
+    );
+    final elements = ref.watch(
+      dbRoutineProvider(routineId).select((r) => r.elements),
+    );
     return _TabScrollView(
       slivers: [
         SectionHeader(title: 'Your routine', trailing: '$count selected'),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
-          sliver: SliverToBoxAdapter(
-            child: CountLimitNotice(
-              level: ref.watch(
-                routineProvider(routineId).select((r) => r.level),
+          sliver: SliverList.list(
+            children: [
+              CountLimitNotice(
+                level: level,
+                apparatus: apparatus,
+                category: DifficultyCategory.db,
+                count: count,
               ),
-              category: 'DB',
-              count: count,
-              limitOf: (requirements) => requirements.db,
-            ),
+              BodyGroupsNotice(
+                requirements: ref.watch(routineRequirementsProvider(routineId)),
+                presentGroups: {for (final e in elements) e.group},
+              ),
+            ],
           ),
         ),
         SelectedElementsSection(routineId: routineId),
@@ -315,11 +337,41 @@ class _RisksTab extends ConsumerWidget {
     final count = ref.watch(
       dbRoutineProvider(routineId).select((r) => r.risks.length),
     );
+    final (level, apparatus) = ref.watch(
+      routineProvider(routineId).select((r) => (r.level, r.apparatus)),
+    );
+    final isFreehand = apparatus == Apparatus.freehand;
     return _TabScrollView(
       slivers: [
         SectionHeader(title: 'Your risks', trailing: '$count added'),
-        // The action comes first so it stays reachable on small screens.
-        BuildRiskAction(routineId: routineId),
+        if (isFreehand)
+          // Existing risks stay listed (as not counted) so nothing is lost
+          // if the apparatus was changed by mistake.
+          SliverToBoxAdapter(
+            child: MessageView(
+              icon: Icons.do_not_disturb_alt,
+              title: 'No risks in freehand',
+              message: count == 0
+                  ? 'Freehand routines have no apparatus throws.'
+                  : 'Freehand routines have no apparatus throws, so these '
+                        'risks are not counted.',
+            ),
+          )
+        else ...[
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+            sliver: SliverToBoxAdapter(
+              child: CountLimitNotice(
+                level: level,
+                apparatus: apparatus,
+                category: DifficultyCategory.risk,
+                count: count,
+              ),
+            ),
+          ),
+          // The action comes first so it stays reachable on small screens.
+          BuildRiskAction(routineId: routineId),
+        ],
         SelectedRisksSection(routineId: routineId),
       ],
     );

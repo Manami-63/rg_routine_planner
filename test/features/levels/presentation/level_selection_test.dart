@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rg_routine_planner/core/scoring/db_element_group.dart';
 import 'package:rg_routine_planner/features/routines/presentation/routine_controller.dart';
 import 'package:rg_routine_planner/features/levels/domain/competition_level.dart';
 import 'package:rg_routine_planner/features/levels/domain/count_limit.dart';
@@ -38,6 +39,21 @@ void main() {
     await tester.pump();
   }
 
+  Future<void> addBalance(WidgetTester tester) async {
+    await tester.tap(find.byTooltip('Add Test Balance'));
+    await tester.pump();
+  }
+
+  Future<void> selectCustomLevel(
+    WidgetTester tester,
+    LevelRequirements requirements,
+  ) async {
+    container
+        .read(routineControllerProvider(testRoutineId).notifier)
+        .selectLevel(CompetitionLevel.custom(requirements));
+    await tester.pump();
+  }
+
   Finder noticeText(String text) => find.descendant(
     of: find.byKey(const ValueKey('count-limit-notice')),
     matching: find.text(text),
@@ -50,54 +66,117 @@ void main() {
     expect(find.byKey(const ValueKey('count-limit-notice')), findsNothing);
   });
 
-  testWidgets('FIG level without data says requirements are not added', (
-    tester,
-  ) async {
+  testWidgets('FIG level checks DB against its maximum', (tester) async {
     await pumpScreen(tester);
     await openPicker(tester);
 
-    await tester.tap(find.text('FIG Senior'));
+    await tester.tap(find.text('FIG Junior'));
     await tester.pump();
     await apply(tester);
 
     expect(
       container.read(routineProvider(testRoutineId)).level?.id,
-      'fig-senior',
+      'fig-junior',
     );
-    expect(find.text('FIG Senior'), findsOneWidget);
+    expect(
+      find.text(
+        'DB up to 6 · R up to 3 · DA up to 12 · needs leap, balance, rotation',
+      ),
+      findsOneWidget,
+    );
+    await addJumps(tester, 7);
+    expect(
+      noticeText('7 DB · 1 not counted (highest 6 count)'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('FIG level has no freehand requirements', (tester) async {
+    await pumpScreen(tester);
+    await tester.tap(find.text('Freehand'));
+    await tester.pump();
+    await openPicker(tester);
+    await tester.tap(find.text('FIG Senior'));
+    await tester.pump();
+    await apply(tester);
+
+    expect(find.text('No freehand requirements'), findsOneWidget);
     expect(
       noticeText(
-        'Official FIG Senior requirements are not in the app yet, '
+        'FIG Senior has no freehand requirements in the app, '
         'so the number of DB is not checked.',
       ),
       findsOneWidget,
     );
   });
 
-  testWidgets('non-FIG level checks the number of DB', (tester) async {
+  testWidgets('non-FIG level sets maximums for DB, risks and DA', (
+    tester,
+  ) async {
     await pumpScreen(tester);
     await openPicker(tester);
 
     await tester.tap(find.text('Non-FIG level'));
     await tester.pumpAndSettle();
+    expect(find.text('Minimum'), findsNothing);
+    await tapStepper(tester, 'Increase DB maximum');
+    await tapStepper(tester, 'Increase DB maximum');
+    await tapStepper(tester, 'Increase risks maximum');
+    await tapStepper(tester, 'Increase DA maximum');
+    await apply(tester);
+
+    expect(
+      container.read(routineProvider(testRoutineId)).level?.requirements,
+      const LevelRequirements(
+        db: CountLimit(max: 2),
+        risk: CountLimit(max: 1),
+        da: CountLimit(max: 1),
+      ),
+    );
+    expect(find.text('DB up to 2 · R up to 1 · DA up to 1'), findsOneWidget);
+
+    await addJumps(tester, 2);
+    expect(noticeText('2 DB · meets the level (up to 2)'), findsOneWidget);
+
+    await addJumps(tester, 1);
+    expect(
+      noticeText('3 DB · 1 not counted (highest 2 count)'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('minimums are optional and checked when added', (tester) async {
+    await pumpScreen(tester);
+    await openPicker(tester);
+
+    await tester.tap(find.text('Non-FIG level'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Add minimums'));
+    await tester.pump();
     await tapStepper(tester, 'Increase DB minimum');
-    await tapStepper(tester, 'Increase DB maximum');
-    await tapStepper(tester, 'Increase DB maximum');
+    await apply(tester);
+
+    expect(noticeText('0 DB · 1 more needed (at least 1)'), findsOneWidget);
+  });
+
+  testWidgets('removing minimums clears them', (tester) async {
+    await pumpScreen(tester);
+    await selectCustomLevel(
+      tester,
+      const LevelRequirements(db: CountLimit(min: 1, max: 4)),
+    );
+    await openPicker(tester);
+
+    // Shown because a minimum is already set.
+    expect(find.text('Remove minimums'), findsOneWidget);
+    await tester.tap(find.text('Remove minimums'));
     await tester.pump();
     await apply(tester);
 
     expect(
       container.read(routineProvider(testRoutineId)).level?.requirements,
-      const LevelRequirements(db: CountLimit(min: 1, max: 2)),
+      const LevelRequirements(db: CountLimit(max: 4)),
     );
-    expect(find.text('DB 1–2'), findsOneWidget);
-    expect(noticeText('0 DB · 1 more needed (1–2)'), findsOneWidget);
-
-    await addJumps(tester, 2);
-    expect(noticeText('2 DB · meets the level (1–2)'), findsOneWidget);
-
-    await addJumps(tester, 1);
-    expect(noticeText('3 DB · 1 over the limit (1–2)'), findsOneWidget);
   });
 
   testWidgets('minimum above maximum disables Apply', (tester) async {
@@ -106,16 +185,119 @@ void main() {
 
     await tester.tap(find.text('Non-FIG level'));
     await tester.pumpAndSettle();
+    await tester.tap(find.text('Add minimums'));
+    await tester.pump();
     await tapStepper(tester, 'Increase DB minimum');
     await tapStepper(tester, 'Increase DB minimum');
     await tapStepper(tester, 'Increase DB maximum');
-    await tester.pump();
 
     expect(find.text('Minimum cannot be more than maximum'), findsOneWidget);
     final button = tester.widget<FilledButton>(
       find.widgetWithText(FilledButton, 'Apply'),
     );
     expect(button.onPressed, isNull);
+  });
+
+  testWidgets('required body groups are chosen with chips', (tester) async {
+    await pumpScreen(tester);
+    await openPicker(tester);
+
+    await tester.tap(find.text('Non-FIG level'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilterChip, 'Balances'));
+    await tester.pump();
+    expect(find.textContaining("Check your level's rules"), findsOneWidget);
+    await apply(tester);
+
+    expect(
+      container
+          .read(routineProvider(testRoutineId))
+          .level
+          ?.requirements
+          ?.requiredBodyGroups,
+      {DbElementGroup.balance},
+    );
+  });
+
+  testWidgets('freehand hides risk and DA limits in the picker', (
+    tester,
+  ) async {
+    await pumpScreen(tester);
+    await tester.tap(find.text('Freehand'));
+    await tester.pump();
+    await openPicker(tester);
+    await tester.tap(find.text('Non-FIG level'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Body difficulties (DB)'), findsOneWidget);
+    expect(find.text('Risks (R)'), findsNothing);
+    expect(find.text('Apparatus difficulties (DA)'), findsNothing);
+  });
+
+  Finder groupAlert(String text) => find.descendant(
+    of: find.byKey(const ValueKey('body-groups-notice')),
+    matching: find.text(text),
+  );
+
+  testWidgets('missing required group shows a penalty alert', (tester) async {
+    await pumpScreen(tester);
+    await selectCustomLevel(
+      tester,
+      const LevelRequirements(
+        db: CountLimit(max: 1),
+        requiredBodyGroups: {DbElementGroup.jump, DbElementGroup.balance},
+      ),
+    );
+
+    expect(
+      groupAlert(
+        'No leap or balance in the routine. Your level requires one of '
+        'each: you may get a penalty.',
+      ),
+      findsOneWidget,
+    );
+
+    await addJumps(tester, 1);
+    expect(
+      groupAlert(
+        'No balance in the routine. Your level requires one: '
+        'you may get a penalty.',
+      ),
+      findsOneWidget,
+    );
+
+    // The balance (0.20) is lower than the jump (0.30), so with a maximum
+    // of 1 it is not counted; performing it still meets the requirement.
+    await addBalance(tester);
+    expect(find.byKey(const ValueKey('body-groups-notice')), findsNothing);
+  });
+
+  testWidgets('FIG alert names the penalty for each missing group', (
+    tester,
+  ) async {
+    await pumpScreen(tester);
+    await openPicker(tester);
+    await tester.tap(find.text('FIG Senior'));
+    await tester.pump();
+    await apply(tester);
+    await addJumps(tester, 1);
+
+    expect(
+      groupAlert(
+        'No balance or rotation in the routine. Your level requires one of '
+        'each: you may get a 0.30 penalty for each.',
+      ),
+      findsOneWidget,
+    );
+
+    await addBalance(tester);
+    expect(
+      groupAlert(
+        'No rotation in the routine. Your level requires one: '
+        'you may get a 0.30 penalty.',
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('dismissing the picker keeps the previous level', (tester) async {
@@ -167,7 +349,7 @@ void main() {
 
     // The DA maximum stepper shows the saved value.
     expect(find.text('3'), findsOneWidget);
-    expect(find.text('Number of DA'), findsOneWidget);
+    expect(find.text('Apparatus difficulties (DA)'), findsOneWidget);
   });
 
   testWidgets('clear all keeps the level', (tester) async {

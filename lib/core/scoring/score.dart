@@ -14,6 +14,25 @@ class Score implements Comparable<Score> {
   Score operator +(Score other) =>
       Score.hundredths(hundredths + other.hundredths);
 
+  Score operator -(Score other) =>
+      Score.hundredths(hundredths - other.hundredths);
+
+  Score operator *(int times) => Score.hundredths(hundredths * times);
+
+  /// Parses a value typed by the user, e.g. `0.4`, `0.40`, `.4` or `1`.
+  /// Returns `null` unless it is a non-negative number with at most two
+  /// decimals.
+  static Score? tryParse(String text) {
+    final match = RegExp(r'^(\d*)(?:[.,](\d{0,2}))?$').firstMatch(text.trim());
+    if (match == null) return null;
+    final whole = match.group(1)!, fraction = match.group(2) ?? '';
+    if (whole.isEmpty && fraction.isEmpty) return null;
+    return Score.hundredths(
+      int.parse(whole.isEmpty ? '0' : whole) * 100 +
+          int.parse(fraction.padRight(2, '0')),
+    );
+  }
+
   /// Formats the score with two decimal places, e.g. `0.30`.
   String format() {
     final sign = hundredths < 0 ? '-' : '';

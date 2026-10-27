@@ -34,6 +34,7 @@ class FakeRoutineRepository implements RoutineRepository {
       RoutineSummary(
         id: r.id,
         name: r.name,
+        apparatus: r.apparatus,
         level: r.level,
         elementCount: r.db.elements.length,
         riskCount: r.db.risks.length,
