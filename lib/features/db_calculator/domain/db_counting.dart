@@ -1,5 +1,5 @@
+import '../../../core/scoring/score.dart';
 import '../../../core/utils/list_equality.dart';
-import 'db_routine.dart';
 
 /// How many body difficulties and risks count towards DB.
 ///
@@ -30,24 +30,24 @@ class DbCounting {
   DbCounting._(this.countedElements, this.countedRisks);
 
   /// Selects what counts under [limits]:
-  /// - body difficulties: the highest-valued ones (an earlier element wins a
-  ///   tie, so the choice is stable);
+  /// - body difficulties: the highest [elementValues] (an earlier element
+  ///   wins a tie, so the choice is stable);
   /// - risks: the first ones in performance order.
-  factory DbCounting.select(DbRoutine routine, DbCountLimits limits) {
-    final byValue = [for (var i = 0; i < routine.elements.length; i++) i]
+  factory DbCounting.select({
+    required List<Score> elementValues,
+    required int riskCount,
+    required DbCountLimits limits,
+  }) {
+    final byValue = [for (var i = 0; i < elementValues.length; i++) i]
       ..sort((a, b) {
-        final diff = routine.elements[b].value.compareTo(
-          routine.elements[a].value,
-        );
+        final diff = elementValues[b].compareTo(elementValues[a]);
         return diff != 0 ? diff : a.compareTo(b);
       });
     final maxElements = limits.maxElements ?? byValue.length;
-    final maxRisks = limits.maxRisks ?? routine.risks.length;
+    final maxRisks = limits.maxRisks ?? riskCount;
     return DbCounting._(
       Set.unmodifiable(byValue.take(maxElements)),
-      Set.unmodifiable({
-        for (var i = 0; i < routine.risks.length && i < maxRisks; i++) i,
-      }),
+      Set.unmodifiable({for (var i = 0; i < riskCount && i < maxRisks; i++) i}),
     );
   }
 

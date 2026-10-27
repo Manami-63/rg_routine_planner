@@ -7,10 +7,12 @@ import '../db_calculator_providers.dart';
 import '../db_routine_providers.dart';
 import 'value_badge.dart';
 
-/// Bottom sheet for composing a risk from a rotation option and criteria.
+/// Bottom sheet for composing a risk the way it is performed: the throw,
+/// the rotations under the flight, and the catch.
 ///
-/// The half-built risk is local widget state (not Riverpod): it only
-/// matters while the sheet is open, and is discarded if the user cancels.
+/// Criteria are filtered by the routine's apparatus. The half-built risk is
+/// local widget state (not Riverpod): it only matters while the sheet is
+/// open, and is discarded if the user cancels.
 class RiskBuilderSheet extends ConsumerStatefulWidget {
   const RiskBuilderSheet({
     super.key,
@@ -40,11 +42,13 @@ class RiskBuilderSheet extends ConsumerStatefulWidget {
 }
 
 class _RiskBuilderSheetState extends ConsumerState<RiskBuilderSheet> {
-  late RiskRotationOption _rotation = widget.catalogue.rotationOptions.first;
+  int _rotationIndex = 0;
   final Set<RiskCriterion> _criteria = {};
 
+  List<RiskRotationOption> get _options => widget.catalogue.rotationOptions;
+
   RiskElement get _risk => RiskElement(
-    rotation: _rotation,
+    rotation: _options[_rotationIndex],
     // Keep catalogue order regardless of tap order.
     criteria: widget.catalogue.criteria.where(_criteria.contains).toList(),
   );
@@ -56,10 +60,32 @@ class _RiskBuilderSheetState extends ConsumerState<RiskBuilderSheet> {
     Navigator.of(context).pop();
   }
 
+  void _toggle(RiskCriterion criterion, bool selected) => setState(
+    () => selected ? _criteria.add(criterion) : _criteria.remove(criterion),
+  );
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final value = ref.watch(dbScoringEngineProvider).riskValue(_risk);
+    final apparatus = ref.watch(
+      routineProvider(widget.routineId).select((r) => r.apparatus),
+    );
+    final rotation = _options[_rotationIndex];
+
+    List<Widget> criteriaOf(RiskPhase phase) => [
+      for (final criterion in widget.catalogue.criteriaFor(phase, apparatus))
+        CheckboxListTile(
+          contentPadding: EdgeInsets.zero,
+          controlAffinity: ListTileControlAffinity.leading,
+          dense: true,
+          title: Text(criterion.name),
+          subtitle: criterion.note == null ? null : Text(criterion.note!),
+          secondary: ValueBadge(value: criterion.value),
+          value: _criteria.contains(criterion),
+          onChanged: (selected) => _toggle(criterion, selected ?? false),
+        ),
+    ];
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -68,43 +94,51 @@ class _RiskBuilderSheetState extends ConsumerState<RiskBuilderSheet> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Build a risk', style: theme.textTheme.titleLarge),
-            const SizedBox(height: 20),
-            Text('Rotations', style: theme.textTheme.labelLarge),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
+            if (apparatus == null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  'Choose an apparatus to see its specific criteria.',
+                  style: theme.textTheme.bodySmall,
+                ),
+              ),
+            _PhaseHeader(RiskPhase.throwing.label),
+            ...criteriaOf(RiskPhase.throwing),
+            _PhaseHeader(RiskPhase.rotations.label),
+            Row(
               children: [
-                for (final option in widget.catalogue.rotationOptions)
-                  ChoiceChip(
-                    label: Text(option.label),
-                    selected: option == _rotation,
-                    onSelected: (_) => setState(() => _rotation = option),
+                Expanded(
+                  child: Text(
+                    '2 base rotations, + each additional rotation',
+                    style: theme.textTheme.bodySmall,
                   ),
+                ),
+                IconButton(
+                  tooltip: 'Fewer rotations',
+                  icon: const Icon(Icons.remove),
+                  onPressed: _rotationIndex == 0
+                      ? null
+                      : () => setState(() => _rotationIndex--),
+                ),
+                Text(
+                  '${rotation.rotations}',
+                  key: const ValueKey('risk-rotations'),
+                  style: theme.textTheme.titleMedium,
+                ),
+                IconButton(
+                  tooltip: 'More rotations',
+                  icon: const Icon(Icons.add),
+                  onPressed: _rotationIndex == _options.length - 1
+                      ? null
+                      : () => setState(() => _rotationIndex++),
+                ),
+                ValueBadge(value: rotation.value),
               ],
             ),
-            if (widget.catalogue.criteria.isNotEmpty) ...[
-              const SizedBox(height: 20),
-              Text('Criteria', style: theme.textTheme.labelLarge),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final criterion in widget.catalogue.criteria)
-                    FilterChip(
-                      label: Text(criterion.name),
-                      selected: _criteria.contains(criterion),
-                      onSelected: (selected) => setState(
-                        () => selected
-                            ? _criteria.add(criterion)
-                            : _criteria.remove(criterion),
-                      ),
-                    ),
-                ],
-              ),
-            ],
-            const SizedBox(height: 24),
+            ...criteriaOf(RiskPhase.rotations),
+            _PhaseHeader(RiskPhase.catching.label),
+            ...criteriaOf(RiskPhase.catching),
+            const SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
@@ -130,4 +164,16 @@ class _RiskBuilderSheetState extends ConsumerState<RiskBuilderSheet> {
       ),
     );
   }
+}
+
+class _PhaseHeader extends StatelessWidget {
+  const _PhaseHeader(this.title);
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: 16, bottom: 4),
+    child: Text(title, style: Theme.of(context).textTheme.labelLarge),
+  );
 }

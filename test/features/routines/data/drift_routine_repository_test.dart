@@ -3,7 +3,9 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rg_routine_planner/core/database/app_database.dart';
 import 'package:rg_routine_planner/core/scoring/apparatus.dart';
+import 'package:rg_routine_planner/core/scoring/score.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_element.dart';
+import 'package:rg_routine_planner/features/db_calculator/domain/db_element_options.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_routine.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/risk.dart';
 import 'package:rg_routine_planner/features/levels/data/fig_levels.dart';
@@ -66,6 +68,34 @@ void main() {
         ),
         RiskElement(rotation: testTwoRotations),
       ],
+    );
+
+    await repository.saveRoutine(original);
+
+    expect(await repository.fetchRoutine('r1'), original);
+  });
+
+  test('round-trips element options and custom elements', () async {
+    const custom = DbElement.custom(
+      name: 'New pivot',
+      group: DbElementGroup.rotation,
+      rulesetId: 'test-v1',
+    );
+    final original = Routine(
+      id: 'r1',
+      name: 'Options',
+      db: DbRoutine(
+        rulesetId: 'test-v1',
+        elements: const [testBalance, testRotation, testJump, custom],
+        elementOptions: const [
+          DbElementOptions(flatFoot: true, slowTurn: true),
+          DbElementOptions(extraRotations: 2),
+          DbElementOptions(manualValue: Score.hundredths(45)),
+          DbElementOptions(manualValue: Score.hundredths(60)),
+        ],
+      ),
+      createdAt: created,
+      updatedAt: created,
     );
 
     await repository.saveRoutine(original);

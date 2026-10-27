@@ -7,6 +7,7 @@ import '../../domain/db_element.dart';
 import '../db_calculator_providers.dart';
 import '../db_routine_providers.dart';
 import 'async_sliver.dart';
+import 'custom_element_sheet.dart';
 import 'value_badge.dart';
 
 /// Sliver showing the element catalogue grouped by family, with loading,
@@ -47,6 +48,18 @@ class CatalogueSection extends ConsumerWidget {
   ) {
     final theme = Theme.of(context);
     return [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: OutlinedButton.icon(
+            onPressed: () =>
+                CustomElementSheet.show(context, routineId: routineId),
+            icon: const Icon(Icons.edit_note),
+            label: const Text('Add an element not in the list'),
+          ),
+        ),
+      ),
       for (final group in DbElementGroup.values)
         if (elements.any((e) => e.group == group)) ...[
           Padding(

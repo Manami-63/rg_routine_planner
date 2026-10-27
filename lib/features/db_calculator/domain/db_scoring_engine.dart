@@ -1,6 +1,8 @@
 import '../../../core/scoring/ruleset.dart';
 import '../../../core/scoring/score.dart';
 import 'db_counting.dart';
+import 'db_element.dart';
+import 'db_element_options.dart';
 import 'db_routine.dart';
 import 'risk.dart';
 
@@ -20,6 +22,7 @@ class DbScoreResult {
     required this.riskSubtotal,
     required this.elementCount,
     required this.riskCount,
+    required this.elementValues,
     required this.counting,
     required this.countLimitsApplied,
     required this.ruleset,
@@ -35,6 +38,10 @@ class DbScoreResult {
   /// All elements and risks in the routine, counted or not.
   final int elementCount;
   final int riskCount;
+
+  /// The value of each element in the routine (same positions), including
+  /// its options.
+  final List<Score> elementValues;
 
   /// Which elements and risks count towards the subtotals.
   final DbCounting counting;
@@ -59,6 +66,9 @@ class DbScoreResult {
 abstract interface class DbScoringEngine {
   RulesetVersion get ruleset;
 
+  /// The value of one DB performed with [options], e.g. on flat foot.
+  Score elementValue(DbElement element, DbElementOptions options);
+
   /// The value of a single risk, e.g. for previewing it before adding.
   Score riskValue(RiskElement risk);
 
@@ -82,10 +92,38 @@ class ProvisionalDbScoringEngine implements DbScoringEngine {
   @override
   final RulesetVersion ruleset;
 
-  /// Placeholder valuation: the rotation option's value plus each
-  /// criterion's value. This additive structure is an assumption to be
-  /// verified against the official rules before any ruleset is marked
-  /// official.
+  // FIG Code of Points 2025-2028.
+  /// #10.3: a balance on flat foot is worth 0.10 less than on relevé.
+  static const flatFootReduction = Score.hundredths(10);
+
+  /// #10.9.2: "slow turn" adds 0.20 on relevé, 0.10 on flat foot.
+  static const slowTurnOnReleve = Score.hundredths(20);
+  static const slowTurnOnFlatFoot = Score.hundredths(10);
+
+  /// A manual value replaces everything else. Otherwise options only apply
+  /// to elements that allow them; additional rotations are worth the
+  /// element's `extraRotationValue` each (#12.2.5-12.2.8).
+  @override
+  Score elementValue(DbElement element, DbElementOptions options) {
+    _checkRuleset(element.rulesetId, 'Element ${element.id}');
+    if (options.manualValue case final manual?) return manual;
+
+    var value = element.value;
+    final flatFoot = options.flatFoot && element.canBeOnFlatFoot;
+    if (flatFoot) value -= flatFootReduction;
+    if (options.slowTurn && element.canSlowTurn) {
+      value += flatFoot ? slowTurnOnFlatFoot : slowTurnOnReleve;
+    }
+    if (element.extraRotationValue case final perRotation?) {
+      value += perRotation * options.extraRotations;
+    }
+    return value;
+  }
+
+  /// The rotation option's value plus each criterion's value. This additive
+  /// structure follows the FIG Code of Points 2025-2028 (#4.2, #4.8-4.10:
+  /// base 0.20 for 2 rotations, + the value of each criterion). Validity
+  /// rules (e.g. repeated rotation groups) are not checked.
   @override
   Score riskValue(RiskElement risk) {
     _checkRuleset(risk.rotation.rulesetId, 'Rotation ${risk.rotation.id}');
@@ -104,17 +142,22 @@ class ProvisionalDbScoringEngine implements DbScoringEngine {
     DbCountLimits limits = DbCountLimits.none,
   }) {
     _checkRuleset(routine.rulesetId, 'Routine');
-    for (final element in routine.elements) {
-      _checkRuleset(element.rulesetId, 'Element ${element.id}');
-    }
 
-    // Valued up front so uncounted risks are still checked for the ruleset.
+    // Valued up front so uncounted items are still checked for the ruleset.
+    final elementValues = [
+      for (final (i, element) in routine.elements.indexed)
+        elementValue(element, routine.elementOptions[i]),
+    ];
     final riskValues = [for (final risk in routine.risks) riskValue(risk)];
 
-    final counting = DbCounting.select(routine, limits);
+    final counting = DbCounting.select(
+      elementValues: elementValues,
+      riskCount: routine.risks.length,
+      limits: limits,
+    );
     final bodySubtotal = counting.countedElements.fold(
       Score.zero,
-      (sum, i) => sum + routine.elements[i].value,
+      (sum, i) => sum + elementValues[i],
     );
     final riskSubtotal = counting.countedRisks.fold(
       Score.zero,
@@ -126,6 +169,7 @@ class ProvisionalDbScoringEngine implements DbScoringEngine {
       riskSubtotal: riskSubtotal,
       elementCount: routine.elements.length,
       riskCount: routine.risks.length,
+      elementValues: List.unmodifiable(elementValues),
       counting: counting,
       countLimitsApplied: limits.isSet,
       ruleset: ruleset,

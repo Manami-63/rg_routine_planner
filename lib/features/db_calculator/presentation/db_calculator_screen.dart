@@ -299,10 +299,6 @@ class _BodyTab extends ConsumerWidget {
     final elements = ref.watch(
       dbRoutineProvider(routineId).select((r) => r.elements),
     );
-    final counted = ref.watch(
-      dbScoreResultProvider(routineId)
-          .select((result) => result.counting.countedElements),
-    );
     return _TabScrollView(
       slivers: [
         SectionHeader(title: 'Your routine', trailing: '$count selected'),
@@ -318,7 +314,7 @@ class _BodyTab extends ConsumerWidget {
               ),
               BodyGroupsNotice(
                 requirements: ref.watch(routineRequirementsProvider(routineId)),
-                countedGroups: {for (final i in counted) elements[i].group},
+                presentGroups: {for (final e in elements) e.group},
               ),
             ],
           ),

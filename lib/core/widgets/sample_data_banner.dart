@@ -30,9 +30,10 @@ class SampleDataBanner extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                '${ruleset.label}: element names and values are placeholders, '
-                'not official rules. Totals are provisional and not '
-                'competition-ready.',
+                '${ruleset.label}: '
+                '${ruleset.detail ?? 'element names and values are '
+                        'placeholders, not official rules.'} '
+                'Totals are provisional and not competition-ready.',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: colors.onTertiaryContainer,
                 ),

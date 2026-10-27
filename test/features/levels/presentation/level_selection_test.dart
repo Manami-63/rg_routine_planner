@@ -78,7 +78,12 @@ void main() {
       container.read(routineProvider(testRoutineId)).level?.id,
       'fig-junior',
     );
-    expect(find.text('DB up to 6 · R up to 3 · DA up to 12'), findsOneWidget);
+    expect(
+      find.text(
+        'DB up to 6 · R up to 3 · DA up to 12 · needs leap, balance, rotation',
+      ),
+      findsOneWidget,
+    );
     await addJumps(tester, 7);
     expect(
       noticeText('7 DB · 1 not counted (highest 6 count)'),
@@ -229,6 +234,11 @@ void main() {
     expect(find.text('Apparatus difficulties (DA)'), findsNothing);
   });
 
+  Finder groupAlert(String text) => find.descendant(
+    of: find.byKey(const ValueKey('body-groups-notice')),
+    matching: find.text(text),
+  );
+
   testWidgets('missing required group shows a penalty alert', (tester) async {
     await pumpScreen(tester);
     await selectCustomLevel(
@@ -239,32 +249,52 @@ void main() {
       ),
     );
 
-    Finder alert(String text) => find.descendant(
-      of: find.byKey(const ValueKey('body-groups-notice')),
-      matching: find.text(text),
-    );
     expect(
-      alert(
-        'No counted leap or balance. Your level requires one of each: '
-        'you may get a penalty.',
+      groupAlert(
+        'No leap or balance in the routine. Your level requires one of '
+        'each: you may get a penalty.',
       ),
       findsOneWidget,
     );
 
     await addJumps(tester, 1);
     expect(
-      alert(
-        'No counted balance. Your level requires one: you may get a penalty.',
+      groupAlert(
+        'No balance in the routine. Your level requires one: '
+        'you may get a penalty.',
       ),
       findsOneWidget,
     );
 
     // The balance (0.20) is lower than the jump (0.30), so with a maximum
-    // of 1 it is not counted and the alert stays.
+    // of 1 it is not counted; performing it still meets the requirement.
+    await addBalance(tester);
+    expect(find.byKey(const ValueKey('body-groups-notice')), findsNothing);
+  });
+
+  testWidgets('FIG alert names the penalty for each missing group', (
+    tester,
+  ) async {
+    await pumpScreen(tester);
+    await openPicker(tester);
+    await tester.tap(find.text('FIG Senior'));
+    await tester.pump();
+    await apply(tester);
+    await addJumps(tester, 1);
+
+    expect(
+      groupAlert(
+        'No balance or rotation in the routine. Your level requires one of '
+        'each: you may get a 0.30 penalty for each.',
+      ),
+      findsOneWidget,
+    );
+
     await addBalance(tester);
     expect(
-      alert(
-        'No counted balance. Your level requires one: you may get a penalty.',
+      groupAlert(
+        'No rotation in the routine. Your level requires one: '
+        'you may get a 0.30 penalty.',
       ),
       findsOneWidget,
     );

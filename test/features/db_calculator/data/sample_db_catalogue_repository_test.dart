@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rg_routine_planner/core/scoring/apparatus.dart';
+import 'package:rg_routine_planner/features/db_calculator/domain/risk.dart';
 import 'package:rg_routine_planner/features/db_calculator/data/sample_db_catalogue_repository.dart';
 
 void main() {
@@ -27,22 +29,38 @@ void main() {
       }
     });
 
-    test(
-      'risk options belong to the sample ruleset and are labelled',
-      () async {
-        final catalogue = await repository.fetchRiskCatalogue();
+    test('risk rotations follow the FIG base and additional values', () async {
+      final catalogue = await repository.fetchRiskCatalogue();
 
-        expect(catalogue.rotationOptions, isNotEmpty);
-        for (final option in catalogue.rotationOptions) {
-          expect(option.rulesetId, repository.ruleset.id);
-          expect(option.label, contains('(sample)'));
-        }
-        for (final criterion in catalogue.criteria) {
-          expect(criterion.rulesetId, repository.ruleset.id);
-          expect(criterion.name, startsWith('Sample '));
-        }
-      },
-    );
+      // CoP 2025-2028 #4.2.1 and #4.8.1: 2 rotations 0.20, + 0.10 each.
+      expect(catalogue.rotationOptions.first.rotations, 2);
+      for (final option in catalogue.rotationOptions) {
+        expect(option.rulesetId, repository.ruleset.id);
+        expect(option.value.hundredths, 20 + (option.rotations - 2) * 10);
+      }
+    });
+
+    test('risk criteria are in the ruleset with unique ids', () async {
+      final catalogue = await repository.fetchRiskCatalogue();
+      final ids = catalogue.criteria.map((c) => c.id).toSet();
+
+      expect(ids.length, catalogue.criteria.length);
+      for (final criterion in catalogue.criteria) {
+        expect(criterion.rulesetId, repository.ruleset.id);
+        expect(criterion.phase, isNotNull);
+      }
+    });
+
+    test('Ribbon has only the general criteria', () async {
+      final catalogue = await repository.fetchRiskCatalogue();
+
+      for (final phase in RiskPhase.values) {
+        expect(
+          catalogue.criteriaFor(phase, Apparatus.ribbon),
+          catalogue.criteriaFor(phase, null),
+        );
+      }
+    });
 
     test('element ids are unique', () async {
       final elements = await repository.fetchElements();

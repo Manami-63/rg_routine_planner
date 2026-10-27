@@ -44,7 +44,8 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
 - Routines store catalogue ids, never values; values resolve from the
   current catalogue on load. Missing ids, or a different ruleset, load as
   `.unknown(...)` placeholders that keep the id so re-saving loses nothing.
-- `DbRoutine` is only the DB content (ruleset, elements, risks). Name,
+- `DbRoutine` is only the DB content (ruleset, elements with matching
+  `elementOptions`, risks). Name,
   apparatus and level live on `Routine`. Edit via
   `routineControllerProvider`; DB helpers are the `DbRoutineEditing`
   extension in `db_routine_providers.dart`.
@@ -61,19 +62,31 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
 ## Scoring rules (important)
 
 - Never invent official FIG element values or competition rules.
-- All catalogue data is currently **sample data** (`sample-v0`,
-  `isOfficial: false`), with names starting `Sample `. Keep it in
-  `data/sample_*.dart`, separate from engines.
+- DB element data is **sample data** (`sample-v0`, `isOfficial: false`),
+  with names starting `Sample `, in `data/sample_*.dart`. Risk data
+  (`data/fig_risks.dart`) is transcribed from the FIG CoP 2025-2028 with
+  section references, but served under `sample-v0` until a FIG DB catalogue
+  exists (then both move to one FIG ruleset). Keep data separate from
+  engines.
 - Scores use `Score` (integer hundredths), never `double`.
 - Every element, routine and engine carries a ruleset id; engines reject
   mismatched data.
 - `ProvisionalDbScoringEngine` only sums the values of what counts. Real
   rules go in a new `DbScoringEngine` implementation, swapped in via
   `dbScoringEngineProvider`.
+- Each DB in a routine has `DbElementOptions`: flat foot, slow turn,
+  additional rotations (only where the `DbElement` flags allow them) and a
+  `manualValue` that replaces the calculated value.
+  `DbScoringEngine.elementValue` applies them (CoP #10.3, #10.9,
+  #12.2.5-12.2.8); counting ranks by these values. Users can add custom
+  elements (`DbElement.custom`, id `custom`) with a manual value, e.g. a DB
+  newly approved by FIG.
 - Risks (R) are part of DB but modelled separately (`domain/risk.dart`): a
-  rotation option plus criteria, valued by `DbScoringEngine.riskValue`. The
-  additive risk valuation is a placeholder assumption, not a verified rule.
-  The UI shows body difficulties and risks as two tabs with a breakdown.
+  rotation option (2 rotations 0.20, + 0.10 each) plus criteria, valued
+  additively by `DbScoringEngine.riskValue` (CoP #4.2, #4.8-4.10). Each
+  criterion has a `RiskPhase` (throw/rotations/catch) and the apparatus it
+  applies to; the builder filters by the routine's apparatus. The UI shows
+  body difficulties and risks as two tabs with a breakdown.
 - `DbCatalogueRepository` serves both element and risk catalogues so they
   always share one ruleset.
 - Keep DB and DA logic in separate features.
@@ -88,6 +101,8 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   highest-valued N DB, first N risks, first N DA (`DifficultyCategory`).
   `DbCounting` picks what counts; the engine sums only that. Uncounted items
   stay in the routine, greyed out as "Not counted".
+- Body groups are required among all DB, counted or not (CoP #2.3.2);
+  FIG presets require all three, 0.30 per missing group.
 - Count checks and missing body groups are advisory notices, never
   blocking. Penalties are never calculated or deducted (too many causes the
   app cannot see); the UI only warns "you may get a penalty".
