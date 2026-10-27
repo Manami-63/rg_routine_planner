@@ -16,6 +16,7 @@ class DbElement {
     this.extraRotationValue,
     this.canBeInSeries = false,
     this.family,
+    this.baseRotationDegrees = 360,
   }) : isCustom = false;
 
   /// An element the user entered themselves, e.g. a DB newly approved by
@@ -33,6 +34,7 @@ class DbElement {
        // The user decides; balances never form series (#10.9.6).
        canBeInSeries = group != DbElementGroup.balance,
        family = null,
+       baseRotationDegrees = 360,
        isCustom = true;
 
   /// The id stored for every custom element.
@@ -49,6 +51,7 @@ class DbElement {
       extraRotationValue = null,
       canBeInSeries = false,
       family = null,
+      baseRotationDegrees = 360,
       isCustom = false;
 
   final String id;
@@ -69,6 +72,10 @@ class DbElement {
   /// The value of each rotation above the base, for rotation DB that can
   /// have additional rotations. `null` when not possible.
   final Score? extraRotationValue;
+
+  /// The minimum rotation of a rotation DB: 360°, or 180° for a few shapes
+  /// (#12.1.2). Each additional rotation adds 360°.
+  final int baseRotationDegrees;
 
   /// A jump/leap or pivot/illusion that may be performed in a series of
   /// identical elements, each counting as 1 DB (#2.4.3, #8.10, #12.8).
@@ -96,6 +103,7 @@ class DbElement {
       other.extraRotationValue == extraRotationValue &&
       other.canBeInSeries == canBeInSeries &&
       other.family == family &&
+      other.baseRotationDegrees == baseRotationDegrees &&
       other.isCustom == isCustom;
 
   @override
@@ -110,6 +118,7 @@ class DbElement {
     extraRotationValue,
     canBeInSeries,
     family,
+    baseRotationDegrees,
     isCustom,
   );
 

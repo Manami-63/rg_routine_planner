@@ -19,12 +19,22 @@ String? describeOptions(DbElement element, DbElementOptions options) {
     if (options.flatFoot) 'Flat foot',
     if (options.slowTurn) 'Slow turn',
     if (options.extraRotations > 0)
-      '+${options.extraRotations} '
-          '${options.extraRotations == 1 ? 'rotation' : 'rotations'}',
+      describeRotation(element, options.extraRotations),
     if (element.canBeInSeries && options.seriesCount > 1)
       'Series of ${options.seriesCount}',
   ];
   return parts.isEmpty ? null : parts.join(' · ');
+}
+
+/// The total rotation of a rotation DB with [extraRotations] above its
+/// base: "3 rotations" for a 360° base, or degrees (e.g. "540°") for the
+/// few with a 180° base.
+String describeRotation(DbElement element, int extraRotations) {
+  if (element.baseRotationDegrees == 360) {
+    final total = extraRotations + 1;
+    return '$total ${total == 1 ? 'rotation' : 'rotations'}';
+  }
+  return '${element.baseRotationDegrees + extraRotations * 360}°';
 }
 
 /// Bottom sheet for adjusting how one DB of the routine is performed.
@@ -85,7 +95,9 @@ class _AdjustElementSheetState extends ConsumerState<AdjustElementSheet> {
     text: widget.options.manualValue?.format() ?? '',
   );
 
-  static const _maxExtraRotations = 10;
+  /// Up to 10 Fouetté components (#12.11), each possibly a double: so up to
+  /// 20 rotations.
+  static const _maxExtraRotations = 20;
   static const _maxSeries = 10;
 
   DbElement get _element => widget.element;
@@ -199,8 +211,15 @@ class _AdjustElementSheetState extends ConsumerState<AdjustElementSheet> {
                   Expanded(
                     child: ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: const Text('Additional rotations'),
-                      subtitle: Text('+${perRotation.format()} each'),
+                      title: const Text('Total rotation'),
+                      subtitle: Text(
+                        _element.baseRotationDegrees == 360
+                            ? '${(_extraRotations + 1) * 360}° · '
+                                  '+${perRotation.format()} for each after '
+                                  'the first'
+                            : '+${perRotation.format()} for each 360° after '
+                                  'the first ${_element.baseRotationDegrees}°',
+                      ),
                     ),
                   ),
                   IconButton(
@@ -210,7 +229,13 @@ class _AdjustElementSheetState extends ConsumerState<AdjustElementSheet> {
                         ? null
                         : () => setState(() => _extraRotations--),
                   ),
-                  Text('$_extraRotations', style: theme.textTheme.titleMedium),
+                  Text(
+                    _element.baseRotationDegrees == 360
+                        ? '${_extraRotations + 1}'
+                        : '${_element.baseRotationDegrees + _extraRotations * 360}°',
+                    key: const ValueKey('total-rotation'),
+                    style: theme.textTheme.titleMedium,
+                  ),
                   IconButton(
                     tooltip: 'More rotations',
                     icon: const Icon(Icons.add),

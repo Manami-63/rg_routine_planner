@@ -71,6 +71,16 @@ void main() {
       }
     });
 
+    test('only the five #12.1.2 shapes have a 180° base rotation', () {
+      expect(
+        {
+          for (final e in elements)
+            if (e.baseRotationDegrees == 180) e.id,
+        },
+        {'fig-3.505', 'fig-3.804', 'fig-3.805', 'fig-3.1405', 'fig-3.2003'},
+      );
+    });
+
     test('every element belongs to a numbered table row', () {
       for (final element in elements) {
         final code = element.id.substring('fig-'.length);

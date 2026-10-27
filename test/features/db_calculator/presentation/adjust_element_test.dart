@@ -3,8 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:rg_routine_planner/core/scoring/score.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_element.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_element_options.dart';
+import 'package:rg_routine_planner/features/db_calculator/presentation/widgets/adjust_element_sheet.dart';
 
 import '../pump_db_calculator.dart';
+import '../test_data.dart';
 
 void main() {
   String subtotal(WidgetTester tester) =>
@@ -59,20 +61,25 @@ void main() {
     );
   });
 
-  testWidgets('a rotation can have additional rotations', (tester) async {
+  testWidgets('a rotation is set by its total rotation', (tester) async {
     await pumpDbCalculator(tester);
     await add(tester, 'Test Rotation');
     await openAdjust(tester, 0);
 
-    expect(find.text('+0.10 each'), findsOneWidget);
+    String total() =>
+        tester.widget<Text>(find.byKey(const ValueKey('total-rotation'))).data!;
+    expect(total(), '1');
+    expect(find.text('360° · +0.10 for each after the first'), findsOneWidget);
     expect(find.text('Slow turn'), findsNothing);
     await tester.tap(find.byTooltip('More rotations'));
     await tester.tap(find.byTooltip('More rotations'));
     await tester.pump();
+    expect(total(), '3');
+    expect(find.text('1080° · +0.10 for each after the first'), findsOneWidget);
     expect(preview(tester), '0.30');
     await save(tester);
 
-    expect(find.text('Rotations · +2 rotations'), findsOneWidget);
+    expect(find.text('Rotations · 3 rotations'), findsOneWidget);
     expect(subtotal(tester), '0.30');
   });
 
@@ -190,5 +197,25 @@ void main() {
 
     expect(find.textContaining('repetition'), findsNothing);
     expect(subtotal(tester), '0.60');
+  });
+
+  test('rotation summary: count for 360° bases, degrees for 180° bases', () {
+    const halfTurn = DbElement(
+      id: 'half',
+      name: 'Half turn base',
+      group: DbElementGroup.rotation,
+      value: Score.hundredths(50),
+      rulesetId: 'test-v1',
+      extraRotationValue: Score.hundredths(20),
+      baseRotationDegrees: 180,
+    );
+
+    expect(describeRotation(testRotation, 0), '1 rotation');
+    expect(describeRotation(testRotation, 9), '10 rotations');
+    expect(describeRotation(halfTurn, 1), '540°');
+    expect(
+      describeOptions(halfTurn, const DbElementOptions(extraRotations: 2)),
+      '900°',
+    );
   });
 }

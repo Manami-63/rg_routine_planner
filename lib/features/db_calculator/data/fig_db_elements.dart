@@ -46,7 +46,11 @@ DbElement _element(
       : Score.hundredths(extraRotation),
   canBeInSeries: series,
   family: _familyOf(code),
+  baseRotationDegrees: _halfTurnBase.contains(code) ? 180 : 360,
 );
+
+/// Rotations with a minimum basic rotation of 180° (#12.1.2).
+const _halfTurnBase = {'3.505', '3.804', '3.805', '3.1405', '3.2003'};
 
 /// "23 · Switch split leap, straight legs" for code 1.2305: the table row
 /// is the code without its group prefix and its last two digits.
