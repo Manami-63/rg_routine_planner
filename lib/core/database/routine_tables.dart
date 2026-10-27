@@ -3,7 +3,7 @@ import 'package:drift/drift.dart';
 // Routine storage. Table and column names (snake_case in SQL) mirror what a
 // future Laravel/MySQL schema would use, so syncing later is a 1:1 mapping.
 //
-// Rows store catalogue ids (e.g. `sample-jump-a`), never values: values are
+// Rows store catalogue ids (e.g. `fig-2.203`), never values: values are
 // looked up from the current catalogue when a routine is loaded.
 
 @DataClassName('RoutineRow')
@@ -52,6 +52,9 @@ class RoutineBodyElements extends Table {
   BoolColumn get flatFoot => boolean().withDefault(const Constant(false))();
   BoolColumn get slowTurn => boolean().withDefault(const Constant(false))();
   IntColumn get extraRotations => integer().withDefault(const Constant(0))();
+
+  /// Identical elements performed in a series (1 = none). Added in v5.
+  IntColumn get seriesCount => integer().withDefault(const Constant(1))();
 
   /// A value entered by the user, in hundredths. Null when not set.
   IntColumn get manualValue => integer().nullable()();

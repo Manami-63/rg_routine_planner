@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rg_routine_planner/core/scoring/db_element_group.dart';
+import 'package:rg_routine_planner/features/db_calculator/domain/db_element_options.dart';
+import 'package:rg_routine_planner/features/db_calculator/presentation/db_routine_providers.dart';
 import 'package:rg_routine_planner/features/routines/presentation/routine_controller.dart';
+
+import '../../db_calculator/test_data.dart';
+
 import 'package:rg_routine_planner/features/levels/domain/competition_level.dart';
 import 'package:rg_routine_planner/features/levels/domain/count_limit.dart';
 
@@ -26,11 +31,31 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// Adds [times] Test Jumps. Repeating an element is not valid, so they
+  /// are performed as one series (each element of a series is 1 DB).
   Future<void> addJumps(WidgetTester tester, int times) async {
-    for (var i = 0; i < times; i++) {
-      await tester.tap(find.byTooltip('Add Test Jump'));
-      await tester.pump();
+    final db = container.read(routineProvider(testRoutineId)).db;
+    final index = db.elements.indexOf(testJump);
+    final controller = container.read(
+      routineControllerProvider(testRoutineId).notifier,
+    );
+    if (index == -1) {
+      await addFromCatalogue(tester, 'Test Jump');
+      if (times > 1) {
+        controller.setElementOptionsAt(
+          db.elements.length,
+          DbElementOptions(seriesCount: times),
+        );
+      }
+    } else {
+      controller.setElementOptionsAt(
+        index,
+        DbElementOptions(
+          seriesCount: db.elementOptions[index].seriesCount + times,
+        ),
+      );
     }
+    await tester.pump();
   }
 
   // Pump after each tap so the next tap sees the rebuilt stepper.
@@ -40,8 +65,7 @@ void main() {
   }
 
   Future<void> addBalance(WidgetTester tester) async {
-    await tester.tap(find.byTooltip('Add Test Balance'));
-    await tester.pump();
+    await addFromCatalogue(tester, 'Test Balance');
   }
 
   Future<void> selectCustomLevel(

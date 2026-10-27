@@ -26,13 +26,96 @@ void main() {
 
     test('sums element values exactly', () {
       final result = engine.calculate(
-        routineOf([testJump, testBalance, testRotation, testJump]),
+        routineOf([testJump, testBalance, testRotation]),
       );
 
-      // 0.30 + 0.20 + 0.10 + 0.30
-      expect(result.subtotal, const Score.hundredths(90));
-      expect(result.subtotal.format(), '0.90');
-      expect(result.elementCount, 4);
+      // 0.30 + 0.20 + 0.10
+      expect(result.subtotal, const Score.hundredths(60));
+      expect(result.subtotal.format(), '0.60');
+      expect(result.elementCount, 3);
+    });
+
+    group('repetitions and series', () {
+      test('a repeated element is not valid and adds nothing', () {
+        final result = engine.calculate(
+          routineOf([testJump, testBalance, testJump]),
+        );
+
+        expect(result.repeatedElements, {2});
+        expect(result.dbPerElement, [1, 1, 0]);
+        expect(result.subtotal, const Score.hundredths(50));
+        expect(result.elementCount, 2);
+      });
+
+      test('a manual value makes a repetition count', () {
+        final result = engine.calculate(
+          DbRoutine(
+            rulesetId: 'test-v1',
+            elements: const [testJump, testJump],
+            elementOptions: const [
+              DbElementOptions.none,
+              DbElementOptions(manualValue: Score.hundredths(30)),
+            ],
+          ),
+        );
+
+        expect(result.repeatedElements, isEmpty);
+        expect(result.subtotal, const Score.hundredths(60));
+      });
+
+      test('custom elements are never repetitions', () {
+        const custom = DbElement.custom(
+          name: 'New',
+          group: DbElementGroup.jump,
+          rulesetId: 'test-v1',
+        );
+        final result = engine.calculate(
+          DbRoutine(
+            rulesetId: 'test-v1',
+            elements: const [custom, custom],
+            elementOptions: const [
+              DbElementOptions(manualValue: Score.hundredths(10)),
+              DbElementOptions(manualValue: Score.hundredths(20)),
+            ],
+          ),
+        );
+
+        expect(result.repeatedElements, isEmpty);
+        expect(result.subtotal, const Score.hundredths(30));
+      });
+
+      test('each element of a series counts as 1 DB', () {
+        final result = engine.calculate(
+          DbRoutine(
+            rulesetId: 'test-v1',
+            elements: const [testJump, testBalance],
+            elementOptions: const [
+              DbElementOptions(seriesCount: 3),
+              DbElementOptions.none,
+            ],
+          ),
+          limits: const DbCountLimits(maxElements: 3),
+        );
+
+        // The 3 jumps of the series (0.30 each) beat the balance (0.20).
+        expect(result.dbPerElement, [3, 1]);
+        expect(result.elementCount, 4);
+        expect(result.counting.countedPerElement, [3, 0]);
+        expect(result.subtotal, const Score.hundredths(90));
+      });
+
+      test('elements that cannot form a series count once', () {
+        final result = engine.calculate(
+          DbRoutine(
+            rulesetId: 'test-v1',
+            elements: const [testBalance],
+            elementOptions: const [DbElementOptions(seriesCount: 3)],
+          ),
+        );
+
+        expect(result.dbPerElement, [1]);
+        expect(result.subtotal, const Score.hundredths(20));
+      });
     });
 
     test('only counted elements and risks add to the subtotal', () {
@@ -166,7 +249,7 @@ void main() {
           Score.hundredths(30),
           Score.hundredths(40),
         ]);
-        expect(result.counting.countedElements, {1});
+        expect(result.counting.countedPerElement, [0, 1]);
         expect(result.bodySubtotal, const Score.hundredths(40));
       });
     });

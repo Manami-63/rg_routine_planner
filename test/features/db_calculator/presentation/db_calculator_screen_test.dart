@@ -19,12 +19,20 @@ void main() {
   String subtotalText(WidgetTester tester) =>
       tester.widget<Text>(find.byKey(const ValueKey('db-subtotal'))).data!;
 
-  testWidgets('shows sample-data warning and empty routine initially', (
+  testWidgets('shows unofficial-data warning and empty routine initially', (
     tester,
   ) async {
     await pumpScreen(tester);
 
+    expect(
+      find.text('Unofficial values · totals are provisional'),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Details'));
+    await tester.pumpAndSettle();
     expect(find.textContaining('not official rules'), findsOneWidget);
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
     expect(find.text('No elements yet'), findsOneWidget);
     expect(subtotalText(tester), '0.00');
     expect(find.text('Provisional DB subtotal'), findsOneWidget);
@@ -33,9 +41,8 @@ void main() {
   testWidgets('adding elements updates the list and subtotal', (tester) async {
     await pumpScreen(tester);
 
-    await tester.tap(find.byTooltip('Add Test Jump'));
-    await tester.tap(find.byTooltip('Add Test Balance'));
-    await tester.pump();
+    await addFromCatalogue(tester, 'Test Jump');
+    await addFromCatalogue(tester, 'Test Balance');
 
     expect(find.text('No elements yet'), findsNothing);
     expect(find.byTooltip('Remove Test Jump'), findsOneWidget);
@@ -47,9 +54,8 @@ void main() {
   testWidgets('removing an element updates the subtotal', (tester) async {
     await pumpScreen(tester);
 
-    await tester.tap(find.byTooltip('Add Test Jump'));
-    await tester.tap(find.byTooltip('Add Test Rotation'));
-    await tester.pump();
+    await addFromCatalogue(tester, 'Test Jump');
+    await addFromCatalogue(tester, 'Test Rotation');
     await tester.tap(find.byTooltip('Remove Test Jump'));
     await tester.pump();
 
@@ -62,8 +68,7 @@ void main() {
   ) async {
     await pumpScreen(tester);
 
-    await tester.tap(find.byTooltip('Add Test Jump'));
-    await tester.pump();
+    await addFromCatalogue(tester, 'Test Jump');
 
     // Cancelling keeps the elements.
     await tester.tap(find.byTooltip('Clear all'));
@@ -99,8 +104,7 @@ void main() {
     await tester.enterText(find.byType(TextField), 'Hoop routine');
     expect(container.read(routineProvider(testRoutineId)).name, 'Hoop routine');
 
-    await tester.tap(find.byTooltip('Add Test Jump'));
-    await tester.pump();
+    await addFromCatalogue(tester, 'Test Jump');
     await tester.tap(find.byTooltip('Clear all'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Clear'));
@@ -119,6 +123,10 @@ void main() {
       repository: FakeDbCatalogueRepository(future: pending.future),
     );
 
+    // The spinner never settles, so pump the route transition explicitly.
+    await tester.tap(find.text('Add element'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
     pending.complete([testJump]);
@@ -136,7 +144,7 @@ void main() {
       tester,
       repository: FakeDbCatalogueRepository(error: StateError('boom')),
     );
-    await tester.pump();
+    await openElementPicker(tester);
 
     expect(find.text('Could not load the catalogue'), findsOneWidget);
     expect(find.text('Retry'), findsOneWidget);
@@ -145,7 +153,7 @@ void main() {
   testWidgets('retry reloads the catalogue after an error', (tester) async {
     final repository = FakeDbCatalogueRepository(error: StateError('boom'));
     await pumpScreen(tester, repository: repository);
-    await tester.pump();
+    await openElementPicker(tester);
 
     repository.error = null;
     await tester.tap(find.text('Retry'));
@@ -280,8 +288,7 @@ void main() {
     ) async {
       await pumpScreen(tester);
 
-      await tester.tap(find.byTooltip('Add Test Jump'));
-      await tester.pump();
+      await addFromCatalogue(tester, 'Test Jump');
       await openRisksTab(tester);
       await tester.tap(find.text('Build a risk'));
       await tester.pumpAndSettle();
@@ -332,7 +339,7 @@ void main() {
       tester,
       repository: FakeDbCatalogueRepository(elements: const []),
     );
-    await tester.pump();
+    await openElementPicker(tester);
 
     expect(find.text('Catalogue is empty'), findsOneWidget);
   });
@@ -393,8 +400,7 @@ void main() {
       expect(find.byTooltip('Saved'), findsOneWidget);
 
       routines.saveError = StateError('disk full');
-      await tester.tap(find.byTooltip('Add Test Jump'));
-      await tester.pump();
+      await addFromCatalogue(tester, 'Test Jump');
       await tester.pump();
       expect(find.byTooltip("Couldn't save. Tap to retry"), findsOneWidget);
 

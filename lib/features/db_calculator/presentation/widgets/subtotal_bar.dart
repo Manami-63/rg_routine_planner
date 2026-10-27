@@ -44,6 +44,8 @@ class SubtotalBar extends ConsumerWidget {
                       '${_countedOf(result.countedRiskCount, result.riskCount)}',
                       key: const ValueKey('db-breakdown'),
                       style: detailStyle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     Text(
                       [
@@ -56,6 +58,8 @@ class SubtotalBar extends ConsumerWidget {
                               : 'No rule checks applied',
                       ].join(' · '),
                       style: detailStyle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),

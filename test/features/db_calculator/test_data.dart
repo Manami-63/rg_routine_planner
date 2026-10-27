@@ -5,8 +5,8 @@ import 'package:rg_routine_planner/features/db_calculator/data/db_catalogue_repo
 import 'package:rg_routine_planner/features/db_calculator/domain/db_element.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/risk.dart';
 
-// Test fixtures, independent of the app's sample catalogue so tests do not
-// break when sample values change.
+// Test fixtures, independent of the app's FIG catalogue so tests do not
+// break when catalogue data changes.
 
 const testRuleset = RulesetVersion(
   id: 'test-v1',
@@ -20,6 +20,8 @@ const testJump = DbElement(
   group: DbElementGroup.jump,
   value: Score.hundredths(30),
   rulesetId: 'test-v1',
+  canBeInSeries: true,
+  family: '1 · Test jumps',
 );
 
 const testBalance = DbElement(
@@ -30,6 +32,7 @@ const testBalance = DbElement(
   rulesetId: 'test-v1',
   canBeOnFlatFoot: true,
   canSlowTurn: true,
+  family: '1 · Test balances',
 );
 
 const testRotation = DbElement(
@@ -39,6 +42,7 @@ const testRotation = DbElement(
   value: Score.hundredths(10),
   rulesetId: 'test-v1',
   extraRotationValue: Score.hundredths(10),
+  family: '1 · Test rotations',
 );
 
 const testTwoRotations = RiskRotationOption(

@@ -24,17 +24,22 @@ class ApparatusSelector extends StatelessWidget {
       children: [
         Text('Apparatus', style: theme.textTheme.titleSmall),
         const SizedBox(height: 4),
-        Wrap(
-          spacing: 8,
-          runSpacing: 4,
-          children: [
-            for (final option in Apparatus.values)
-              ChoiceChip(
-                label: Text(option.label),
-                selected: option == apparatus,
-                onSelected: (_) => onChanged(option),
-              ),
-          ],
+        // One row that scrolls sideways, to keep the header short.
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (final option in Apparatus.values)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    label: Text(option.label),
+                    selected: option == apparatus,
+                    onSelected: (_) => onChanged(option),
+                  ),
+                ),
+            ],
+          ),
         ),
       ],
     );

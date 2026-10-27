@@ -33,7 +33,7 @@ class HomeScreen extends StatelessWidget {
               title: 'My routines',
               description:
                   'Create and save routines, and see a provisional DB '
-                  'subtotal. Uses sample data for now.',
+                  'subtotal based on the FIG Code of Points 2025-2028.',
               onTap: () => context.go(AppRoutes.routines),
             ),
             const SizedBox(height: 12),

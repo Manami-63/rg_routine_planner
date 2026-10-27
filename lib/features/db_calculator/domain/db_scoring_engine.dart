@@ -11,8 +11,8 @@ enum DbScoreNotice {
   /// Values come from a ruleset that is not verified against official rules.
   unofficialRuleset,
 
-  /// No rule checks (repetitions, requirements, ...) were applied, other
-  /// than the level's count limits.
+  /// Only some rules (count limits, repetitions) were applied; others
+  /// (e.g. apparatus technical elements, risk repetitions) were not.
   rulesNotValidated,
 }
 
@@ -21,6 +21,8 @@ class DbScoreResult {
     required this.bodySubtotal,
     required this.riskSubtotal,
     required this.elementCount,
+    required this.repeatedElements,
+    required this.dbPerElement,
     required this.riskCount,
     required this.elementValues,
     required this.counting,
@@ -35,12 +37,23 @@ class DbScoreResult {
   /// Total from the counted risks.
   final Score riskSubtotal;
 
-  /// All elements and risks in the routine, counted or not.
+  /// The valid DB in the routine, counted or not: each element of a series
+  /// is 1 DB, and repetitions are left out.
   final int elementCount;
+
+  /// All risks in the routine, counted or not.
   final int riskCount;
 
+  /// Positions of elements that repeat an earlier one and are therefore
+  /// not valid (#2.4.2), unless the user set a manual value.
+  final Set<int> repeatedElements;
+
+  /// How many DB each element stands for: its series length, or 0 for a
+  /// repetition.
+  final List<int> dbPerElement;
+
   /// The value of each element in the routine (same positions), including
-  /// its options.
+  /// its options. For a series, the value of each of its DB.
   final List<Score> elementValues;
 
   /// Which elements and risks count towards the subtotals.
@@ -49,13 +62,18 @@ class DbScoreResult {
   /// Whether a level limited what counts.
   final bool countLimitsApplied;
 
-  int get countedElementCount => counting.countedElements.length;
+  int get countedElementCount => counting.countedDbCount;
   int get countedRiskCount => counting.countedRisks.length;
   final RulesetVersion ruleset;
   final Set<DbScoreNotice> notices;
 
   Score get subtotal => bodySubtotal + riskSubtotal;
 }
+
+/// How many identical DB an element of a routine stands for: its series
+/// length when the element can be performed in series, otherwise 1.
+int seriesLengthOf(DbElement element, DbElementOptions options) =>
+    element.canBeInSeries ? options.seriesCount : 1;
 
 /// Calculates a DB score for a routine under one specific ruleset.
 ///
@@ -73,19 +91,19 @@ abstract interface class DbScoringEngine {
   Score riskValue(RiskElement risk);
 
   /// Calculates the subtotal of what counts under [limits] (the level's
-  /// maximums). Elements beyond them stay in the routine but add nothing.
+  /// maximums). Elements beyond them, and repetitions, stay in the routine
+  /// but add nothing.
   DbScoreResult calculate(
     DbRoutine routine, {
     DbCountLimits limits = DbCountLimits.none,
   });
 }
 
-/// Adds up the values of what counts and nothing else.
+/// Adds up the values of what counts.
 ///
-/// Apart from the level's count limits (see [DbCounting]), it deliberately
-/// applies no competition rules (no repetition or requirement checks),
-/// because those must come from verified official sources, not from
-/// guesses. Results are always marked provisional.
+/// Applies the level's count limits (see [DbCounting]) and the repetition
+/// and series rules of the FIG Code of Points; no other validity rules.
+/// Results are always marked provisional.
 class ProvisionalDbScoringEngine implements DbScoringEngine {
   const ProvisionalDbScoringEngine({required this.ruleset});
 
@@ -150,15 +168,24 @@ class ProvisionalDbScoringEngine implements DbScoringEngine {
     ];
     final riskValues = [for (final risk in routine.risks) riskValue(risk)];
 
+    final repeated = repetitionsIn(routine);
+    final dbPerElement = [
+      for (final (i, element) in routine.elements.indexed)
+        repeated.contains(i)
+            ? 0
+            : seriesLengthOf(element, routine.elementOptions[i]),
+    ];
+
     final counting = DbCounting.select(
       elementValues: elementValues,
+      dbPerElement: dbPerElement,
       riskCount: routine.risks.length,
       limits: limits,
     );
-    final bodySubtotal = counting.countedElements.fold(
-      Score.zero,
-      (sum, i) => sum + elementValues[i],
-    );
+    var bodySubtotal = Score.zero;
+    for (final (i, counted) in counting.countedPerElement.indexed) {
+      bodySubtotal += elementValues[i] * counted;
+    }
     final riskSubtotal = counting.countedRisks.fold(
       Score.zero,
       (sum, i) => sum + riskValues[i],
@@ -167,7 +194,9 @@ class ProvisionalDbScoringEngine implements DbScoringEngine {
     return DbScoreResult(
       bodySubtotal: bodySubtotal,
       riskSubtotal: riskSubtotal,
-      elementCount: routine.elements.length,
+      elementCount: dbPerElement.fold(0, (sum, n) => sum + n),
+      repeatedElements: Set.unmodifiable(repeated),
+      dbPerElement: List.unmodifiable(dbPerElement),
       riskCount: routine.risks.length,
       elementValues: List.unmodifiable(elementValues),
       counting: counting,
@@ -178,6 +207,21 @@ class ProvisionalDbScoringEngine implements DbScoringEngine {
         DbScoreNotice.rulesNotValidated,
       },
     );
+  }
+
+  /// Elements that repeat an earlier element (same box), which are not
+  /// valid (#2.4.2, #8.9, #10.9.6). A series is one element, so it is not
+  /// a repetition. Custom elements are all different, and a manual value
+  /// makes a repetition count (for levels that allow it).
+  static Set<int> repetitionsIn(DbRoutine routine) {
+    final seen = <String>{};
+    return {
+      for (final (i, element) in routine.elements.indexed)
+        if (!element.isCustom &&
+            !seen.add(element.id) &&
+            routine.elementOptions[i].manualValue == null)
+          i,
+    };
   }
 
   void _checkRuleset(String rulesetId, String what) {

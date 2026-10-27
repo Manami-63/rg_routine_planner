@@ -90,7 +90,7 @@ void main() {
         elementOptions: const [
           DbElementOptions(flatFoot: true, slowTurn: true),
           DbElementOptions(extraRotations: 2),
-          DbElementOptions(manualValue: Score.hundredths(45)),
+          DbElementOptions(manualValue: Score.hundredths(45), seriesCount: 2),
           DbElementOptions(manualValue: Score.hundredths(60)),
         ],
       ),

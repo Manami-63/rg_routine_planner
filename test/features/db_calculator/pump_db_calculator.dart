@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rg_routine_planner/features/db_calculator/presentation/db_calculator_providers.dart';
 import 'package:rg_routine_planner/features/db_calculator/presentation/db_calculator_screen.dart';
+import 'package:rg_routine_planner/features/db_calculator/presentation/element_picker_screen.dart';
 import 'package:rg_routine_planner/features/routines/domain/routine.dart';
 import 'package:rg_routine_planner/features/routines/presentation/routine_providers.dart';
 
@@ -51,3 +52,34 @@ Future<FakeRoutineRepository> pumpDbCalculator(
 
 ProviderContainer containerOf(WidgetTester tester) =>
     ProviderScope.containerOf(tester.element(find.byType(DbCalculatorScreen)));
+
+/// Opens the "Add element" picker from the body difficulties tab.
+Future<void> openElementPicker(WidgetTester tester) async {
+  await tester.tap(find.text('Add element'));
+  await tester.pumpAndSettle();
+}
+
+/// Adds the test element named [name] through the picker (its group, then
+/// a search) and closes the picker again.
+Future<void> addFromCatalogue(WidgetTester tester, String name) async {
+  final element = [
+    testJump,
+    testBalance,
+    testRotation,
+  ].singleWhere((e) => e.name == name);
+  await openElementPicker(tester);
+  await tester.tap(find.text(element.group.label));
+  await tester.pumpAndSettle();
+  await tester.enterText(
+    find.descendant(
+      of: find.byType(ElementPickerScreen),
+      matching: find.byType(TextField),
+    ),
+    name,
+  );
+  await tester.pump();
+  await tester.tap(find.byTooltip('Add $name'));
+  await tester.pump();
+  await tester.tap(find.text('Done'));
+  await tester.pumpAndSettle();
+}

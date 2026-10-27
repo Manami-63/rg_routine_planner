@@ -62,12 +62,11 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
 ## Scoring rules (important)
 
 - Never invent official FIG element values or competition rules.
-- DB element data is **sample data** (`sample-v0`, `isOfficial: false`),
-  with names starting `Sample `, in `data/sample_*.dart`. Risk data
-  (`data/fig_risks.dart`) is transcribed from the FIG CoP 2025-2028 with
-  section references, but served under `sample-v0` until a FIG DB catalogue
-  exists (then both move to one FIG ruleset). Keep data separate from
-  engines.
+- Catalogue data is the FIG Code of Points 2025-2028 (`fig-2025`,
+  `data/fig_*.dart`), transcribed from the CoP tables with page/section
+  references. It stays `isOfficial: false` until the user has checked the
+  transcription. Element names are "code · short description" (the CoP has
+  no names). Keep data separate from engines.
 - Scores use `Score` (integer hundredths), never `double`.
 - Every element, routine and engine carries a ruleset id; engines reject
   mismatched data.
@@ -78,7 +77,11 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   additional rotations (only where the `DbElement` flags allow them) and a
   `manualValue` that replaces the calculated value.
   `DbScoringEngine.elementValue` applies them (CoP #10.3, #10.9,
-  #12.2.5-12.2.8); counting ranks by these values. Users can add custom
+  #12.2.5-12.2.8); counting ranks by these values. `seriesCount` makes one
+  entry a series of identical DB, each counting as 1 DB (#2.4.3, #8.10,
+  #12.8; only where `canBeInSeries`). Repeating an element (same id, not
+  custom) is not valid and worth nothing (#2.4.2), unless the entry has a
+  manual value, which is how users handle levels with other rules. Users can add custom
   elements (`DbElement.custom`, id `custom`) with a manual value, e.g. a DB
   newly approved by FIG.
 - Risks (R) are part of DB but modelled separately (`domain/risk.dart`): a
@@ -115,4 +118,4 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
 ## Tests
 
 Mirror `lib/` under `test/`. Widget tests use fixtures from
-`test/features/db_calculator/test_data.dart` rather than sample data.
+`test/features/db_calculator/test_data.dart` rather than catalogue data.

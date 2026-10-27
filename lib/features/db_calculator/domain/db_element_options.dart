@@ -9,6 +9,7 @@ class DbElementOptions {
     this.flatFoot = false,
     this.slowTurn = false,
     this.extraRotations = 0,
+    this.seriesCount = 1,
     this.manualValue,
   });
 
@@ -23,9 +24,14 @@ class DbElementOptions {
   /// Rotations above the base rotation of a rotation DB.
   final int extraRotations;
 
+  /// How many identical elements are performed in a series (1 = not a
+  /// series). Each counts as 1 DB.
+  final int seriesCount;
+
   /// A value entered by the user, replacing the calculated one (e.g. a DB
-  /// newly approved by FIG, or a national value table). `null` when not
-  /// set.
+  /// newly approved by FIG, or a national value table), for each element
+  /// of a series. It also makes a repetition count, for levels that allow
+  /// it. `null` when not set.
   final Score? manualValue;
 
   bool get isDefault => this == none;
@@ -36,14 +42,15 @@ class DbElementOptions {
       other.flatFoot == flatFoot &&
       other.slowTurn == slowTurn &&
       other.extraRotations == extraRotations &&
+      other.seriesCount == seriesCount &&
       other.manualValue == manualValue;
 
   @override
   int get hashCode =>
-      Object.hash(flatFoot, slowTurn, extraRotations, manualValue);
+      Object.hash(flatFoot, slowTurn, extraRotations, seriesCount, manualValue);
 
   @override
   String toString() =>
       'DbElementOptions(flat: $flatFoot, slow: $slowTurn, '
-      '+$extraRotations, manual: $manualValue)';
+      '+$extraRotations, x$seriesCount, manual: $manualValue)';
 }

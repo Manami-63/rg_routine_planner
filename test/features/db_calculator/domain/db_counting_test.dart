@@ -5,10 +5,12 @@ import 'package:rg_routine_planner/features/db_calculator/domain/db_counting.dar
 void main() {
   DbCounting select({
     List<int> values = const [],
+    List<int>? dbs,
     int risks = 0,
     DbCountLimits limits = DbCountLimits.none,
   }) => DbCounting.select(
     elementValues: [for (final v in values) Score.hundredths(v)],
+    dbPerElement: dbs ?? List.filled(values.length, 1),
     riskCount: risks,
     limits: limits,
   );
@@ -16,7 +18,7 @@ void main() {
   test('without limits everything counts', () {
     final counting = select(values: [30, 20], risks: 2);
 
-    expect(counting.countedElements, {0, 1});
+    expect(counting.countedPerElement, [1, 1]);
     expect(counting.countedRisks, {0, 1});
   });
 
@@ -26,7 +28,7 @@ void main() {
       limits: const DbCountLimits(maxElements: 2),
     );
 
-    expect(counting.countedElements, {1, 2});
+    expect(counting.countedPerElement, [0, 1, 1, 0]);
     expect(counting.isElementCounted(0), isFalse);
   });
 
@@ -36,7 +38,7 @@ void main() {
       limits: const DbCountLimits(maxElements: 2),
     );
 
-    expect(counting.countedElements, {0, 1});
+    expect(counting.countedPerElement, [1, 1, 0]);
   });
 
   test('the first risks count', () {
@@ -53,7 +55,7 @@ void main() {
       limits: const DbCountLimits(maxElements: 0, maxRisks: 0),
     );
 
-    expect(counting.countedElements, isEmpty);
+    expect(counting.countedDbCount, 0);
     expect(counting.countedRisks, isEmpty);
   });
 
@@ -64,7 +66,26 @@ void main() {
       limits: const DbCountLimits(maxElements: 6, maxRisks: 3),
     );
 
-    expect(counting.countedElements, {0});
+    expect(counting.countedPerElement, [1]);
     expect(counting.countedRisks, {0});
+  });
+
+  test('each element of a series is 1 DB; part of a series may count', () {
+    // A series of 3 (0.50 each) and a single 0.30; highest 4 count.
+    final counting = select(
+      values: [50, 30, 40],
+      dbs: [3, 1, 1],
+      limits: const DbCountLimits(maxElements: 4),
+    );
+
+    expect(counting.countedPerElement, [3, 0, 1]);
+    expect(counting.countedDbCount, 4);
+    expect(counting.isElementCounted(1), isFalse);
+  });
+
+  test('an element worth 0 DB (a repetition) never counts', () {
+    final counting = select(values: [30, 30], dbs: [1, 0]);
+
+    expect(counting.countedPerElement, [1, 0]);
   });
 }

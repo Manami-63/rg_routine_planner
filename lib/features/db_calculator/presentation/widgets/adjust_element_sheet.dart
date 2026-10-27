@@ -13,16 +13,28 @@ import 'value_badge.dart';
 /// Short summary of how an element is performed, e.g. "Flat foot · Slow
 /// turn", or `null` when it uses the catalogue value as is.
 String? describeOptions(DbElement element, DbElementOptions options) {
-  if (element.isCustom) return 'Custom element';
   final parts = [
-    if (options.manualValue != null) 'Manual value',
+    if (element.isCustom) 'Custom element',
+    if (options.manualValue != null && !element.isCustom) 'Manual value',
     if (options.flatFoot) 'Flat foot',
     if (options.slowTurn) 'Slow turn',
     if (options.extraRotations > 0)
-      '+${options.extraRotations} '
-          '${options.extraRotations == 1 ? 'rotation' : 'rotations'}',
+      describeRotation(element, options.extraRotations),
+    if (element.canBeInSeries && options.seriesCount > 1)
+      'Series of ${options.seriesCount}',
   ];
   return parts.isEmpty ? null : parts.join(' · ');
+}
+
+/// The total rotation of a rotation DB with [extraRotations] above its
+/// base: "3 rotations" for a 360° base, or degrees (e.g. "540°") for the
+/// few with a 180° base.
+String describeRotation(DbElement element, int extraRotations) {
+  if (element.baseRotationDegrees == 360) {
+    final total = extraRotations + 1;
+    return '$total ${total == 1 ? 'rotation' : 'rotations'}';
+  }
+  return '${element.baseRotationDegrees + extraRotations * 360}°';
 }
 
 /// Bottom sheet for adjusting how one DB of the routine is performed.
@@ -74,6 +86,7 @@ class _AdjustElementSheetState extends ConsumerState<AdjustElementSheet> {
   late bool _flatFoot = widget.options.flatFoot;
   late bool _slowTurn = widget.options.slowTurn;
   late int _extraRotations = widget.options.extraRotations;
+  late int _seriesCount = widget.options.seriesCount;
 
   // Custom elements always use a manual value.
   late bool _manual =
@@ -82,7 +95,10 @@ class _AdjustElementSheetState extends ConsumerState<AdjustElementSheet> {
     text: widget.options.manualValue?.format() ?? '',
   );
 
-  static const _maxExtraRotations = 10;
+  /// Up to 10 Fouetté components (#12.11), each possibly a double: so up to
+  /// 20 rotations.
+  static const _maxExtraRotations = 20;
+  static const _maxSeries = 10;
 
   DbElement get _element => widget.element;
 
@@ -95,6 +111,7 @@ class _AdjustElementSheetState extends ConsumerState<AdjustElementSheet> {
         flatFoot: flatFoot ?? _flatFoot,
         slowTurn: slowTurn ?? _slowTurn,
         extraRotations: _extraRotations,
+        seriesCount: _seriesCount,
         manualValue: _manual ? _manualValue : null,
       );
 
@@ -127,6 +144,11 @@ class _AdjustElementSheetState extends ConsumerState<AdjustElementSheet> {
 
     final value = _canSave ? valueOf(_options()) : null;
     final structured = !_manual;
+    final series = _element.canBeInSeries ? _seriesCount : 1;
+    final isRepetition = ref.watch(
+      dbScoreResultProvider(widget.routineId)
+          .select((r) => r.repeatedElements.contains(widget.index)),
+    );
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -145,6 +167,17 @@ class _AdjustElementSheetState extends ConsumerState<AdjustElementSheet> {
                 'Catalogue value ${_element.value.format()}',
                 style: theme.textTheme.bodySmall,
               ),
+            if (isRepetition && !_manual) ...[
+              const SizedBox(height: 12),
+              Text(
+                'Not valid: this element repeats an earlier one. Set a value '
+                'manually if your level allows repetitions.',
+                key: const ValueKey('repetition-note'),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
+              ),
+            ],
             if (_element.canBeOnFlatFoot && structured) ...[
               const SizedBox(height: 16),
               SegmentedButton<bool>(
@@ -178,8 +211,15 @@ class _AdjustElementSheetState extends ConsumerState<AdjustElementSheet> {
                   Expanded(
                     child: ListTile(
                       contentPadding: EdgeInsets.zero,
-                      title: const Text('Additional rotations'),
-                      subtitle: Text('+${perRotation.format()} each'),
+                      title: const Text('Total rotation'),
+                      subtitle: Text(
+                        _element.baseRotationDegrees == 360
+                            ? '${(_extraRotations + 1) * 360}° · '
+                                  '+${perRotation.format()} for each after '
+                                  'the first'
+                            : '+${perRotation.format()} for each 360° after '
+                                  'the first ${_element.baseRotationDegrees}°',
+                      ),
                     ),
                   ),
                   IconButton(
@@ -189,13 +229,50 @@ class _AdjustElementSheetState extends ConsumerState<AdjustElementSheet> {
                         ? null
                         : () => setState(() => _extraRotations--),
                   ),
-                  Text('$_extraRotations', style: theme.textTheme.titleMedium),
+                  Text(
+                    _element.baseRotationDegrees == 360
+                        ? '${_extraRotations + 1}'
+                        : '${_element.baseRotationDegrees + _extraRotations * 360}°',
+                    key: const ValueKey('total-rotation'),
+                    style: theme.textTheme.titleMedium,
+                  ),
                   IconButton(
                     tooltip: 'More rotations',
                     icon: const Icon(Icons.add),
                     onPressed: _extraRotations == _maxExtraRotations
                         ? null
                         : () => setState(() => _extraRotations++),
+                  ),
+                ],
+              ),
+            if (_element.canBeInSeries)
+              Row(
+                children: [
+                  const Expanded(
+                    child: ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text('Performed in a series of'),
+                      subtitle: Text('Each one counts as 1 DB'),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Shorter series',
+                    icon: const Icon(Icons.remove),
+                    onPressed: _seriesCount == 1
+                        ? null
+                        : () => setState(() => _seriesCount--),
+                  ),
+                  Text(
+                    '$_seriesCount',
+                    key: const ValueKey('series-count'),
+                    style: theme.textTheme.titleMedium,
+                  ),
+                  IconButton(
+                    tooltip: 'Longer series',
+                    icon: const Icon(Icons.add),
+                    onPressed: _seriesCount == _maxSeries
+                        ? null
+                        : () => setState(() => _seriesCount++),
                   ),
                 ],
               ),
@@ -221,12 +298,17 @@ class _AdjustElementSheetState extends ConsumerState<AdjustElementSheet> {
             Row(
               children: [
                 Expanded(
-                  child: Text('Value', style: theme.textTheme.titleMedium),
+                  child: Text(
+                    series > 1 && value != null
+                        ? 'Value ($series × ${value.format()})'
+                        : 'Value',
+                    style: theme.textTheme.titleMedium,
+                  ),
                 ),
                 if (value != null)
                   ValueBadge(
                     key: const ValueKey('adjust-preview-value'),
-                    value: value,
+                    value: value * series,
                   ),
               ],
             ),

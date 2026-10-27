@@ -12,7 +12,8 @@ import '../../routines/presentation/routine_controller.dart';
 import '../domain/db_routine.dart';
 import 'db_calculator_providers.dart';
 import 'db_routine_providers.dart';
-import 'widgets/catalogue_section.dart';
+import 'element_picker_screen.dart';
+import 'widgets/risk_builder_sheet.dart';
 import 'widgets/risks_section.dart';
 import 'widgets/routine_name_field.dart';
 import 'widgets/section_header.dart';
@@ -179,6 +180,8 @@ class _DbCalculatorContent extends ConsumerWidget {
             ),
           ),
         ),
+        // Always reachable, even when the header fills a small screen.
+        floatingActionButton: _AddFab(routineId: routineId),
         bottomNavigationBar: SubtotalBar(routineId: routineId),
       ),
     );
@@ -293,6 +296,10 @@ class _BodyTab extends ConsumerWidget {
     final count = ref.watch(
       dbRoutineProvider(routineId).select((r) => r.elements.length),
     );
+    // Series count as several DB, repetitions as none.
+    final dbCount = ref.watch(
+      dbScoreResultProvider(routineId).select((r) => r.elementCount),
+    );
     final (level, apparatus) = ref.watch(
       routineProvider(routineId).select((r) => (r.level, r.apparatus)),
     );
@@ -310,7 +317,7 @@ class _BodyTab extends ConsumerWidget {
                 level: level,
                 apparatus: apparatus,
                 category: DifficultyCategory.db,
-                count: count,
+                count: dbCount,
               ),
               BodyGroupsNotice(
                 requirements: ref.watch(routineRequirementsProvider(routineId)),
@@ -320,8 +327,6 @@ class _BodyTab extends ConsumerWidget {
           ),
         ),
         SelectedElementsSection(routineId: routineId),
-        const SectionHeader(title: 'Element catalogue'),
-        CatalogueSection(routineId: routineId),
       ],
     );
   }
@@ -369,8 +374,9 @@ class _RisksTab extends ConsumerWidget {
               ),
             ),
           ),
-          // The action comes first so it stays reachable on small screens.
-          BuildRiskAction(routineId: routineId),
+          // Loading, error and empty states; the action is the floating
+          // button.
+          RiskOptionsStatus(routineId: routineId),
         ],
         SelectedRisksSection(routineId: routineId),
       ],
@@ -380,6 +386,52 @@ class _RisksTab extends ConsumerWidget {
 
 /// A tab's scroll view inside the [NestedScrollView]. The injector leaves
 /// room for the pinned tab bar so content does not scroll underneath it.
+/// "Add element" on the body difficulties tab, "Build a risk" on the risks
+/// tab (only once risk options have loaded, and never for freehand).
+class _AddFab extends ConsumerWidget {
+  const _AddFab({required this.routineId});
+
+  final String routineId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tabs = DefaultTabController.of(context);
+    final isFreehand = ref.watch(
+      routineProvider(routineId)
+          .select((r) => r.apparatus == Apparatus.freehand),
+    );
+    final riskCatalogue = ref.watch(riskCatalogueProvider).value;
+
+    return ListenableBuilder(
+      listenable: tabs,
+      builder: (context, _) {
+        if (tabs.index == 0) {
+          return FloatingActionButton.extended(
+            heroTag: null,
+            onPressed: () =>
+                ElementPickerScreen.show(context, routineId: routineId),
+            icon: const Icon(Icons.add),
+            label: const Text('Add element'),
+          );
+        }
+        if (isFreehand || riskCatalogue == null || riskCatalogue.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        return FloatingActionButton.extended(
+          heroTag: null,
+          onPressed: () => RiskBuilderSheet.show(
+            context,
+            routineId: routineId,
+            catalogue: riskCatalogue,
+          ),
+          icon: const Icon(Icons.add),
+          label: const Text('Build a risk'),
+        );
+      },
+    );
+  }
+}
+
 class _TabScrollView extends StatelessWidget {
   const _TabScrollView({required this.slivers});
 
@@ -393,7 +445,8 @@ class _TabScrollView extends StatelessWidget {
           handle: NestedScrollView.sliverOverlapAbsorberHandleFor(context),
         ),
         ...slivers,
-        const SliverPadding(padding: EdgeInsets.only(bottom: 24)),
+        // Room for the floating button, so it never covers the last row.
+        const SliverPadding(padding: EdgeInsets.only(bottom: 88)),
       ],
     );
   }
