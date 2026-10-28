@@ -64,9 +64,10 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
 - Never invent official FIG element values or competition rules.
 - Catalogue data is the FIG Code of Points 2025-2028 (`fig-2025`,
   `data/fig_*.dart`), transcribed from the CoP tables with page/section
-  references. It stays `isOfficial: false` until the user has checked the
-  transcription. Element names are "code · short description" (the CoP has
-  no names). Keep data separate from engines.
+  references. The user has checked the transcription, so it is
+  `isOfficial: true`; correct any value only from the CoP. Element names
+  are "code · short description" (the CoP has no names). Keep data
+  separate from engines.
 - Scores use `Score` (integer hundredths), never `double`.
 - Every element, routine and engine carries a ruleset id; engines reject
   mismatched data.
