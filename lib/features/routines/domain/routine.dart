@@ -1,21 +1,24 @@
 import '../../../core/scoring/apparatus.dart';
+import '../../da_calculator/domain/da_routine.dart';
 import '../../db_calculator/domain/db_routine.dart';
 import '../../levels/domain/competition_level.dart';
 
-/// A saved routine: identity, name, apparatus, level and its DB content.
+/// A saved routine: identity, name, apparatus, level and its DB and DA
+/// content.
 ///
 /// This is the unit that is persisted (and later synced to the server).
-/// DA content will be added next to [db].
 class Routine {
-  const Routine({
+  /// Without [da], the routine has no DA yet.
+  Routine({
     required this.id,
     required this.name,
     required this.db,
     required this.createdAt,
     required this.updatedAt,
+    DaRoutine? da,
     this.apparatus,
     this.level,
-  });
+  }) : da = da ?? DaRoutine(rulesetId: db.rulesetId);
 
   /// A new, empty routine.
   Routine.create({
@@ -26,6 +29,7 @@ class Routine {
        apparatus = null,
        level = null,
        db = DbRoutine(rulesetId: rulesetId),
+       da = DaRoutine(rulesetId: rulesetId),
        createdAt = now,
        updatedAt = now;
 
@@ -41,6 +45,7 @@ class Routine {
   final CompetitionLevel? level;
 
   final DbRoutine db;
+  final DaRoutine da;
 
   /// Timestamps are UTC; convert with `toLocal()` only for display.
   final DateTime createdAt;
@@ -58,6 +63,7 @@ class Routine {
     apparatus: newApparatus,
     level: level,
     db: db,
+    da: da,
     createdAt: createdAt,
     updatedAt: updatedAt,
   );
@@ -68,24 +74,32 @@ class Routine {
     apparatus: apparatus,
     level: newLevel,
     db: db,
+    da: da,
     createdAt: createdAt,
     updatedAt: updatedAt,
   );
 
   Routine withDb(DbRoutine newDb) => _copyWith(db: newDb);
 
+  Routine withDa(DaRoutine newDa) => _copyWith(da: newDa);
+
   Routine withUpdatedAt(DateTime time) => _copyWith(updatedAt: time);
 
-  Routine _copyWith({String? name, DbRoutine? db, DateTime? updatedAt}) =>
-      Routine(
-        id: id,
-        name: name ?? this.name,
-        apparatus: apparatus,
-        level: level,
-        db: db ?? this.db,
-        createdAt: createdAt,
-        updatedAt: updatedAt ?? this.updatedAt,
-      );
+  Routine _copyWith({
+    String? name,
+    DbRoutine? db,
+    DaRoutine? da,
+    DateTime? updatedAt,
+  }) => Routine(
+    id: id,
+    name: name ?? this.name,
+    apparatus: apparatus,
+    level: level,
+    db: db ?? this.db,
+    da: da ?? this.da,
+    createdAt: createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
 
   @override
   bool operator ==(Object other) =>
@@ -95,10 +109,11 @@ class Routine {
       other.apparatus == apparatus &&
       other.level == level &&
       other.db == db &&
+      other.da == da &&
       other.createdAt == createdAt &&
       other.updatedAt == updatedAt;
 
   @override
   int get hashCode =>
-      Object.hash(id, name, apparatus, level, db, createdAt, updatedAt);
+      Object.hash(id, name, apparatus, level, db, da, createdAt, updatedAt);
 }

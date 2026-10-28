@@ -103,9 +103,7 @@ void main() {
       'fig-junior',
     );
     expect(
-      find.text(
-        'DB up to 6 · R up to 3 · needs leap, balance, rotation',
-      ),
+      find.text('DB up to 6 · R up to 3 · needs leap, balance, rotation'),
       findsOneWidget,
     );
     await addJumps(tester, 7);
@@ -134,9 +132,7 @@ void main() {
     );
   });
 
-  testWidgets('non-FIG level sets maximums for DB and risks', (
-    tester,
-  ) async {
+  testWidgets('non-FIG level sets maximums for DB and risks', (tester) async {
     await pumpScreen(tester);
     await openPicker(tester);
 
@@ -152,10 +148,7 @@ void main() {
 
     expect(
       container.read(routineProvider(testRoutineId)).level?.requirements,
-      const LevelRequirements(
-        db: CountLimit(max: 2),
-        risk: CountLimit(max: 1),
-      ),
+      const LevelRequirements(db: CountLimit(max: 2), risk: CountLimit(max: 1)),
     );
     expect(find.text('DB up to 2 · R up to 1'), findsOneWidget);
 

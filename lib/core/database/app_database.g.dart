@@ -2185,6 +2185,600 @@ class RoutineRiskCriteriaCompanion
   }
 }
 
+class $RoutineApparatusDifficultiesTable extends RoutineApparatusDifficulties
+    with
+        TableInfo<
+          $RoutineApparatusDifficultiesTable,
+          RoutineApparatusDifficultyRow
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RoutineApparatusDifficultiesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _routineIdMeta = const VerificationMeta(
+    'routineId',
+  );
+  @override
+  late final GeneratedColumn<String> routineId = GeneratedColumn<String>(
+    'routine_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES routines (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _positionMeta = const VerificationMeta(
+    'position',
+  );
+  @override
+  late final GeneratedColumn<int> position = GeneratedColumn<int>(
+    'position',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _baseIdMeta = const VerificationMeta('baseId');
+  @override
+  late final GeneratedColumn<String> baseId = GeneratedColumn<String>(
+    'base_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _secondBaseIdMeta = const VerificationMeta(
+    'secondBaseId',
+  );
+  @override
+  late final GeneratedColumn<String> secondBaseId = GeneratedColumn<String>(
+    'second_base_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _criteriaMeta = const VerificationMeta(
+    'criteria',
+  );
+  @override
+  late final GeneratedColumn<String> criteria = GeneratedColumn<String>(
+    'criteria',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _preAcrobaticMeta = const VerificationMeta(
+    'preAcrobatic',
+  );
+  @override
+  late final GeneratedColumn<bool> preAcrobatic = GeneratedColumn<bool>(
+    'pre_acrobatic',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("pre_acrobatic" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _manualValueMeta = const VerificationMeta(
+    'manualValue',
+  );
+  @override
+  late final GeneratedColumn<int> manualValue = GeneratedColumn<int>(
+    'manual_value',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _customNameMeta = const VerificationMeta(
+    'customName',
+  );
+  @override
+  late final GeneratedColumn<String> customName = GeneratedColumn<String>(
+    'custom_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    routineId,
+    position,
+    baseId,
+    secondBaseId,
+    criteria,
+    preAcrobatic,
+    manualValue,
+    customName,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'routine_apparatus_difficulties';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RoutineApparatusDifficultyRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('routine_id')) {
+      context.handle(
+        _routineIdMeta,
+        routineId.isAcceptableOrUnknown(data['routine_id']!, _routineIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_routineIdMeta);
+    }
+    if (data.containsKey('position')) {
+      context.handle(
+        _positionMeta,
+        position.isAcceptableOrUnknown(data['position']!, _positionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_positionMeta);
+    }
+    if (data.containsKey('base_id')) {
+      context.handle(
+        _baseIdMeta,
+        baseId.isAcceptableOrUnknown(data['base_id']!, _baseIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_baseIdMeta);
+    }
+    if (data.containsKey('second_base_id')) {
+      context.handle(
+        _secondBaseIdMeta,
+        secondBaseId.isAcceptableOrUnknown(
+          data['second_base_id']!,
+          _secondBaseIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('criteria')) {
+      context.handle(
+        _criteriaMeta,
+        criteria.isAcceptableOrUnknown(data['criteria']!, _criteriaMeta),
+      );
+    }
+    if (data.containsKey('pre_acrobatic')) {
+      context.handle(
+        _preAcrobaticMeta,
+        preAcrobatic.isAcceptableOrUnknown(
+          data['pre_acrobatic']!,
+          _preAcrobaticMeta,
+        ),
+      );
+    }
+    if (data.containsKey('manual_value')) {
+      context.handle(
+        _manualValueMeta,
+        manualValue.isAcceptableOrUnknown(
+          data['manual_value']!,
+          _manualValueMeta,
+        ),
+      );
+    }
+    if (data.containsKey('custom_name')) {
+      context.handle(
+        _customNameMeta,
+        customName.isAcceptableOrUnknown(data['custom_name']!, _customNameMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  RoutineApparatusDifficultyRow map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RoutineApparatusDifficultyRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      routineId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}routine_id'],
+      )!,
+      position: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}position'],
+      )!,
+      baseId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}base_id'],
+      )!,
+      secondBaseId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}second_base_id'],
+      ),
+      criteria: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}criteria'],
+      )!,
+      preAcrobatic: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}pre_acrobatic'],
+      )!,
+      manualValue: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}manual_value'],
+      ),
+      customName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}custom_name'],
+      ),
+    );
+  }
+
+  @override
+  $RoutineApparatusDifficultiesTable createAlias(String alias) {
+    return $RoutineApparatusDifficultiesTable(attachedDatabase, alias);
+  }
+}
+
+class RoutineApparatusDifficultyRow extends DataClass
+    implements Insertable<RoutineApparatusDifficultyRow> {
+  final int id;
+  final String routineId;
+  final int position;
+
+  /// Catalogue id of the base, or `custom` for a DA the user entered.
+  final String baseId;
+
+  /// Catalogue id of a 2nd base after a catch from a high throw, or null.
+  final String? secondBaseId;
+
+  /// Criteria performed, as comma-separated `DaCriterion.name`s (e.g.
+  /// `outsideVisualField,rotation`). Empty for none.
+  final String criteria;
+
+  /// The "rotation" criterion is a pre-acrobatic element.
+  final bool preAcrobatic;
+
+  /// A value entered by the user, in hundredths. Null when not set.
+  final int? manualValue;
+
+  /// Name of a custom DA. Null otherwise.
+  final String? customName;
+  const RoutineApparatusDifficultyRow({
+    required this.id,
+    required this.routineId,
+    required this.position,
+    required this.baseId,
+    this.secondBaseId,
+    required this.criteria,
+    required this.preAcrobatic,
+    this.manualValue,
+    this.customName,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['routine_id'] = Variable<String>(routineId);
+    map['position'] = Variable<int>(position);
+    map['base_id'] = Variable<String>(baseId);
+    if (!nullToAbsent || secondBaseId != null) {
+      map['second_base_id'] = Variable<String>(secondBaseId);
+    }
+    map['criteria'] = Variable<String>(criteria);
+    map['pre_acrobatic'] = Variable<bool>(preAcrobatic);
+    if (!nullToAbsent || manualValue != null) {
+      map['manual_value'] = Variable<int>(manualValue);
+    }
+    if (!nullToAbsent || customName != null) {
+      map['custom_name'] = Variable<String>(customName);
+    }
+    return map;
+  }
+
+  RoutineApparatusDifficultiesCompanion toCompanion(bool nullToAbsent) {
+    return RoutineApparatusDifficultiesCompanion(
+      id: Value(id),
+      routineId: Value(routineId),
+      position: Value(position),
+      baseId: Value(baseId),
+      secondBaseId: secondBaseId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(secondBaseId),
+      criteria: Value(criteria),
+      preAcrobatic: Value(preAcrobatic),
+      manualValue: manualValue == null && nullToAbsent
+          ? const Value.absent()
+          : Value(manualValue),
+      customName: customName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customName),
+    );
+  }
+
+  factory RoutineApparatusDifficultyRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RoutineApparatusDifficultyRow(
+      id: serializer.fromJson<int>(json['id']),
+      routineId: serializer.fromJson<String>(json['routineId']),
+      position: serializer.fromJson<int>(json['position']),
+      baseId: serializer.fromJson<String>(json['baseId']),
+      secondBaseId: serializer.fromJson<String?>(json['secondBaseId']),
+      criteria: serializer.fromJson<String>(json['criteria']),
+      preAcrobatic: serializer.fromJson<bool>(json['preAcrobatic']),
+      manualValue: serializer.fromJson<int?>(json['manualValue']),
+      customName: serializer.fromJson<String?>(json['customName']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'routineId': serializer.toJson<String>(routineId),
+      'position': serializer.toJson<int>(position),
+      'baseId': serializer.toJson<String>(baseId),
+      'secondBaseId': serializer.toJson<String?>(secondBaseId),
+      'criteria': serializer.toJson<String>(criteria),
+      'preAcrobatic': serializer.toJson<bool>(preAcrobatic),
+      'manualValue': serializer.toJson<int?>(manualValue),
+      'customName': serializer.toJson<String?>(customName),
+    };
+  }
+
+  RoutineApparatusDifficultyRow copyWith({
+    int? id,
+    String? routineId,
+    int? position,
+    String? baseId,
+    Value<String?> secondBaseId = const Value.absent(),
+    String? criteria,
+    bool? preAcrobatic,
+    Value<int?> manualValue = const Value.absent(),
+    Value<String?> customName = const Value.absent(),
+  }) => RoutineApparatusDifficultyRow(
+    id: id ?? this.id,
+    routineId: routineId ?? this.routineId,
+    position: position ?? this.position,
+    baseId: baseId ?? this.baseId,
+    secondBaseId: secondBaseId.present ? secondBaseId.value : this.secondBaseId,
+    criteria: criteria ?? this.criteria,
+    preAcrobatic: preAcrobatic ?? this.preAcrobatic,
+    manualValue: manualValue.present ? manualValue.value : this.manualValue,
+    customName: customName.present ? customName.value : this.customName,
+  );
+  RoutineApparatusDifficultyRow copyWithCompanion(
+    RoutineApparatusDifficultiesCompanion data,
+  ) {
+    return RoutineApparatusDifficultyRow(
+      id: data.id.present ? data.id.value : this.id,
+      routineId: data.routineId.present ? data.routineId.value : this.routineId,
+      position: data.position.present ? data.position.value : this.position,
+      baseId: data.baseId.present ? data.baseId.value : this.baseId,
+      secondBaseId: data.secondBaseId.present
+          ? data.secondBaseId.value
+          : this.secondBaseId,
+      criteria: data.criteria.present ? data.criteria.value : this.criteria,
+      preAcrobatic: data.preAcrobatic.present
+          ? data.preAcrobatic.value
+          : this.preAcrobatic,
+      manualValue: data.manualValue.present
+          ? data.manualValue.value
+          : this.manualValue,
+      customName: data.customName.present
+          ? data.customName.value
+          : this.customName,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RoutineApparatusDifficultyRow(')
+          ..write('id: $id, ')
+          ..write('routineId: $routineId, ')
+          ..write('position: $position, ')
+          ..write('baseId: $baseId, ')
+          ..write('secondBaseId: $secondBaseId, ')
+          ..write('criteria: $criteria, ')
+          ..write('preAcrobatic: $preAcrobatic, ')
+          ..write('manualValue: $manualValue, ')
+          ..write('customName: $customName')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    routineId,
+    position,
+    baseId,
+    secondBaseId,
+    criteria,
+    preAcrobatic,
+    manualValue,
+    customName,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RoutineApparatusDifficultyRow &&
+          other.id == this.id &&
+          other.routineId == this.routineId &&
+          other.position == this.position &&
+          other.baseId == this.baseId &&
+          other.secondBaseId == this.secondBaseId &&
+          other.criteria == this.criteria &&
+          other.preAcrobatic == this.preAcrobatic &&
+          other.manualValue == this.manualValue &&
+          other.customName == this.customName);
+}
+
+class RoutineApparatusDifficultiesCompanion
+    extends UpdateCompanion<RoutineApparatusDifficultyRow> {
+  final Value<int> id;
+  final Value<String> routineId;
+  final Value<int> position;
+  final Value<String> baseId;
+  final Value<String?> secondBaseId;
+  final Value<String> criteria;
+  final Value<bool> preAcrobatic;
+  final Value<int?> manualValue;
+  final Value<String?> customName;
+  const RoutineApparatusDifficultiesCompanion({
+    this.id = const Value.absent(),
+    this.routineId = const Value.absent(),
+    this.position = const Value.absent(),
+    this.baseId = const Value.absent(),
+    this.secondBaseId = const Value.absent(),
+    this.criteria = const Value.absent(),
+    this.preAcrobatic = const Value.absent(),
+    this.manualValue = const Value.absent(),
+    this.customName = const Value.absent(),
+  });
+  RoutineApparatusDifficultiesCompanion.insert({
+    this.id = const Value.absent(),
+    required String routineId,
+    required int position,
+    required String baseId,
+    this.secondBaseId = const Value.absent(),
+    this.criteria = const Value.absent(),
+    this.preAcrobatic = const Value.absent(),
+    this.manualValue = const Value.absent(),
+    this.customName = const Value.absent(),
+  }) : routineId = Value(routineId),
+       position = Value(position),
+       baseId = Value(baseId);
+  static Insertable<RoutineApparatusDifficultyRow> custom({
+    Expression<int>? id,
+    Expression<String>? routineId,
+    Expression<int>? position,
+    Expression<String>? baseId,
+    Expression<String>? secondBaseId,
+    Expression<String>? criteria,
+    Expression<bool>? preAcrobatic,
+    Expression<int>? manualValue,
+    Expression<String>? customName,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (routineId != null) 'routine_id': routineId,
+      if (position != null) 'position': position,
+      if (baseId != null) 'base_id': baseId,
+      if (secondBaseId != null) 'second_base_id': secondBaseId,
+      if (criteria != null) 'criteria': criteria,
+      if (preAcrobatic != null) 'pre_acrobatic': preAcrobatic,
+      if (manualValue != null) 'manual_value': manualValue,
+      if (customName != null) 'custom_name': customName,
+    });
+  }
+
+  RoutineApparatusDifficultiesCompanion copyWith({
+    Value<int>? id,
+    Value<String>? routineId,
+    Value<int>? position,
+    Value<String>? baseId,
+    Value<String?>? secondBaseId,
+    Value<String>? criteria,
+    Value<bool>? preAcrobatic,
+    Value<int?>? manualValue,
+    Value<String?>? customName,
+  }) {
+    return RoutineApparatusDifficultiesCompanion(
+      id: id ?? this.id,
+      routineId: routineId ?? this.routineId,
+      position: position ?? this.position,
+      baseId: baseId ?? this.baseId,
+      secondBaseId: secondBaseId ?? this.secondBaseId,
+      criteria: criteria ?? this.criteria,
+      preAcrobatic: preAcrobatic ?? this.preAcrobatic,
+      manualValue: manualValue ?? this.manualValue,
+      customName: customName ?? this.customName,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (routineId.present) {
+      map['routine_id'] = Variable<String>(routineId.value);
+    }
+    if (position.present) {
+      map['position'] = Variable<int>(position.value);
+    }
+    if (baseId.present) {
+      map['base_id'] = Variable<String>(baseId.value);
+    }
+    if (secondBaseId.present) {
+      map['second_base_id'] = Variable<String>(secondBaseId.value);
+    }
+    if (criteria.present) {
+      map['criteria'] = Variable<String>(criteria.value);
+    }
+    if (preAcrobatic.present) {
+      map['pre_acrobatic'] = Variable<bool>(preAcrobatic.value);
+    }
+    if (manualValue.present) {
+      map['manual_value'] = Variable<int>(manualValue.value);
+    }
+    if (customName.present) {
+      map['custom_name'] = Variable<String>(customName.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RoutineApparatusDifficultiesCompanion(')
+          ..write('id: $id, ')
+          ..write('routineId: $routineId, ')
+          ..write('position: $position, ')
+          ..write('baseId: $baseId, ')
+          ..write('secondBaseId: $secondBaseId, ')
+          ..write('criteria: $criteria, ')
+          ..write('preAcrobatic: $preAcrobatic, ')
+          ..write('manualValue: $manualValue, ')
+          ..write('customName: $customName')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2194,6 +2788,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $RoutineRisksTable routineRisks = $RoutineRisksTable(this);
   late final $RoutineRiskCriteriaTable routineRiskCriteria =
       $RoutineRiskCriteriaTable(this);
+  late final $RoutineApparatusDifficultiesTable routineApparatusDifficulties =
+      $RoutineApparatusDifficultiesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2203,6 +2799,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     routineBodyElements,
     routineRisks,
     routineRiskCriteria,
+    routineApparatusDifficulties,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -2226,6 +2823,15 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('routine_risk_criteria', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'routines',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [
+        TableUpdate('routine_apparatus_difficulties', kind: UpdateKind.delete),
+      ],
     ),
   ]);
   @override
@@ -2309,6 +2915,31 @@ final class $$RoutinesTableReferences
     ).filter((f) => f.routineId.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_routineRisksRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $RoutineApparatusDifficultiesTable,
+    List<RoutineApparatusDifficultyRow>
+  >
+  _routineApparatusDifficultiesRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.routineApparatusDifficulties,
+        aliasName: 'routines__id__routine_apparatus_difficulties__routine_id',
+      );
+
+  $$RoutineApparatusDifficultiesTableProcessedTableManager
+  get routineApparatusDifficultiesRefs {
+    final manager = $$RoutineApparatusDifficultiesTableTableManager(
+      $_db,
+      $_db.routineApparatusDifficulties,
+    ).filter((f) => f.routineId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _routineApparatusDifficultiesRefsTable($_db),
+    );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -2441,6 +3072,35 @@ class $$RoutinesTableFilterComposer
                 $removeJoinBuilderFromRootComposer,
           ),
     );
+    return f(composer);
+  }
+
+  Expression<bool> routineApparatusDifficultiesRefs(
+    Expression<bool> Function(
+      $$RoutineApparatusDifficultiesTableFilterComposer f,
+    )
+    f,
+  ) {
+    final $$RoutineApparatusDifficultiesTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.routineApparatusDifficulties,
+          getReferencedColumn: (t) => t.routineId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$RoutineApparatusDifficultiesTableFilterComposer(
+                $db: $db,
+                $table: $db.routineApparatusDifficulties,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
     return f(composer);
   }
 }
@@ -2640,6 +3300,35 @@ class $$RoutinesTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> routineApparatusDifficultiesRefs<T extends Object>(
+    Expression<T> Function(
+      $$RoutineApparatusDifficultiesTableAnnotationComposer a,
+    )
+    f,
+  ) {
+    final $$RoutineApparatusDifficultiesTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.routineApparatusDifficulties,
+          getReferencedColumn: (t) => t.routineId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$RoutineApparatusDifficultiesTableAnnotationComposer(
+                $db: $db,
+                $table: $db.routineApparatusDifficulties,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$RoutinesTableTableManager
@@ -2658,6 +3347,7 @@ class $$RoutinesTableTableManager
           PrefetchHooks Function({
             bool routineBodyElementsRefs,
             bool routineRisksRefs,
+            bool routineApparatusDifficultiesRefs,
           })
         > {
   $$RoutinesTableTableManager(_$AppDatabase db, $RoutinesTable table)
@@ -2748,12 +3438,18 @@ class $$RoutinesTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({routineBodyElementsRefs = false, routineRisksRefs = false}) {
+              ({
+                routineBodyElementsRefs = false,
+                routineRisksRefs = false,
+                routineApparatusDifficultiesRefs = false,
+              }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (routineBodyElementsRefs) db.routineBodyElements,
                     if (routineRisksRefs) db.routineRisks,
+                    if (routineApparatusDifficultiesRefs)
+                      db.routineApparatusDifficulties,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -2798,6 +3494,26 @@ class $$RoutinesTableTableManager
                           referencedColumn: 'routine_id',
                           typedResults: items,
                         ),
+                      if (routineApparatusDifficultiesRefs)
+                        await $_getPrefetchedDataByColumns<
+                          RoutineRow,
+                          $RoutinesTable,
+                          RoutineApparatusDifficultyRow,
+                          $RoutineApparatusDifficultiesTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$RoutinesTableReferences
+                              ._routineApparatusDifficultiesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$RoutinesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).routineApparatusDifficultiesRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'routine_id',
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -2821,6 +3537,7 @@ typedef $$RoutinesTableProcessedTableManager =
       PrefetchHooks Function({
         bool routineBodyElementsRefs,
         bool routineRisksRefs,
+        bool routineApparatusDifficultiesRefs,
       })
     >;
 typedef $$RoutineBodyElementsTableCreateCompanionBuilder =
@@ -3979,6 +4696,430 @@ typedef $$RoutineRiskCriteriaTableProcessedTableManager =
       RoutineRiskCriterionRow,
       PrefetchHooks Function({bool routineRiskId})
     >;
+typedef $$RoutineApparatusDifficultiesTableCreateCompanionBuilder =
+    RoutineApparatusDifficultiesCompanion Function({
+      Value<int> id,
+      required String routineId,
+      required int position,
+      required String baseId,
+      Value<String?> secondBaseId,
+      Value<String> criteria,
+      Value<bool> preAcrobatic,
+      Value<int?> manualValue,
+      Value<String?> customName,
+    });
+typedef $$RoutineApparatusDifficultiesTableUpdateCompanionBuilder =
+    RoutineApparatusDifficultiesCompanion Function({
+      Value<int> id,
+      Value<String> routineId,
+      Value<int> position,
+      Value<String> baseId,
+      Value<String?> secondBaseId,
+      Value<String> criteria,
+      Value<bool> preAcrobatic,
+      Value<int?> manualValue,
+      Value<String?> customName,
+    });
+
+final class $$RoutineApparatusDifficultiesTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $RoutineApparatusDifficultiesTable,
+          RoutineApparatusDifficultyRow
+        > {
+  $$RoutineApparatusDifficultiesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $RoutinesTable _routineIdTable(_$AppDatabase db) => db.routines
+      .createAlias('routine_apparatus_difficulties__routine_id__routines__id');
+
+  $$RoutinesTableProcessedTableManager get routineId {
+    final $_column = $_itemColumn<String>('routine_id')!;
+
+    final manager = $$RoutinesTableTableManager(
+      $_db,
+      $_db.routines,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_routineIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$RoutineApparatusDifficultiesTableFilterComposer
+    extends Composer<_$AppDatabase, $RoutineApparatusDifficultiesTable> {
+  $$RoutineApparatusDifficultiesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get baseId => $composableBuilder(
+    column: $table.baseId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get secondBaseId => $composableBuilder(
+    column: $table.secondBaseId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get criteria => $composableBuilder(
+    column: $table.criteria,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get preAcrobatic => $composableBuilder(
+    column: $table.preAcrobatic,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get manualValue => $composableBuilder(
+    column: $table.manualValue,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get customName => $composableBuilder(
+    column: $table.customName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$RoutinesTableFilterComposer get routineId {
+    final $$RoutinesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.routineId,
+      referencedTable: $db.routines,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RoutinesTableFilterComposer(
+            $db: $db,
+            $table: $db.routines,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RoutineApparatusDifficultiesTableOrderingComposer
+    extends Composer<_$AppDatabase, $RoutineApparatusDifficultiesTable> {
+  $$RoutineApparatusDifficultiesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get baseId => $composableBuilder(
+    column: $table.baseId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get secondBaseId => $composableBuilder(
+    column: $table.secondBaseId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get criteria => $composableBuilder(
+    column: $table.criteria,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get preAcrobatic => $composableBuilder(
+    column: $table.preAcrobatic,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get manualValue => $composableBuilder(
+    column: $table.manualValue,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get customName => $composableBuilder(
+    column: $table.customName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$RoutinesTableOrderingComposer get routineId {
+    final $$RoutinesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.routineId,
+      referencedTable: $db.routines,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RoutinesTableOrderingComposer(
+            $db: $db,
+            $table: $db.routines,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RoutineApparatusDifficultiesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RoutineApparatusDifficultiesTable> {
+  $$RoutineApparatusDifficultiesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => column);
+
+  GeneratedColumn<String> get baseId =>
+      $composableBuilder(column: $table.baseId, builder: (column) => column);
+
+  GeneratedColumn<String> get secondBaseId => $composableBuilder(
+    column: $table.secondBaseId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get criteria =>
+      $composableBuilder(column: $table.criteria, builder: (column) => column);
+
+  GeneratedColumn<bool> get preAcrobatic => $composableBuilder(
+    column: $table.preAcrobatic,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get manualValue => $composableBuilder(
+    column: $table.manualValue,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get customName => $composableBuilder(
+    column: $table.customName,
+    builder: (column) => column,
+  );
+
+  $$RoutinesTableAnnotationComposer get routineId {
+    final $$RoutinesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.routineId,
+      referencedTable: $db.routines,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RoutinesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.routines,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RoutineApparatusDifficultiesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $RoutineApparatusDifficultiesTable,
+          RoutineApparatusDifficultyRow,
+          $$RoutineApparatusDifficultiesTableFilterComposer,
+          $$RoutineApparatusDifficultiesTableOrderingComposer,
+          $$RoutineApparatusDifficultiesTableAnnotationComposer,
+          $$RoutineApparatusDifficultiesTableCreateCompanionBuilder,
+          $$RoutineApparatusDifficultiesTableUpdateCompanionBuilder,
+          (
+            RoutineApparatusDifficultyRow,
+            $$RoutineApparatusDifficultiesTableReferences,
+          ),
+          RoutineApparatusDifficultyRow,
+          PrefetchHooks Function({bool routineId})
+        > {
+  $$RoutineApparatusDifficultiesTableTableManager(
+    _$AppDatabase db,
+    $RoutineApparatusDifficultiesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RoutineApparatusDifficultiesTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$RoutineApparatusDifficultiesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$RoutineApparatusDifficultiesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> routineId = const Value.absent(),
+                Value<int> position = const Value.absent(),
+                Value<String> baseId = const Value.absent(),
+                Value<String?> secondBaseId = const Value.absent(),
+                Value<String> criteria = const Value.absent(),
+                Value<bool> preAcrobatic = const Value.absent(),
+                Value<int?> manualValue = const Value.absent(),
+                Value<String?> customName = const Value.absent(),
+              }) => RoutineApparatusDifficultiesCompanion(
+                id: id,
+                routineId: routineId,
+                position: position,
+                baseId: baseId,
+                secondBaseId: secondBaseId,
+                criteria: criteria,
+                preAcrobatic: preAcrobatic,
+                manualValue: manualValue,
+                customName: customName,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String routineId,
+                required int position,
+                required String baseId,
+                Value<String?> secondBaseId = const Value.absent(),
+                Value<String> criteria = const Value.absent(),
+                Value<bool> preAcrobatic = const Value.absent(),
+                Value<int?> manualValue = const Value.absent(),
+                Value<String?> customName = const Value.absent(),
+              }) => RoutineApparatusDifficultiesCompanion.insert(
+                id: id,
+                routineId: routineId,
+                position: position,
+                baseId: baseId,
+                secondBaseId: secondBaseId,
+                criteria: criteria,
+                preAcrobatic: preAcrobatic,
+                manualValue: manualValue,
+                customName: customName,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $RoutineApparatusDifficultiesTable,
+                    RoutineApparatusDifficultyRow
+                  >(table),
+                  $$RoutineApparatusDifficultiesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({routineId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (routineId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.routineId,
+                        referencedTable:
+                            $$RoutineApparatusDifficultiesTableReferences
+                                ._routineIdTable(db),
+                        referencedColumn:
+                            $$RoutineApparatusDifficultiesTableReferences
+                                ._routineIdTable(db)
+                                .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$RoutineApparatusDifficultiesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $RoutineApparatusDifficultiesTable,
+      RoutineApparatusDifficultyRow,
+      $$RoutineApparatusDifficultiesTableFilterComposer,
+      $$RoutineApparatusDifficultiesTableOrderingComposer,
+      $$RoutineApparatusDifficultiesTableAnnotationComposer,
+      $$RoutineApparatusDifficultiesTableCreateCompanionBuilder,
+      $$RoutineApparatusDifficultiesTableUpdateCompanionBuilder,
+      (
+        RoutineApparatusDifficultyRow,
+        $$RoutineApparatusDifficultiesTableReferences,
+      ),
+      RoutineApparatusDifficultyRow,
+      PrefetchHooks Function({bool routineId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3991,4 +5132,10 @@ class $AppDatabaseManager {
       $$RoutineRisksTableTableManager(_db, _db.routineRisks);
   $$RoutineRiskCriteriaTableTableManager get routineRiskCriteria =>
       $$RoutineRiskCriteriaTableTableManager(_db, _db.routineRiskCriteria);
+  $$RoutineApparatusDifficultiesTableTableManager
+  get routineApparatusDifficulties =>
+      $$RoutineApparatusDifficultiesTableTableManager(
+        _db,
+        _db.routineApparatusDifficulties,
+      );
 }

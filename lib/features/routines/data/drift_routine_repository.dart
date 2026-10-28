@@ -2,8 +2,13 @@ import 'package:drift/drift.dart';
 
 import '../../../core/database/app_database.dart';
 import '../../../core/scoring/apparatus.dart';
-import '../../db_calculator/data/db_catalogue_repository.dart';
 import '../../../core/scoring/score.dart';
+import '../../da_calculator/data/da_catalogue_repository.dart';
+import '../../da_calculator/domain/da_base.dart';
+import '../../da_calculator/domain/da_criterion.dart';
+import '../../da_calculator/domain/da_element.dart';
+import '../../da_calculator/domain/da_routine.dart';
+import '../../db_calculator/data/db_catalogue_repository.dart';
 import '../../db_calculator/domain/db_element.dart';
 import '../../db_calculator/domain/db_element_options.dart';
 import '../../db_calculator/domain/db_routine.dart';
@@ -16,17 +21,20 @@ import 'routine_repository.dart';
 /// [RoutineRepository] backed by the local SQLite database.
 ///
 /// Saved rows hold catalogue ids. On load they are resolved against the
-/// current [catalogue] and [presetLevels]; ids that no longer exist become
-/// "unknown" placeholders, which keep their id so re-saving loses nothing.
+/// current [catalogue], [daCatalogue] and [presetLevels]; ids that no
+/// longer exist become "unknown" placeholders, which keep their id so
+/// re-saving loses nothing.
 class DriftRoutineRepository implements RoutineRepository {
   DriftRoutineRepository(
     this._db, {
     required this.catalogue,
+    required this.daCatalogue,
     required this.presetLevels,
   });
 
   final AppDatabase _db;
   final DbCatalogueRepository catalogue;
+  final DaCatalogueRepository daCatalogue;
   final List<CompetitionLevel> presetLevels;
 
   @override
@@ -36,9 +44,16 @@ class DriftRoutineRepository implements RoutineRepository {
       '(SELECT COUNT(*) FROM routine_body_elements e '
       'WHERE e.routine_id = r.id) AS element_count, '
       '(SELECT COUNT(*) FROM routine_risks k '
-      'WHERE k.routine_id = r.id) AS risk_count '
+      'WHERE k.routine_id = r.id) AS risk_count, '
+      '(SELECT COUNT(*) FROM routine_apparatus_difficulties a '
+      'WHERE a.routine_id = r.id) AS da_count '
       'FROM routines r ORDER BY r.updated_at DESC',
-      readsFrom: {_db.routines, _db.routineBodyElements, _db.routineRisks},
+      readsFrom: {
+        _db.routines,
+        _db.routineBodyElements,
+        _db.routineRisks,
+        _db.routineApparatusDifficulties,
+      },
     );
     return query.watch().map(
       (rows) => [
@@ -47,6 +62,7 @@ class DriftRoutineRepository implements RoutineRepository {
             _db.routines.map(row.data),
             elementCount: row.read<int>('element_count'),
             riskCount: row.read<int>('risk_count'),
+            daCount: row.read<int>('da_count'),
           ),
       ],
     );
@@ -56,6 +72,7 @@ class DriftRoutineRepository implements RoutineRepository {
     RoutineRow row, {
     required int elementCount,
     required int riskCount,
+    required int daCount,
   }) => RoutineSummary(
     id: row.id,
     name: row.name,
@@ -63,6 +80,7 @@ class DriftRoutineRepository implements RoutineRepository {
     level: _resolveLevel(row),
     elementCount: elementCount,
     riskCount: riskCount,
+    daCount: daCount,
     updatedAt: row.updatedAt,
   );
 
@@ -89,6 +107,12 @@ class DriftRoutineRepository implements RoutineRepository {
               ..orderBy([(t) => OrderingTerm.asc(t.position)]))
             .get();
 
+    final daRows =
+        await (_db.select(_db.routineApparatusDifficulties)
+              ..where((t) => t.routineId.equals(id))
+              ..orderBy([(t) => OrderingTerm.asc(t.position)]))
+            .get();
+
     // Catalogue values only apply to routines planned under its ruleset.
     final sameRuleset = row.rulesetId == catalogue.ruleset.id;
     final elements = {
@@ -105,6 +129,12 @@ class DriftRoutineRepository implements RoutineRepository {
     final criteria = {
       for (final c in riskCatalogue?.criteria ?? <RiskCriterion>[]) c.id: c,
     };
+    final bases = {
+      if (row.rulesetId == daCatalogue.ruleset.id)
+        for (final b in await daCatalogue.fetchBases()) b.id: b,
+    };
+    DaBase base(String id) =>
+        bases[id] ?? DaBase.unknown(id: id, rulesetId: row.rulesetId);
 
     return Routine(
       id: row.id,
@@ -159,6 +189,30 @@ class DriftRoutineRepository implements RoutineRepository {
                         rulesetId: row.rulesetId,
                       ),
               ],
+            ),
+        ],
+      ),
+      da: DaRoutine(
+        rulesetId: row.rulesetId,
+        elements: [
+          for (final a in daRows)
+            DaElement(
+              base: a.baseId == DaBase.customId
+                  ? DaBase.custom(
+                      name: a.customName ?? '',
+                      rulesetId: row.rulesetId,
+                    )
+                  : base(a.baseId),
+              secondBase: switch (a.secondBaseId) {
+                final id? => base(id),
+                null => null,
+              },
+              criteria: DaCriterion.parseAll(a.criteria),
+              preAcrobatic: a.preAcrobatic,
+              manualValue: switch (a.manualValue) {
+                final hundredths? => Score.hundredths(hundredths),
+                null => null,
+              },
             ),
         ],
       ),
@@ -234,6 +288,9 @@ class DriftRoutineRepository implements RoutineRepository {
     // Replace the children wholesale; routines are small, and this keeps
     // positions consistent. Deleting risks cascades to their criteria.
     await (_db.delete(
+      _db.routineApparatusDifficulties,
+    )..where((t) => t.routineId.equals(routine.id))).go();
+    await (_db.delete(
       _db.routineBodyElements,
     )..where((t) => t.routineId.equals(routine.id))).go();
     await (_db.delete(
@@ -244,6 +301,10 @@ class DriftRoutineRepository implements RoutineRepository {
       batch.insertAll(_db.routineBodyElements, [
         for (final (i, element) in routine.db.elements.indexed)
           _elementRow(routine.id, i, element, routine.db.elementOptions[i]),
+      ]);
+      batch.insertAll(_db.routineApparatusDifficulties, [
+        for (final (i, element) in routine.da.elements.indexed)
+          _daRow(routine.id, i, element),
       ]);
     });
 
@@ -286,6 +347,21 @@ class DriftRoutineRepository implements RoutineRepository {
     manualValue: Value(options.manualValue?.hundredths),
     customName: Value(element.isCustom ? element.name : null),
     customGroup: Value(element.isCustom ? element.group.name : null),
+  );
+
+  static RoutineApparatusDifficultiesCompanion _daRow(
+    String routineId,
+    int position,
+    DaElement element,
+  ) => RoutineApparatusDifficultiesCompanion.insert(
+    routineId: routineId,
+    position: position,
+    baseId: element.base.id,
+    secondBaseId: Value(element.secondBase?.id),
+    criteria: Value(DaCriterion.formatAll(element.criteria)),
+    preAcrobatic: Value(element.preAcrobatic),
+    manualValue: Value(element.manualValue?.hundredths),
+    customName: Value(element.isCustom ? element.base.name : null),
   );
 
   @override
