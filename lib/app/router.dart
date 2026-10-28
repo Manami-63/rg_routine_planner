@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/da_calculator/presentation/da_calculator_screen.dart';
 import '../features/db_calculator/presentation/db_calculator_screen.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/routines/presentation/routines_screen.dart';
@@ -23,7 +24,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const HomeScreen(),
         routes: [
           // Nested routes give each screen a back button to its parent:
-          // calculator -> my routines -> home.
+          // calculator (DB or DA) -> my routines -> home.
           GoRoute(
             path: 'routines',
             builder: (context, state) => const RoutinesScreen(),
@@ -32,6 +33,11 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: ':id/db',
                 builder: (context, state) =>
                     DbCalculatorScreen(routineId: state.pathParameters['id']!),
+              ),
+              GoRoute(
+                path: ':id/da',
+                builder: (context, state) =>
+                    DaCalculatorScreen(routineId: state.pathParameters['id']!),
               ),
             ],
           ),

@@ -133,8 +133,10 @@ class ProvisionalDaScoringEngine implements DaScoringEngine {
   /// #5.4.7: at most 3 DA with a pre-acrobatic element as "rotation".
   static const maxPreAcrobatic = 3;
 
-  /// #5.4.6: at most 3 consecutive DA in a position on the floor.
+  /// #5.4.6: at most 3 consecutive DA in a position on the floor; 0.30
+  /// penalty for each set of 4 (shown in a warning, never deducted).
   static const maxConsecutiveOnFloor = 3;
+  static const onFloorPenalty = Score.hundredths(30);
 
   @override
   Set<DaCriterion> availableCriteria(DaBase base, [DaBase? secondBase]) =>

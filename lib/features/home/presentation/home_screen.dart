@@ -32,15 +32,9 @@ class HomeScreen extends StatelessWidget {
               icon: Icons.event_note_outlined,
               title: 'My routines',
               description:
-                  'Create and save routines, and see a provisional DB '
-                  'subtotal based on the FIG Code of Points 2025-2028.',
+                  'Create and save routines, and see provisional DB and DA '
+                  'subtotals based on the FIG Code of Points 2025-2028.',
               onTap: () => context.go(AppRoutes.routines),
-            ),
-            const SizedBox(height: 12),
-            const _FeatureCard(
-              icon: Icons.sports_gymnastics,
-              title: 'DA Calculator',
-              description: 'Dynamic difficulty with apparatus.',
             ),
           ],
         ),
