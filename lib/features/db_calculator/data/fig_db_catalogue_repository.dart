@@ -4,7 +4,7 @@ import '../domain/risk.dart';
 import 'db_catalogue_repository.dart';
 import 'fig_db_elements.dart';
 import 'fig_risks.dart';
-import 'fig_ruleset.dart';
+import '../../../core/scoring/fig_ruleset.dart';
 
 /// Serves the FIG DB and risk catalogues from memory.
 class FigDbCatalogueRepository implements DbCatalogueRepository {

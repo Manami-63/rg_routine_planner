@@ -6,7 +6,7 @@
 import '../../../core/scoring/apparatus.dart';
 import '../../../core/scoring/score.dart';
 import '../domain/risk.dart';
-import 'fig_ruleset.dart';
+import '../../../core/scoring/fig_ruleset.dart';
 
 /// Highest number of rotations offered in the builder.
 const _maxRotations = 10;

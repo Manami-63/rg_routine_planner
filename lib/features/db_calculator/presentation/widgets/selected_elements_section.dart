@@ -5,7 +5,7 @@ import '../../../../core/widgets/message_view.dart';
 import '../../../routines/presentation/routine_controller.dart';
 import '../db_routine_providers.dart';
 import 'adjust_element_sheet.dart';
-import 'value_badge.dart';
+import '../../../../core/widgets/value_badge.dart';
 
 /// Sliver listing the elements in the routine, or an empty state.
 class SelectedElementsSection extends ConsumerWidget {

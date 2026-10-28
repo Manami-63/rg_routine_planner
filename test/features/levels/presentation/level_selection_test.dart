@@ -104,7 +104,7 @@ void main() {
     );
     expect(
       find.text(
-        'DB up to 6 · R up to 3 · DA up to 12 · needs leap, balance, rotation',
+        'DB up to 6 · R up to 3 · needs leap, balance, rotation',
       ),
       findsOneWidget,
     );
@@ -134,7 +134,7 @@ void main() {
     );
   });
 
-  testWidgets('non-FIG level sets maximums for DB, risks and DA', (
+  testWidgets('non-FIG level sets maximums for DB and risks', (
     tester,
   ) async {
     await pumpScreen(tester);
@@ -146,7 +146,8 @@ void main() {
     await tapStepper(tester, 'Increase DB maximum');
     await tapStepper(tester, 'Increase DB maximum');
     await tapStepper(tester, 'Increase risks maximum');
-    await tapStepper(tester, 'Increase DA maximum');
+    // DA numbers are set on the DA page.
+    expect(find.text('Apparatus difficulties (DA)'), findsNothing);
     await apply(tester);
 
     expect(
@@ -154,10 +155,9 @@ void main() {
       const LevelRequirements(
         db: CountLimit(max: 2),
         risk: CountLimit(max: 1),
-        da: CountLimit(max: 1),
       ),
     );
-    expect(find.text('DB up to 2 · R up to 1 · DA up to 1'), findsOneWidget);
+    expect(find.text('DB up to 2 · R up to 1'), findsOneWidget);
 
     await addJumps(tester, 2);
     expect(noticeText('2 DB · meets the level (up to 2)'), findsOneWidget);
@@ -360,20 +360,26 @@ void main() {
 
   testWidgets('reopening a non-FIG level keeps its numbers', (tester) async {
     await pumpScreen(tester);
+    const requirements = LevelRequirements(
+      db: CountLimit(max: 4),
+      da: CountLimit(max: 3),
+    );
     container
         .read(routineControllerProvider(testRoutineId).notifier)
-        .selectLevel(
-          const CompetitionLevel.custom(
-            LevelRequirements(da: CountLimit(max: 3)),
-          ),
-        );
+        .selectLevel(const CompetitionLevel.custom(requirements));
     await tester.pump();
 
     await openPicker(tester);
 
-    // The DA maximum stepper shows the saved value.
-    expect(find.text('3'), findsOneWidget);
-    expect(find.text('Apparatus difficulties (DA)'), findsOneWidget);
+    // The DB maximum stepper shows the saved value; DA is not on this page
+    // but is kept when applying.
+    expect(find.text('4'), findsOneWidget);
+    expect(find.text('Apparatus difficulties (DA)'), findsNothing);
+    await apply(tester);
+    expect(
+      container.read(routineProvider(testRoutineId)).level?.requirements,
+      requirements,
+    );
   });
 
   testWidgets('clear all keeps the level', (tester) async {

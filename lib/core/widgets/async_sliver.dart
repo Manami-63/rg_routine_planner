@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/widgets/message_view.dart';
+import 'message_view.dart';
 
 /// Renders an [AsyncValue] as a sliver with consistent loading and error
 /// (with retry) states. [data] builds the loaded content.

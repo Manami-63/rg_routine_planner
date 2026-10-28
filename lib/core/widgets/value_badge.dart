@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/scoring/score.dart';
+import '../scoring/score.dart';
 
 class ValueBadge extends StatelessWidget {
   const ValueBadge({super.key, required this.value});

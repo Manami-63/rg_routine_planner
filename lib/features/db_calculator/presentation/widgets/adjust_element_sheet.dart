@@ -8,7 +8,7 @@ import '../../domain/db_element.dart';
 import '../../domain/db_element_options.dart';
 import '../db_calculator_providers.dart';
 import '../db_routine_providers.dart';
-import 'value_badge.dart';
+import '../../../../core/widgets/value_badge.dart';
 
 /// Short summary of how an element is performed, e.g. "Flat foot · Slow
 /// turn", or `null` when it uses the catalogue value as is.

@@ -16,8 +16,13 @@ String describeLimit(CountLimit limit) {
 }
 
 /// One-line summary of a level's requirements for a routine with
-/// [apparatus], for the selector.
-String describeLevel(CompetitionLevel level, Apparatus? apparatus) {
+/// [apparatus], for the selector. Only [categories] are described (e.g. DA
+/// on the DA page); body groups belong to DB.
+String describeLevel(
+  CompetitionLevel level,
+  Apparatus? apparatus, {
+  List<DifficultyCategory> categories = DifficultyCategory.values,
+}) {
   final requirements = level.requirementsFor(apparatus);
   if (requirements == null) {
     return apparatus == Apparatus.freehand && level.requirements != null
@@ -25,18 +30,24 @@ String describeLevel(CompetitionLevel level, Apparatus? apparatus) {
         : 'Requirements not added yet';
   }
   final parts = [
-    for (final category in categoriesFor(apparatus))
+    for (final category in categoriesFor(apparatus, categories))
       if (category.limitOf(requirements).isSet)
         '${category.label} ${describeLimit(category.limitOf(requirements))}',
-    if (requirements.requiredBodyGroups.isNotEmpty)
+    if (categories.contains(DifficultyCategory.db) &&
+        requirements.requiredBodyGroups.isNotEmpty)
       'needs ${[for (final group in DbElementGroup.requirable)
         if (requirements.requiredBodyGroups.contains(group)) group.singular].join(', ')}',
   ];
   return parts.isEmpty ? 'No limits set' : parts.join(' · ');
 }
 
-/// Freehand routines have no risks or DA, so their limits are not shown.
-List<DifficultyCategory> categoriesFor(Apparatus? apparatus) =>
-    apparatus == Apparatus.freehand
-    ? const [DifficultyCategory.db]
-    : DifficultyCategory.values;
+/// The [categories] that apply to a routine with [apparatus]: freehand
+/// routines have no risks or DA, so their limits are not shown.
+List<DifficultyCategory> categoriesFor(
+  Apparatus? apparatus, [
+  List<DifficultyCategory> categories = DifficultyCategory.values,
+]) => [
+  for (final category in categories)
+    if (apparatus != Apparatus.freehand || category == DifficultyCategory.db)
+      category,
+];

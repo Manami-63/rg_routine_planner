@@ -9,6 +9,7 @@ abstract final class AppRoutes {
   static const home = '/';
   static const routines = '/routines';
   static String dbCalculator(String routineId) => '/routines/$routineId/db';
+  static String daCalculator(String routineId) => '/routines/$routineId/da';
 }
 
 /// Created per [ProviderScope], so each widget test gets a fresh router

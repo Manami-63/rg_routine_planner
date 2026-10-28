@@ -1,4 +1,4 @@
-import '../../../core/scoring/ruleset.dart';
+import 'ruleset.dart';
 
 /// Kept as a separate constant because a field of a const object cannot be
 /// used in other const expressions.

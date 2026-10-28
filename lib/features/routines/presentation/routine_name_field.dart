@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../routines/presentation/routine_controller.dart';
+import 'routine_controller.dart';
 
 /// Edits the routine name. Stateful because a [TextEditingController] must
 /// live as long as the field and be disposed with it.
