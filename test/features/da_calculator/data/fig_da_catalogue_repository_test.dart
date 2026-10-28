@@ -66,6 +66,19 @@ void main() {
     }
   });
 
+  test('other catches from a high throw cannot be a 2nd base', () {
+    final catches = bases.where(
+      (b) => b.isCatchFromHighThrow && !b.startsCombination,
+    );
+    expect(catches.map((b) => b.id), [
+      'fig-da-rope-catch-open-rope',
+      'fig-da-ball-catch-one-hand',
+      'fig-da-ball-rebound-floor-high-throw',
+      'fig-da-clubs-catch-one-hand',
+      'fig-da-clubs-catch-simultaneous',
+    ]);
+  });
+
   test('N/A criteria match the table rows (spot checks)', () {
     DaBase base(String id) => bases.singleWhere((b) => b.id == 'fig-da-$id');
 

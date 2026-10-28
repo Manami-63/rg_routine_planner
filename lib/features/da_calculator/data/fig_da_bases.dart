@@ -441,6 +441,7 @@ final _rope = [
     'Catch of the open Rope with 1 end in each hand from a high throw',
     30,
     'v-vvvvv',
+    isCatchFromHighThrow: true,
     note: 'Without support on another part of the body.',
   ),
   _base(Apparatus.rope, 'echappe', 'Echappé and catch', 30, 'vv-vvvv'),
