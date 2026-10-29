@@ -85,6 +85,23 @@ class Routine {
 
   Routine withUpdatedAt(DateTime time) => _copyWith(updatedAt: time);
 
+  /// A copy saved as a new routine: same content, new [id] and [name],
+  /// created and updated [now].
+  Routine duplicate({
+    required String id,
+    required String name,
+    required DateTime now,
+  }) => Routine(
+    id: id,
+    name: name,
+    apparatus: apparatus,
+    level: level,
+    db: db,
+    da: da,
+    createdAt: now,
+    updatedAt: now,
+  );
+
   Routine _copyWith({
     String? name,
     DbRoutine? db,

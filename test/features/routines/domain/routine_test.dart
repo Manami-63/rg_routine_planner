@@ -54,4 +54,24 @@ void main() {
     expect(touched.updatedAt, later);
     expect(touched.createdAt, now);
   });
+
+  test('duplicate copies the content under a new id, name and time', () {
+    final original = routine
+        .rename('Hoop')
+        .withApparatus(Apparatus.hoop)
+        .withLevel(figSenior)
+        .withDb(routine.db.withElementAdded(testJump));
+    final later = now.add(const Duration(days: 1));
+
+    final copy = original.duplicate(id: 'r2', name: 'Hoop (copy)', now: later);
+
+    expect(copy.id, 'r2');
+    expect(copy.name, 'Hoop (copy)');
+    expect(copy.apparatus, Apparatus.hoop);
+    expect(copy.level, figSenior);
+    expect(copy.db, original.db);
+    expect(copy.da, original.da);
+    expect(copy.createdAt, later);
+    expect(copy.updatedAt, later);
+  });
 }

@@ -73,23 +73,81 @@ void main() {
     expect(find.textContaining('No level · 0 DB · 0 risks'), findsNWidgets(2));
   });
 
+  Future<void> chooseAction(
+    WidgetTester tester,
+    String name,
+    String action,
+  ) async {
+    await tester.tap(find.byTooltip('Options for $name'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(action));
+    await tester.pumpAndSettle();
+  }
+
   testWidgets('delete asks for confirmation', (tester) async {
     final repository = await pumpScreen(tester, [routine('r1', 'Hoop')]);
 
-    await tester.tap(find.byTooltip('Delete Hoop'));
-    await tester.pumpAndSettle();
+    await chooseAction(tester, 'Hoop', 'Delete');
     expect(find.text('Delete "Hoop"?'), findsOneWidget);
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
     expect(repository.routines, contains('r1'));
 
-    await tester.tap(find.byTooltip('Delete Hoop'));
-    await tester.pumpAndSettle();
+    await chooseAction(tester, 'Hoop', 'Delete');
     await tester.tap(find.text('Delete'));
     await tester.pumpAndSettle();
 
     expect(repository.routines, isEmpty);
     expect(find.text('No routines yet'), findsOneWidget);
+  });
+
+  testWidgets('duplicate saves a copy with the same content', (tester) async {
+    final db = DbRoutine(
+      rulesetId: 'test-v1',
+      elements: const [testJump, testBalance],
+    );
+    final repository = await pumpScreen(tester, [
+      routine('senior', 'Ribbon', db: db, age: const Duration(days: 1)),
+    ]);
+
+    await chooseAction(tester, 'Ribbon', 'Duplicate');
+
+    expect(repository.routines, hasLength(2));
+    final copy = repository.routines.values.firstWhere((r) => r.id != 'senior');
+    expect(copy.name, 'Ribbon (copy)');
+    expect(copy.db, db);
+    expect(copy.level, figSenior);
+    expect(repository.routines['senior']!.name, 'Ribbon');
+    expect(find.text('Saved as "Ribbon (copy)".'), findsOneWidget);
+
+    // The copy is the most recently updated, so it is listed first.
+    expect(
+      tester
+          .widgetList<ListTile>(find.byType(ListTile))
+          .map((tile) => (tile.title! as Text).data),
+      ['Ribbon (copy)', 'Ribbon'],
+    );
+  });
+
+  testWidgets('duplicate names an untitled copy', (tester) async {
+    final repository = await pumpScreen(tester, [routine('blank', '')]);
+
+    await chooseAction(tester, 'Untitled routine', 'Duplicate');
+
+    expect(
+      repository.routines.values.map((r) => r.name),
+      containsAll(['', 'Untitled routine (copy)']),
+    );
+  });
+
+  testWidgets('duplicate reports a failed save', (tester) async {
+    final repository = await pumpScreen(tester, [routine('r1', 'Hoop')]);
+    repository.saveError = Exception('disk full');
+
+    await chooseAction(tester, 'Hoop', 'Duplicate');
+
+    expect(repository.routines, hasLength(1));
+    expect(find.text('Could not duplicate the routine.'), findsOneWidget);
   });
 
   test('formatDateTime uses day, short month, year and 24h time', () {
