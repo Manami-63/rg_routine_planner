@@ -25,7 +25,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'rg_routine_planner'));
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -75,6 +75,10 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 7) {
         await m.addColumn(routines, routines.notes);
+      }
+      if (from < 8) {
+        await m.addColumn(routines, routines.musicFileName);
+        await m.addColumn(routines, routines.musicTitle);
       }
     },
     // SQLite does not enforce foreign keys (and cascades) unless asked.

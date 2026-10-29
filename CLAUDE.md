@@ -40,7 +40,7 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   local time. Bump `schemaVersion` and add a migration on any change, with a
   test in `test/core/database/` that upgrades a hand-written old schema.
 - `features/routines/`: `Routine` (id = UUID, name, apparatus, level,
-  free-text `notes`, timestamps, `db` and `da` content) and `RoutineRepository`
+  free-text `notes`, optional `music`, timestamps, `db` and `da` content) and `RoutineRepository`
   (`DriftRoutineRepository`). Shared pieces live here too: `RoutineLoader`
   (loading/errors/ruleset), `RoutineDetailsForm` (name, apparatus, level;
   used for New routine and Edit details), `duplicateRoutine` and
@@ -61,8 +61,8 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   the screen closes). New routine opens the details form
   first (apparatus required for new routines). The routine page shows the
   name and "apparatus · level" in its app bar (edit with the pencil), and
-  tabs DB | R | DA | Notes (`RoutineTab`; `?tab=risks|da|notes` opens
-  another tab). Each tab but Notes has its own add button; `RoutineTotalBar` below shows DB + DA = the
+  tabs DB | R | DA | Notes | Music (`RoutineTab`; `?tab=risks|da|notes|music`
+  opens another tab). DB, R and DA each have their own add button; `RoutineTotalBar` below shows DB + DA = the
   provisional total and the open tab's breakdown. The tab widgets live in
   their features (`db_tabs.dart`, `da_tab.dart`). DB, risks and DA are
   listed in performance order and reordered with a drag handle.
@@ -73,6 +73,17 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   `daScoreResultProvider` in the widget: a provider combining them is
   refreshed while the page resumes after a full-screen form, which
   Riverpod rejects.
+- Music (`features/music/`): `RoutineMusic` stores the file name of the
+  app's own copy (in the app support `music/` folder, never a full path)
+  and the title the user sees. `MusicLibrary` adds, copies and deletes
+  copies: replacing or removing music deletes the old copy, Duplicate
+  gives the new routine its own copy, deleting a routine deletes its copy
+  (`deleteRoutine`). `MusicPicker` (file_picker) and `MusicPlayer`
+  (just_audio) are wrapped so widget tests use the fakes in
+  `test/features/music/fake_music.dart` (`pumpDbCalculator` sets them up).
+  Planned next: dance steps combinations (S, no details, only a count:
+  FIG 2, user-set for Non-FIG), marking each DB/R/DA/S time by tapping
+  while the music plays, and a Play mode with an 8 s S countdown.
 - `routineControllerProvider(id)` is an auto-disposing async family: loads
   by id, saves every change (name and notes debounced 500 ms), flushes a pending save
   on dispose, and reports `routineSaveStatusProvider(id)`. Automatic retry

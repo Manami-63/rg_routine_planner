@@ -15,6 +15,7 @@ import '../../db_calculator/domain/db_routine.dart';
 import '../../db_calculator/domain/risk.dart';
 import '../../levels/domain/competition_level.dart';
 import '../../levels/domain/count_limit.dart';
+import '../../music/domain/routine_music.dart';
 import '../domain/routine.dart';
 import 'routine_repository.dart';
 
@@ -143,6 +144,12 @@ class DriftRoutineRepository implements RoutineRepository {
       apparatus: Apparatus.fromName(row.apparatus),
       level: _resolveLevel(row),
       notes: row.notes,
+      music: row.musicFileName == null
+          ? null
+          : RoutineMusic(
+              fileName: row.musicFileName!,
+              title: row.musicTitle ?? row.musicFileName!,
+            ),
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
       db: DbRoutine(
@@ -281,6 +288,8 @@ class DriftRoutineRepository implements RoutineRepository {
               custom == null ? null : _formatGroups(custom.requiredBodyGroups),
             ),
             notes: Value(routine.notes),
+            musicFileName: Value(routine.music?.fileName),
+            musicTitle: Value(routine.music?.title),
             // Always stored in UTC (shown in local time by the UI), so data
             // from devices in different time zones sorts and syncs cleanly.
             createdAt: routine.createdAt.toUtc(),

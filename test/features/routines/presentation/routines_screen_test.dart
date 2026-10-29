@@ -8,12 +8,15 @@ import 'package:rg_routine_planner/features/db_calculator/domain/db_routine.dart
 import 'package:rg_routine_planner/features/db_calculator/presentation/db_calculator_providers.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/risk.dart';
 import 'package:rg_routine_planner/features/levels/data/fig_levels.dart';
+import 'package:rg_routine_planner/features/music/domain/routine_music.dart';
+import 'package:rg_routine_planner/features/music/presentation/music_providers.dart';
 import 'package:rg_routine_planner/features/routines/domain/routine.dart';
 import 'package:rg_routine_planner/features/routines/presentation/routine_providers.dart';
 import 'package:rg_routine_planner/features/routines/presentation/routines_screen.dart';
 
 import '../../da_calculator/test_data.dart';
 import '../../db_calculator/test_data.dart';
+import '../../music/fake_music.dart';
 import '../fake_routine_repository.dart';
 
 void main() {
@@ -35,12 +38,18 @@ void main() {
 
   Future<FakeRoutineRepository> pumpScreen(
     WidgetTester tester,
-    List<Routine> routines,
-  ) async {
+    List<Routine> routines, {
+    FakeMusicLibrary? musicLibrary,
+  }) async {
     final repository = FakeRoutineRepository(routines);
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [routineRepositoryProvider.overrideWithValue(repository)],
+        overrides: [
+          routineRepositoryProvider.overrideWithValue(repository),
+          musicLibraryProvider.overrideWithValue(
+            musicLibrary ?? FakeMusicLibrary(),
+          ),
+        ],
         child: const MaterialApp(home: RoutinesScreen()),
       ),
     );
@@ -175,6 +184,37 @@ void main() {
 
       expect(find.byType(SearchBar), findsOneWidget);
       expect(find.byType(FilterChip), findsNothing);
+    });
+  });
+
+  group('music', () {
+    const bolero = RoutineMusic(fileName: 'bolero.mp3', title: 'Bolero');
+
+    testWidgets('duplicate gives the copy its own music file', (tester) async {
+      final library = FakeMusicLibrary({bolero.fileName: '/picked/Bolero.mp3'});
+      final repository = await pumpScreen(tester, [
+        routine('r1', 'Hoop').withMusic(bolero),
+      ], musicLibrary: library);
+
+      await chooseAction(tester, 'Hoop', 'Duplicate');
+
+      final copy = repository.routines.values.firstWhere((r) => r.id != 'r1');
+      expect(copy.music!.title, 'Bolero');
+      expect(copy.music!.fileName, isNot(bolero.fileName));
+      expect(library.files, hasLength(2));
+    });
+
+    testWidgets('deleting a routine deletes its music', (tester) async {
+      final library = FakeMusicLibrary({bolero.fileName: '/picked/Bolero.mp3'});
+      await pumpScreen(tester, [
+        routine('r1', 'Hoop').withMusic(bolero),
+      ], musicLibrary: library);
+
+      await chooseAction(tester, 'Hoop', 'Delete');
+      await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+      await tester.pumpAndSettle();
+
+      expect(library.files, isEmpty);
     });
   });
 

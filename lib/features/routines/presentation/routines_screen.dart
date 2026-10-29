@@ -231,7 +231,7 @@ class _RoutineTile extends ConsumerWidget {
       ),
     );
     if (confirmed ?? false) {
-      await ref.read(routineRepositoryProvider).deleteRoutine(summary.id);
+      await deleteRoutine(ref, summary.id);
     }
   }
 }

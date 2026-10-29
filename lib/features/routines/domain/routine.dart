@@ -2,9 +2,10 @@ import '../../../core/scoring/apparatus.dart';
 import '../../da_calculator/domain/da_routine.dart';
 import '../../db_calculator/domain/db_routine.dart';
 import '../../levels/domain/competition_level.dart';
+import '../../music/domain/routine_music.dart';
 
-/// A saved routine: identity, name, apparatus, level, notes and its DB and
-/// DA content.
+/// A saved routine: identity, name, apparatus, level, notes, music and its
+/// DB and DA content.
 ///
 /// This is the unit that is persisted (and later synced to the server).
 class Routine {
@@ -19,6 +20,7 @@ class Routine {
     this.apparatus,
     this.level,
     this.notes = '',
+    this.music,
   }) : da = da ?? DaRoutine(rulesetId: db.rulesetId);
 
   /// A new, empty routine.
@@ -30,6 +32,7 @@ class Routine {
        apparatus = null,
        level = null,
        notes = '',
+       music = null,
        db = DbRoutine(rulesetId: rulesetId),
        da = DaRoutine(rulesetId: rulesetId),
        createdAt = now,
@@ -48,6 +51,9 @@ class Routine {
 
   /// Free text from the user, e.g. music or choreography reminders.
   final String notes;
+
+  /// The routine's music, or `null` if none was added.
+  final RoutineMusic? music;
 
   final DbRoutine db;
   final DaRoutine da;
@@ -68,6 +74,7 @@ class Routine {
     apparatus: newApparatus,
     level: level,
     notes: notes,
+    music: music,
     db: db,
     da: da,
     createdAt: createdAt,
@@ -80,6 +87,20 @@ class Routine {
     apparatus: apparatus,
     level: newLevel,
     notes: notes,
+    music: music,
+    db: db,
+    da: da,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+  );
+
+  Routine withMusic(RoutineMusic? newMusic) => Routine(
+    id: id,
+    name: name,
+    apparatus: apparatus,
+    level: level,
+    notes: notes,
+    music: newMusic,
     db: db,
     da: da,
     createdAt: createdAt,
@@ -95,7 +116,8 @@ class Routine {
   Routine withUpdatedAt(DateTime time) => _copyWith(updatedAt: time);
 
   /// A copy saved as a new routine: same content, new [id] and [name],
-  /// created and updated [now].
+  /// created and updated [now]. It refers to the same music file, so give
+  /// it its own copy (`withMusic`) before saving.
   Routine duplicate({
     required String id,
     required String name,
@@ -106,6 +128,7 @@ class Routine {
     apparatus: apparatus,
     level: level,
     notes: notes,
+    music: music,
     db: db,
     da: da,
     createdAt: now,
@@ -124,6 +147,7 @@ class Routine {
     apparatus: apparatus,
     level: level,
     notes: notes ?? this.notes,
+    music: music,
     db: db ?? this.db,
     da: da ?? this.da,
     createdAt: createdAt,
@@ -138,6 +162,7 @@ class Routine {
       other.apparatus == apparatus &&
       other.level == level &&
       other.notes == notes &&
+      other.music == music &&
       other.db == db &&
       other.da == da &&
       other.createdAt == createdAt &&
@@ -150,6 +175,7 @@ class Routine {
     apparatus,
     level,
     notes,
+    music,
     db,
     da,
     createdAt,

@@ -11,6 +11,7 @@ import '../../routines/presentation/routine_controller.dart';
 import '../../routines/presentation/routine_details_form.dart';
 import '../../routines/presentation/routine_loader.dart';
 import '../../routines/presentation/save_status_indicator.dart';
+import '../../music/presentation/music_tab.dart';
 import 'notes_tab.dart';
 import 'routine_total_bar.dart';
 
@@ -19,7 +20,8 @@ enum RoutineTab {
   db('DB'),
   risks('R'),
   da('DA'),
-  notes('Notes');
+  notes('Notes'),
+  music('Music');
 
   const RoutineTab(this.label);
 
@@ -32,7 +34,7 @@ enum RoutineTab {
 
 /// One saved routine: its name, apparatus and level in the header, and
 /// its body difficulties (DB), risks (R) and apparatus difficulties (DA)
-/// and notes as tabs, with the provisional total below.
+/// notes and music as tabs, with the provisional total below.
 class RoutineScreen extends ConsumerWidget {
   const RoutineScreen({
     super.key,
@@ -147,6 +149,7 @@ class _RoutinePage extends ConsumerWidget {
           DbRisksTab(routineId: routineId),
           DaTab(routineId: routineId),
           NotesTab(routineId: routineId),
+          MusicTab(routineId: routineId),
         ],
       ),
       // The add button and the total's breakdown follow the selected tab.
@@ -156,7 +159,7 @@ class _RoutinePage extends ConsumerWidget {
           RoutineTab.db => AddElementButton(routineId: routineId),
           RoutineTab.risks => BuildRiskButton(routineId: routineId),
           RoutineTab.da => BuildDaButton(routineId: routineId),
-          RoutineTab.notes => const SizedBox.shrink(),
+          RoutineTab.notes || RoutineTab.music => const SizedBox.shrink(),
         },
       ),
       bottomNavigationBar: ListenableBuilder(

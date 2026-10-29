@@ -34,6 +34,11 @@ class Routines extends Table {
   /// Free text from the user. Empty for none. Added in v7.
   TextColumn get notes => text().withDefault(const Constant(''))();
 
+  // The routine's music: the app's copy and the name the user chose. Null
+  // for none. Added in v8.
+  TextColumn get musicFileName => text().nullable()();
+  TextColumn get musicTitle => text().nullable()();
+
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
