@@ -46,6 +46,39 @@ void main() {
       expect(routine.elementOptions, [flat]);
     });
 
+    test('moves elements with their options', () {
+      const flat = DbElementOptions(flatFoot: true);
+      final routine = empty
+          .withElementAdded(testJump)
+          .withElementAdded(testBalance, flat)
+          .withElementAdded(testRotation);
+
+      final down = routine.withElementMoved(0, 2);
+      expect(down.elements, [testBalance, testRotation, testJump]);
+      expect(down.elementOptions, [
+        flat,
+        DbElementOptions.none,
+        DbElementOptions.none,
+      ]);
+
+      final up = routine.withElementMoved(1, 0);
+      expect(up.elements, [testBalance, testJump, testRotation]);
+      expect(up.elementOptions, [
+        flat,
+        DbElementOptions.none,
+        DbElementOptions.none,
+      ]);
+    });
+
+    test('moves risks', () {
+      final twoRot = RiskElement(rotation: testTwoRotations);
+      final threeRot = RiskElement(rotation: testThreeRotations);
+      final routine = empty.withRiskAdded(twoRot).withRiskAdded(threeRot);
+
+      expect(routine.withRiskMoved(1, 0).risks, [threeRot, twoRot]);
+      expect(routine.withRiskMoved(0, 1).risks, [threeRot, twoRot]);
+    });
+
     test('new elements get default options; options can be changed', () {
       const manual = DbElementOptions(manualValue: Score.hundredths(50));
       final routine = empty

@@ -62,7 +62,8 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   tabs DB | R | DA | Notes (`RoutineTab`; `?tab=risks|da|notes` opens
   another tab). Each tab but Notes has its own add button; `RoutineTotalBar` below shows DB + DA = the
   provisional total and the open tab's breakdown. The tab widgets live in
-  their features (`db_tabs.dart`, `da_tab.dart`).
+  their features (`db_tabs.dart`, `da_tab.dart`). DB, risks and DA are
+  listed in performance order and reordered with a drag handle.
 - `RoutineScore` (`routine_editor/domain/`) is DB + DA for a routine, with
   its level's limits (`DbCountLimits.of`, `daMaxCounted`). My routines
   shows each routine's total (`savedRoutineScoreProvider`, keyed by id and

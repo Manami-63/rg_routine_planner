@@ -8,7 +8,8 @@ import '../db_routine_providers.dart';
 import '../../../../core/widgets/async_sliver.dart';
 import '../../../../core/widgets/value_badge.dart';
 
-/// Sliver listing the risks in the routine, or an empty state.
+/// Sliver listing the risks in the routine in performance order, or an
+/// empty state. Drag the handle to reorder.
 class SelectedRisksSection extends ConsumerWidget {
   const SelectedRisksSection({super.key, required this.routineId});
 
@@ -23,6 +24,7 @@ class SelectedRisksSection extends ConsumerWidget {
     final counting = ref.watch(
       dbScoreResultProvider(routineId).select((result) => result.counting),
     );
+    final controller = ref.read(routineControllerProvider(routineId).notifier);
 
     if (risks.isEmpty) {
       return const SliverToBoxAdapter(
@@ -34,29 +36,40 @@ class SelectedRisksSection extends ConsumerWidget {
       );
     }
 
-    return SliverList.builder(
+    return SliverReorderableList(
       itemCount: risks.length,
+      onReorderItem: controller.moveRisk,
       itemBuilder: (context, index) {
         final risk = risks[index];
         final counted = counting.isRiskCounted(index);
-        return ListTile(
+        return Material(
           key: ValueKey('risk-$index'),
-          enabled: counted,
-          leading: CircleAvatar(child: Text('R${index + 1}')),
-          title: Text(risk.description),
-          subtitle: counted ? null : const Text('Not counted'),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ValueBadge(value: engine.riskValue(risk)),
-              IconButton(
-                tooltip: 'Remove risk ${index + 1}',
-                icon: const Icon(Icons.remove_circle_outline),
-                onPressed: () => ref
-                    .read(routineControllerProvider(routineId).notifier)
-                    .removeRiskAt(index),
-              ),
-            ],
+          child: ListTile(
+            enabled: counted,
+            leading: CircleAvatar(child: Text('R${index + 1}')),
+            title: Text(risk.description),
+            subtitle: counted ? null : const Text('Not counted'),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ValueBadge(value: engine.riskValue(risk)),
+                IconButton(
+                  tooltip: 'Remove risk ${index + 1}',
+                  icon: const Icon(Icons.remove_circle_outline),
+                  onPressed: () => controller.removeRiskAt(index),
+                ),
+                ReorderableDragStartListener(
+                  index: index,
+                  child: const Tooltip(
+                    message: 'Drag to reorder',
+                    child: Padding(
+                      padding: EdgeInsets.all(8),
+                      child: Icon(Icons.drag_handle),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },

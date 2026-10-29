@@ -66,6 +66,13 @@ class DbRoutine {
     elementOptions: [...elementOptions]..removeAt(index),
   );
 
+  /// Moves the element at [from] (with its options) so it ends up at
+  /// position [to].
+  DbRoutine withElementMoved(int from, int to) => _copyWith(
+    elements: _moved(elements, from, to),
+    elementOptions: _moved(elementOptions, from, to),
+  );
+
   DbRoutine withElementOptionsAt(int index, DbElementOptions options) =>
       _copyWith(elementOptions: [...elementOptions]..[index] = options);
 
@@ -74,6 +81,16 @@ class DbRoutine {
 
   DbRoutine withRiskRemovedAt(int index) =>
       _copyWith(risks: [...risks]..removeAt(index));
+
+  /// Moves the risk at [from] so it ends up at position [to].
+  DbRoutine withRiskMoved(int from, int to) =>
+      _copyWith(risks: _moved(risks, from, to));
+
+  static List<T> _moved<T>(List<T> items, int from, int to) {
+    final moved = [...items];
+    moved.insert(to, moved.removeAt(from));
+    return moved;
+  }
 
   /// Removes all elements and risks but keeps the ruleset.
   DbRoutine cleared() => DbRoutine(rulesetId: rulesetId);
