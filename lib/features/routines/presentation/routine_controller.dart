@@ -70,7 +70,7 @@ class RoutineController extends AsyncNotifier<Routine> {
 
   final String routineId;
 
-  /// Typing pauses this long before the name is saved.
+  /// Typing pauses this long before the name or notes are saved.
   static const nameSaveDelay = Duration(milliseconds: 500);
 
   Timer? _debounce;
@@ -102,6 +102,9 @@ class RoutineController extends AsyncNotifier<Routine> {
 
   void rename(String name) =>
       _update((routine) => routine.rename(name), debounce: true);
+
+  void updateNotes(String notes) =>
+      _update((routine) => routine.withNotes(notes), debounce: true);
 
   void selectApparatus(Apparatus? apparatus) =>
       _update((routine) => routine.withApparatus(apparatus));

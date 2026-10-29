@@ -31,6 +31,9 @@ class Routines extends Table {
   /// `jump,balance`). Null or empty for none. Added in v2.
   TextColumn get customRequiredBodyGroups => text().nullable()();
 
+  /// Free text from the user. Empty for none. Added in v7.
+  TextColumn get notes => text().withDefault(const Constant(''))();
+
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 

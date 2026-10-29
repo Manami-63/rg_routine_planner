@@ -3,8 +3,8 @@ import '../../da_calculator/domain/da_routine.dart';
 import '../../db_calculator/domain/db_routine.dart';
 import '../../levels/domain/competition_level.dart';
 
-/// A saved routine: identity, name, apparatus, level and its DB and DA
-/// content.
+/// A saved routine: identity, name, apparatus, level, notes and its DB and
+/// DA content.
 ///
 /// This is the unit that is persisted (and later synced to the server).
 class Routine {
@@ -18,6 +18,7 @@ class Routine {
     DaRoutine? da,
     this.apparatus,
     this.level,
+    this.notes = '',
   }) : da = da ?? DaRoutine(rulesetId: db.rulesetId);
 
   /// A new, empty routine.
@@ -28,6 +29,7 @@ class Routine {
   }) : name = '',
        apparatus = null,
        level = null,
+       notes = '',
        db = DbRoutine(rulesetId: rulesetId),
        da = DaRoutine(rulesetId: rulesetId),
        createdAt = now,
@@ -43,6 +45,9 @@ class Routine {
 
   /// The competition level, or `null` if none chosen.
   final CompetitionLevel? level;
+
+  /// Free text from the user, e.g. music or choreography reminders.
+  final String notes;
 
   final DbRoutine db;
   final DaRoutine da;
@@ -62,6 +67,7 @@ class Routine {
     name: name,
     apparatus: newApparatus,
     level: level,
+    notes: notes,
     db: db,
     da: da,
     createdAt: createdAt,
@@ -73,11 +79,14 @@ class Routine {
     name: name,
     apparatus: apparatus,
     level: newLevel,
+    notes: notes,
     db: db,
     da: da,
     createdAt: createdAt,
     updatedAt: updatedAt,
   );
+
+  Routine withNotes(String newNotes) => _copyWith(notes: newNotes);
 
   Routine withDb(DbRoutine newDb) => _copyWith(db: newDb);
 
@@ -96,6 +105,7 @@ class Routine {
     name: name,
     apparatus: apparatus,
     level: level,
+    notes: notes,
     db: db,
     da: da,
     createdAt: now,
@@ -104,6 +114,7 @@ class Routine {
 
   Routine _copyWith({
     String? name,
+    String? notes,
     DbRoutine? db,
     DaRoutine? da,
     DateTime? updatedAt,
@@ -112,6 +123,7 @@ class Routine {
     name: name ?? this.name,
     apparatus: apparatus,
     level: level,
+    notes: notes ?? this.notes,
     db: db ?? this.db,
     da: da ?? this.da,
     createdAt: createdAt,
@@ -125,12 +137,22 @@ class Routine {
       other.name == name &&
       other.apparatus == apparatus &&
       other.level == level &&
+      other.notes == notes &&
       other.db == db &&
       other.da == da &&
       other.createdAt == createdAt &&
       other.updatedAt == updatedAt;
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, apparatus, level, db, da, createdAt, updatedAt);
+  int get hashCode => Object.hash(
+    id,
+    name,
+    apparatus,
+    level,
+    notes,
+    db,
+    da,
+    createdAt,
+    updatedAt,
+  );
 }
