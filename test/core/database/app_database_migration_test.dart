@@ -2,12 +2,14 @@ import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rg_routine_planner/core/database/app_database.dart';
+import 'package:rg_routine_planner/features/da_calculator/domain/da_element.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_element_options.dart';
 import 'package:rg_routine_planner/features/levels/data/fig_levels.dart';
 import 'package:rg_routine_planner/features/levels/domain/competition_level.dart';
 import 'package:rg_routine_planner/features/levels/domain/count_limit.dart';
 import 'package:rg_routine_planner/features/routines/data/drift_routine_repository.dart';
 
+import '../../features/da_calculator/test_data.dart';
 import '../../features/db_calculator/test_data.dart';
 
 // The v1 schema as shipped (commit 1105d9d), with one saved routine.
@@ -54,6 +56,7 @@ void main() {
     final repository = DriftRoutineRepository(
       db,
       catalogue: FakeDbCatalogueRepository(),
+      daCatalogue: FakeDaCatalogueRepository(),
       presetLevels: figLevels,
     );
 
@@ -63,6 +66,7 @@ void main() {
     expect(routine.apparatus, isNull);
     expect(routine.db.elements, [testJump]);
     expect(routine.db.elementOptions, [DbElementOptions.none]);
+    expect(routine.da.elements, isEmpty);
     expect(
       routine.level,
       const CompetitionLevel.custom(
@@ -72,6 +76,25 @@ void main() {
         ),
       ),
     );
+  });
+
+  test('upgraded databases can save DA', () async {
+    final db = _v1Database(const []);
+    addTearDown(db.close);
+    final repository = DriftRoutineRepository(
+      db,
+      catalogue: FakeDbCatalogueRepository(),
+      daCatalogue: FakeDaCatalogueRepository(),
+      presetLevels: figLevels,
+    );
+    final routine = (await repository.fetchRoutine('r1'))!;
+    final withDa = routine.withDa(
+      routine.da.withElementAdded(DaElement(base: testThrow)),
+    );
+
+    await repository.saveRoutine(withDa);
+
+    expect(await repository.fetchRoutine('r1'), withDa);
   });
 
   test('routines planned with sample data are deleted on upgrade', () async {
@@ -90,6 +113,7 @@ void main() {
     final repository = DriftRoutineRepository(
       db,
       catalogue: FakeDbCatalogueRepository(),
+      daCatalogue: FakeDaCatalogueRepository(),
       presetLevels: figLevels,
     );
 

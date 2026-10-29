@@ -11,6 +11,7 @@ class RoutineSummary {
     required this.level,
     required this.elementCount,
     required this.riskCount,
+    required this.daCount,
     required this.updatedAt,
   });
 
@@ -20,6 +21,9 @@ class RoutineSummary {
   final CompetitionLevel? level;
   final int elementCount;
   final int riskCount;
+
+  /// DA entries in the routine, whether or not they are valid DA.
+  final int daCount;
   final DateTime updatedAt;
 }
 

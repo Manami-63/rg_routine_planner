@@ -3,6 +3,7 @@ import '../../../core/scoring/db_element_group.dart';
 import '../../../core/scoring/score.dart';
 import '../../../core/utils/list_equality.dart';
 import 'count_limit.dart';
+import 'difficulty_category.dart';
 
 /// How many DB, risks (R) and DA a level allows, and which body groups it
 /// requires.
@@ -45,6 +46,14 @@ class LevelRequirements {
     requiredBodyGroups: requiredBodyGroups ?? this.requiredBodyGroups,
     missingBodyGroupPenalty: missingBodyGroupPenalty,
   );
+
+  /// A copy with [limit] for [category].
+  LevelRequirements withLimit(DifficultyCategory category, CountLimit limit) =>
+      switch (category) {
+        DifficultyCategory.db => copyWith(db: limit),
+        DifficultyCategory.risk => copyWith(risk: limit),
+        DifficultyCategory.da => copyWith(da: limit),
+      };
 
   @override
   bool operator ==(Object other) =>

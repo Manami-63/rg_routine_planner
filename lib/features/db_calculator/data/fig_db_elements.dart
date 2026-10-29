@@ -22,7 +22,7 @@
 
 import '../../../core/scoring/score.dart';
 import '../domain/db_element.dart';
-import 'fig_ruleset.dart';
+import '../../../core/scoring/fig_ruleset.dart';
 
 DbElement _element(
   String code,

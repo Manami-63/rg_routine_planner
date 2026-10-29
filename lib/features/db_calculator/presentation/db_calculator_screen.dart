@@ -6,85 +6,33 @@ import '../../../core/widgets/message_view.dart';
 import '../../../core/widgets/sample_data_banner.dart';
 import '../../levels/presentation/count_limit_notice.dart';
 import '../../levels/domain/difficulty_category.dart';
-import '../../levels/presentation/level_selector.dart';
-import '../../routines/presentation/apparatus_selector.dart';
 import '../../routines/presentation/routine_controller.dart';
+import '../../routines/presentation/routine_details_fields.dart';
+import '../../routines/presentation/routine_loader.dart';
+import '../../routines/presentation/save_status_indicator.dart';
 import '../domain/db_routine.dart';
 import 'db_calculator_providers.dart';
 import 'db_routine_providers.dart';
 import 'element_picker_screen.dart';
 import 'widgets/risk_builder_sheet.dart';
 import 'widgets/risks_section.dart';
-import 'widgets/routine_name_field.dart';
-import 'widgets/section_header.dart';
+import '../../../core/widgets/section_header.dart';
 import 'widgets/selected_elements_section.dart';
 import 'widgets/subtotal_bar.dart';
 
 /// DB calculator for one saved routine, with two tabs: body difficulties
-/// and risks. Handles loading, "not found" and ruleset mismatch first.
+/// and risks.
 class DbCalculatorScreen extends ConsumerWidget {
   const DbCalculatorScreen({super.key, required this.routineId});
 
   final String routineId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Only rebuild when loading state or ruleset changes, not on every edit.
-    final rulesetId = ref.watch(
-      routineControllerProvider(routineId)
-          .select((routine) => routine.whenData((r) => r.rulesetId)),
-    );
-    final engineRuleset = ref.watch(dbScoringEngineProvider).ruleset;
-
-    return rulesetId.when(
-      loading: () => const _MessageScaffold(
-        child: CircularProgressIndicator(semanticsLabel: 'Loading routine'),
-      ),
-      error: (error, _) => _MessageScaffold(
-        child: error is RoutineNotFoundException
-            ? const MessageView(
-                icon: Icons.search_off,
-                title: 'Routine not found',
-                message: 'It may have been deleted.',
-              )
-            : MessageView(
-                icon: Icons.error_outline,
-                isError: true,
-                title: 'Could not open the routine',
-                message: 'Please try again.',
-                action: FilledButton.tonalIcon(
-                  onPressed: () =>
-                      ref.invalidate(routineControllerProvider(routineId)),
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Retry'),
-                ),
-              ),
-      ),
-      data: (rulesetId) => rulesetId == engineRuleset.id
-          ? _DbCalculatorContent(routineId: routineId)
-          : _MessageScaffold(
-              child: MessageView(
-                icon: Icons.rule,
-                title: 'Different ruleset',
-                message:
-                    'This routine was planned with the "$rulesetId" '
-                    'ruleset, which is not available in this version of '
-                    'the app.',
-              ),
-            ),
-    );
-  }
-}
-
-class _MessageScaffold extends StatelessWidget {
-  const _MessageScaffold({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('DB Calculator')),
-    body: Center(child: child),
+  Widget build(BuildContext context, WidgetRef ref) => RoutineLoader(
+    routineId: routineId,
+    title: 'DB Calculator',
+    rulesetId: ref.watch(dbScoringEngineProvider).ruleset.id,
+    content: (context) => _DbCalculatorContent(routineId: routineId),
   );
 }
 
@@ -96,10 +44,6 @@ class _DbCalculatorContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ruleset = ref.watch(dbScoringEngineProvider).ruleset;
-    final level = ref.watch(routineProvider(routineId).select((r) => r.level));
-    final apparatus = ref.watch(
-      routineProvider(routineId).select((r) => r.apparatus),
-    );
     final isEmpty = ref.watch(
       dbRoutineProvider(routineId).select((r) => r.isEmpty),
     );
@@ -114,7 +58,7 @@ class _DbCalculatorContent extends ConsumerWidget {
         appBar: AppBar(
           title: const Text('DB Calculator'),
           actions: [
-            _SaveStatusIndicator(routineId: routineId),
+            SaveStatusIndicator(routineId: routineId),
             IconButton(
               tooltip: 'Clear all',
               icon: const Icon(Icons.delete_sweep_outlined),
@@ -140,17 +84,9 @@ class _DbCalculatorContent extends ConsumerWidget {
                       _UnknownItemsBanner(count: unknownCount),
                     ],
                     const SizedBox(height: 16),
-                    RoutineNameField(routineId: routineId),
-                    const SizedBox(height: 12),
-                    ApparatusSelector(
-                      apparatus: apparatus,
-                      onChanged: controller.selectApparatus,
-                    ),
-                    const SizedBox(height: 12),
-                    LevelSelector(
-                      level: level,
-                      apparatus: apparatus,
-                      onChanged: controller.selectLevel,
+                    RoutineDetailsFields(
+                      routineId: routineId,
+                      page: RoutinePage.db,
                     ),
                   ],
                 ),
@@ -220,35 +156,6 @@ class _DbCalculatorContent extends ConsumerWidget {
       ),
     );
     if (confirmed ?? false) controller.clearDb();
-  }
-}
-
-/// Saved / saving / failed indicator. Tapping it after a failure retries.
-class _SaveStatusIndicator extends ConsumerWidget {
-  const _SaveStatusIndicator({required this.routineId});
-
-  final String routineId;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final colors = Theme.of(context).colorScheme;
-    return switch (ref.watch(routineSaveStatusProvider(routineId))) {
-      SaveStatus.saved => Tooltip(
-        message: 'Saved',
-        child: Icon(Icons.check_circle_outline, color: colors.primary),
-      ),
-      SaveStatus.saving => Tooltip(
-        message: 'Saving…',
-        child: Icon(Icons.sync, color: colors.onSurfaceVariant),
-      ),
-      SaveStatus.failed => IconButton(
-        tooltip: "Couldn't save. Tap to retry",
-        icon: Icon(Icons.error_outline, color: colors.error),
-        onPressed: ref
-            .read(routineControllerProvider(routineId).notifier)
-            .saveNow,
-      ),
-    };
   }
 }
 

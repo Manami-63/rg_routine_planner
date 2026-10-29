@@ -81,3 +81,31 @@ class RoutineRiskCriteria extends Table {
   TextColumn get criterionId => text()();
   IntColumn get position => integer()();
 }
+
+/// One DA of a routine, in performance order. Added in v6.
+@DataClassName('RoutineApparatusDifficultyRow')
+class RoutineApparatusDifficulties extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get routineId =>
+      text().references(Routines, #id, onDelete: KeyAction.cascade)();
+  IntColumn get position => integer()();
+
+  /// Catalogue id of the base, or `custom` for a DA the user entered.
+  TextColumn get baseId => text()();
+
+  /// Catalogue id of a 2nd base after a catch from a high throw, or null.
+  TextColumn get secondBaseId => text().nullable()();
+
+  /// Criteria performed, as comma-separated `DaCriterion.name`s (e.g.
+  /// `outsideVisualField,rotation`). Empty for none.
+  TextColumn get criteria => text().withDefault(const Constant(''))();
+
+  /// The "rotation" criterion is a pre-acrobatic element.
+  BoolColumn get preAcrobatic => boolean().withDefault(const Constant(false))();
+
+  /// A value entered by the user, in hundredths. Null when not set.
+  IntColumn get manualValue => integer().nullable()();
+
+  /// Name of a custom DA. Null otherwise.
+  TextColumn get customName => text().nullable()();
+}

@@ -5,7 +5,7 @@ import '../../../routines/presentation/routine_controller.dart';
 import '../../domain/risk.dart';
 import '../db_calculator_providers.dart';
 import '../db_routine_providers.dart';
-import 'value_badge.dart';
+import '../../../../core/widgets/value_badge.dart';
 
 /// Bottom sheet for composing a risk the way it is performed: the throw,
 /// the rotations under the flight, and the catch.

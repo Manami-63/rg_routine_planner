@@ -11,7 +11,13 @@ part 'app_database.g.dart';
 /// `dart run build_runner build --delete-conflicting-outputs`, bump
 /// [schemaVersion] and add a migration step.
 @DriftDatabase(
-  tables: [Routines, RoutineBodyElements, RoutineRisks, RoutineRiskCriteria],
+  tables: [
+    Routines,
+    RoutineBodyElements,
+    RoutineRisks,
+    RoutineRiskCriteria,
+    RoutineApparatusDifficulties,
+  ],
 )
 class AppDatabase extends _$AppDatabase {
   /// Pass an [executor] in tests (e.g. `NativeDatabase.memory()`).
@@ -19,7 +25,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'rg_routine_planner'));
 
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -63,6 +69,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 5) {
         await m.addColumn(routineBodyElements, routineBodyElements.seriesCount);
+      }
+      if (from < 6) {
+        await m.createTable(routineApparatusDifficulties);
       }
     },
     // SQLite does not enforce foreign keys (and cascades) unless asked.

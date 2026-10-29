@@ -4,6 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:rg_routine_planner/core/database/app_database.dart';
 import 'package:rg_routine_planner/core/scoring/apparatus.dart';
 import 'package:rg_routine_planner/core/scoring/score.dart';
+import 'package:rg_routine_planner/features/da_calculator/domain/da_base.dart';
+import 'package:rg_routine_planner/features/da_calculator/domain/da_criterion.dart';
+import 'package:rg_routine_planner/features/da_calculator/domain/da_element.dart';
+import 'package:rg_routine_planner/features/da_calculator/domain/da_routine.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_element.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_element_options.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_routine.dart';
@@ -14,6 +18,7 @@ import 'package:rg_routine_planner/features/levels/domain/count_limit.dart';
 import 'package:rg_routine_planner/features/routines/data/drift_routine_repository.dart';
 import 'package:rg_routine_planner/features/routines/domain/routine.dart';
 
+import '../../da_calculator/test_data.dart';
 import '../../db_calculator/test_data.dart';
 
 void main() {
@@ -28,6 +33,7 @@ void main() {
     repository = DriftRoutineRepository(
       db,
       catalogue: FakeDbCatalogueRepository(),
+      daCatalogue: FakeDaCatalogueRepository(),
       presetLevels: figLevels,
     );
   });
@@ -41,6 +47,7 @@ void main() {
     CompetitionLevel? level,
     List<DbElement> elements = const [],
     List<RiskElement> risks = const [],
+    List<DaElement> das = const [],
     DateTime? updatedAt,
   }) => Routine(
     id: id,
@@ -48,6 +55,7 @@ void main() {
     apparatus: apparatus,
     level: level,
     db: DbRoutine(rulesetId: 'test-v1', elements: elements, risks: risks),
+    da: DaRoutine(rulesetId: 'test-v1', elements: das),
     createdAt: created,
     updatedAt: updatedAt ?? created,
   );
@@ -101,6 +109,55 @@ void main() {
     await repository.saveRoutine(original);
 
     expect(await repository.fetchRoutine('r1'), original);
+  });
+
+  test('round-trips DA in order, with all their details', () async {
+    final original = routine(
+      apparatus: Apparatus.hoop,
+      das: [
+        DaElement(
+          base: testRoll,
+          criteria: const {DaCriterion.outsideVisualField, DaCriterion.db},
+        ),
+        DaElement(
+          base: testCatch,
+          secondBase: testRoll,
+          criteria: const {DaCriterion.rotation},
+          preAcrobatic: true,
+        ),
+        DaElement(base: testThrow, manualValue: const Score.hundredths(50)),
+        DaElement(
+          base: const DaBase.custom(name: 'National DA', rulesetId: 'test-v1'),
+          manualValue: const Score.hundredths(10),
+        ),
+      ],
+    );
+
+    await repository.saveRoutine(original);
+
+    expect(await repository.fetchRoutine('r1'), original);
+    final rows = await db.select(db.routineApparatusDifficulties).get();
+    expect(rows.first.baseId, 'hoop-roll');
+    expect(rows.first.criteria, 'outsideVisualField,db');
+  });
+
+  test('unknown DA bases load as unknown and survive a re-save', () async {
+    await repository.saveRoutine(
+      routine(
+        das: [
+          DaElement(
+            base: const DaBase.unknown(id: 'removed', rulesetId: 'test-v1'),
+          ),
+        ],
+      ),
+    );
+
+    final loaded = await repository.fetchRoutine('r1');
+    expect(loaded!.da.elements.single.base.isUnknown, isTrue);
+
+    await repository.saveRoutine(loaded);
+    final rows = await db.select(db.routineApparatusDifficulties).get();
+    expect(rows.single.baseId, 'removed');
   });
 
   test('keeps millisecond timestamps in UTC', () async {
@@ -169,6 +226,7 @@ void main() {
         risks: [
           RiskElement(rotation: testTwoRotations, criteria: [testCriterionA]),
         ],
+        das: [DaElement(base: testThrow)],
       ),
     );
 
@@ -178,6 +236,7 @@ void main() {
     expect(await db.select(db.routineBodyElements).get(), isEmpty);
     expect(await db.select(db.routineRisks).get(), isEmpty);
     expect(await db.select(db.routineRiskCriteria).get(), isEmpty);
+    expect(await db.select(db.routineApparatusDifficulties).get(), isEmpty);
   });
 
   test('stores catalogue ids, not values', () async {
@@ -282,6 +341,10 @@ void main() {
         level: figJunior,
         elements: const [testJump, testBalance],
         risks: [RiskElement(rotation: testTwoRotations)],
+        das: [
+          DaElement(base: testThrow),
+          DaElement(base: testRoll),
+        ],
         updatedAt: created.add(const Duration(hours: 1)),
       ),
     );
@@ -291,6 +354,7 @@ void main() {
     expect(summaries.map((s) => s.name), ['Newer', 'Older']);
     expect(summaries.first.elementCount, 2);
     expect(summaries.first.riskCount, 1);
+    expect(summaries.first.daCount, 2);
     expect(summaries.first.level, figJunior);
     expect(summaries.first.apparatus, Apparatus.clubs);
     expect(summaries.last.elementCount, 1);

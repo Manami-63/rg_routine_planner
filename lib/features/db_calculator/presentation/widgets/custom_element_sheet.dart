@@ -5,7 +5,7 @@ import '../../../../core/scoring/score.dart';
 import '../../../routines/presentation/routine_controller.dart';
 import '../../domain/db_element.dart';
 import '../db_routine_providers.dart';
-import 'adjust_element_sheet.dart';
+import '../../../../core/widgets/manual_value_field.dart';
 
 /// Bottom sheet for adding a DB that is not in the catalogue, e.g. one
 /// newly approved by FIG during the Olympic cycle.

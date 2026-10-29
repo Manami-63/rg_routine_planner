@@ -6,9 +6,9 @@ import '../../routines/presentation/routine_controller.dart';
 import '../domain/db_element.dart';
 import 'db_calculator_providers.dart';
 import 'db_routine_providers.dart';
-import 'widgets/async_sliver.dart';
+import '../../../core/widgets/async_sliver.dart';
 import 'widgets/custom_element_sheet.dart';
-import 'widgets/value_badge.dart';
+import '../../../core/widgets/value_badge.dart';
 
 /// Whether [element] matches a search: every word of [query] must appear
 /// in its name or family (codes are part of the name, e.g. "2.203").

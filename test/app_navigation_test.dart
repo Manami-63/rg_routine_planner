@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rg_routine_planner/app/app.dart';
+import 'package:rg_routine_planner/features/da_calculator/presentation/da_calculator_providers.dart';
 import 'package:rg_routine_planner/features/db_calculator/presentation/db_calculator_providers.dart';
 import 'package:rg_routine_planner/features/routines/presentation/routine_providers.dart';
 
+import 'features/da_calculator/test_data.dart';
 import 'features/db_calculator/pump_db_calculator.dart';
 import 'features/db_calculator/test_data.dart';
 import 'features/routines/fake_routine_repository.dart';
@@ -24,6 +26,9 @@ void main() {
           dbCatalogueRepositoryProvider.overrideWithValue(
             FakeDbCatalogueRepository(),
           ),
+          daCatalogueRepositoryProvider.overrideWithValue(
+            FakeDaCatalogueRepository(),
+          ),
           routineRepositoryProvider.overrideWithValue(routines),
         ],
         child: const RgRoutinePlannerApp(),
@@ -33,7 +38,6 @@ void main() {
 
     // Home -> My routines (empty).
     expect(find.text('RG Routine Planner'), findsOneWidget);
-    expect(find.text('Coming soon'), findsOneWidget);
     await tester.tap(find.text('My routines'));
     await tester.pumpAndSettle();
     expect(find.text('No routines yet'), findsOneWidget);
@@ -47,11 +51,21 @@ void main() {
     await tester.enterText(find.byType(TextField), 'Ball final');
     await addFromCatalogue(tester, 'Test Jump');
 
-    // Leaving straight away still saves the (debounced) name.
+    // The DA page edits the same routine.
+    await tester.tap(find.text('Apparatus (DA)'));
+    await tester.pumpAndSettle();
+    expect(find.widgetWithText(AppBar, 'DA Calculator'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Ball final'), findsOneWidget);
+
+    // Leaving straight away still saves the (debounced) name, and Back
+    // returns to the list rather than to the DB page.
     await tester.tap(find.byTooltip('Back'));
     await tester.pumpAndSettle();
     expect(find.text('Ball final'), findsOneWidget);
-    expect(find.textContaining('No level · 1 DB · 0 risks'), findsOneWidget);
+    expect(
+      find.textContaining('No level · 1 DB · 0 risks · 0 DA'),
+      findsOneWidget,
+    );
 
     // Reopening shows the saved content.
     await tester.tap(find.text('Ball final'));

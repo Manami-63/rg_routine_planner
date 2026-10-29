@@ -5,8 +5,8 @@ import '../../../../core/widgets/message_view.dart';
 import '../../../routines/presentation/routine_controller.dart';
 import '../db_calculator_providers.dart';
 import '../db_routine_providers.dart';
-import 'async_sliver.dart';
-import 'value_badge.dart';
+import '../../../../core/widgets/async_sliver.dart';
+import '../../../../core/widgets/value_badge.dart';
 
 /// Sliver listing the risks in the routine, or an empty state.
 class SelectedRisksSection extends ConsumerWidget {

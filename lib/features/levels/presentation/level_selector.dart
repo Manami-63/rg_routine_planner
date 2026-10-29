@@ -12,12 +12,14 @@ import 'limit_text.dart';
 /// Shows a routine's level and opens the level picker.
 ///
 /// Takes the level and a callback instead of reading a provider, so this
-/// feature does not depend on where the level is stored.
+/// feature does not depend on where the level is stored. The level is
+/// shared by the DB and DA pages; each shows only its own [categories].
 class LevelSelector extends StatelessWidget {
   const LevelSelector({
     super.key,
     required this.level,
     required this.apparatus,
+    required this.categories,
     required this.onChanged,
   });
 
@@ -25,6 +27,9 @@ class LevelSelector extends StatelessWidget {
 
   /// The routine's apparatus; freehand routines show freehand limits.
   final Apparatus? apparatus;
+
+  /// The categories shown and edited on this page, e.g. DB and R.
+  final List<DifficultyCategory> categories;
   final ValueChanged<CompetitionLevel?> onChanged;
 
   @override
@@ -38,7 +43,7 @@ class LevelSelector extends StatelessWidget {
         subtitle: Text(
           level == null
               ? 'Used to decide which difficulties count'
-              : describeLevel(level, apparatus),
+              : describeLevel(level, apparatus, categories: categories),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
@@ -47,6 +52,7 @@ class LevelSelector extends StatelessWidget {
           context,
           initialLevel: level,
           apparatus: apparatus,
+          categories: categories,
           onApply: onChanged,
         ),
       ),
@@ -57,17 +63,20 @@ class LevelSelector extends StatelessWidget {
 /// Bottom sheet for choosing a FIG level or entering a non-FIG level.
 ///
 /// The choice is held in local state and only applied on "Apply", so
-/// dismissing the sheet changes nothing.
+/// dismissing the sheet changes nothing. Numbers of other [categories] in
+/// a non-FIG level are kept as they are.
 class LevelPickerSheet extends ConsumerStatefulWidget {
   const LevelPickerSheet({
     super.key,
     required this.initialLevel,
     required this.apparatus,
+    required this.categories,
     required this.onApply,
   });
 
   final CompetitionLevel? initialLevel;
   final Apparatus? apparatus;
+  final List<DifficultyCategory> categories;
 
   /// Called with the chosen level, or `null` when the level is removed.
   final ValueChanged<CompetitionLevel?> onApply;
@@ -76,6 +85,7 @@ class LevelPickerSheet extends ConsumerStatefulWidget {
     BuildContext context, {
     required CompetitionLevel? initialLevel,
     required Apparatus? apparatus,
+    required List<DifficultyCategory> categories,
     required ValueChanged<CompetitionLevel?> onApply,
   }) {
     return showModalBottomSheet<void>(
@@ -85,6 +95,7 @@ class LevelPickerSheet extends ConsumerStatefulWidget {
       builder: (context) => LevelPickerSheet(
         initialLevel: initialLevel,
         apparatus: apparatus,
+        categories: categories,
         onApply: onApply,
       ),
     );
@@ -101,11 +112,13 @@ class _LevelPickerSheetState extends ConsumerState<LevelPickerSheet> {
       ? _current!.requirements!
       : const LevelRequirements();
 
+  List<DifficultyCategory> get _categories =>
+      categoriesFor(widget.apparatus, widget.categories);
+
   /// Minimums are rarely needed, so they stay hidden until asked for.
-  late bool _showMinimums =
-      _custom.db.min != null ||
-      _custom.risk.min != null ||
-      _custom.da.min != null;
+  late bool _showMinimums = _categories.any(
+    (category) => category.limitOf(_custom).min != null,
+  );
 
   bool get _isCustom => _selectedId == CompetitionLevel.customId;
 
@@ -151,7 +164,13 @@ class _LevelPickerSheetState extends ConsumerState<LevelPickerSheet> {
                     RadioListTile<String>(
                       value: level.id,
                       title: Text(level.label),
-                      subtitle: Text(describeLevel(level, widget.apparatus)),
+                      subtitle: Text(
+                        describeLevel(
+                          level,
+                          widget.apparatus,
+                          categories: widget.categories,
+                        ),
+                      ),
                     ),
                   const RadioListTile<String>(
                     value: CompetitionLevel.customId,
@@ -168,18 +187,23 @@ class _LevelPickerSheetState extends ConsumerState<LevelPickerSheet> {
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
                 child: _CustomRequirementsEditor(
                   requirements: _custom,
-                  categories: categoriesFor(widget.apparatus),
+                  categories: _categories,
+                  showBodyGroups: widget.categories.contains(
+                    DifficultyCategory.db,
+                  ),
                   showMinimums: _showMinimums,
                   onChanged: (custom) => setState(() => _custom = custom),
                   onShowMinimumsChanged: (show) => setState(() {
                     _showMinimums = show;
-                    // Hidden minimums would still be checked, so clear them.
+                    // Hidden minimums would still be checked, so clear them
+                    // (only those of this page's categories).
                     if (!show) {
-                      _custom = _custom.copyWith(
-                        db: _custom.db.withMin(null),
-                        risk: _custom.risk.withMin(null),
-                        da: _custom.da.withMin(null),
-                      );
+                      for (final category in _categories) {
+                        _custom = _custom.withLimit(
+                          category,
+                          category.limitOf(_custom).withMin(null),
+                        );
+                      }
                     }
                   }),
                 ),
@@ -214,6 +238,7 @@ class _CustomRequirementsEditor extends StatelessWidget {
   const _CustomRequirementsEditor({
     required this.requirements,
     required this.categories,
+    required this.showBodyGroups,
     required this.showMinimums,
     required this.onChanged,
     required this.onShowMinimumsChanged,
@@ -221,18 +246,15 @@ class _CustomRequirementsEditor extends StatelessWidget {
 
   final LevelRequirements requirements;
 
-  /// The categories that apply to the routine (freehand has only DB).
+  /// The categories edited on this page that apply to the routine
+  /// (freehand has only DB).
   final List<DifficultyCategory> categories;
+
+  /// Body groups are DB requirements, so only the DB page edits them.
+  final bool showBodyGroups;
   final bool showMinimums;
   final ValueChanged<LevelRequirements> onChanged;
   final ValueChanged<bool> onShowMinimumsChanged;
-
-  LevelRequirements _withLimit(DifficultyCategory category, CountLimit limit) =>
-      switch (category) {
-        DifficultyCategory.db => requirements.copyWith(db: limit),
-        DifficultyCategory.risk => requirements.copyWith(risk: limit),
-        DifficultyCategory.da => requirements.copyWith(da: limit),
-      };
 
   void _toggleGroup(DbElementGroup group, bool selected) => onChanged(
     requirements.copyWith(
@@ -268,7 +290,8 @@ class _CustomRequirementsEditor extends StatelessWidget {
                   category: category,
                   limit: category.limitOf(requirements),
                   showMinimum: showMinimums,
-                  onChanged: (limit) => onChanged(_withLimit(category, limit)),
+                  onChanged: (limit) =>
+                      onChanged(requirements.withLimit(category, limit)),
                 ),
               TextButton.icon(
                 onPressed: () => onShowMinimumsChanged(!showMinimums),
@@ -278,20 +301,22 @@ class _CustomRequirementsEditor extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 12),
-        Text('Required body groups', style: theme.textTheme.titleSmall),
-        const SizedBox(height: 4),
-        Wrap(
-          spacing: 8,
-          children: [
-            for (final group in DbElementGroup.requirable)
-              FilterChip(
-                label: Text(group.label),
-                selected: requirements.requiredBodyGroups.contains(group),
-                onSelected: (selected) => _toggleGroup(group, selected),
-              ),
-          ],
-        ),
+        if (showBodyGroups) ...[
+          const SizedBox(height: 12),
+          Text('Required body groups', style: theme.textTheme.titleSmall),
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: 8,
+            children: [
+              for (final group in DbElementGroup.requirable)
+                FilterChip(
+                  label: Text(group.label),
+                  selected: requirements.requiredBodyGroups.contains(group),
+                  onSelected: (selected) => _toggleGroup(group, selected),
+                ),
+            ],
+          ),
+        ],
         const SizedBox(height: 12),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,

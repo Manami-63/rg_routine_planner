@@ -99,6 +99,7 @@ class _RoutineTile extends ConsumerWidget {
       summary.level?.label ?? 'No level',
       '${summary.elementCount} DB',
       '${summary.riskCount} ${summary.riskCount == 1 ? 'risk' : 'risks'}',
+      '${summary.daCount} DA',
     ].join(' · ');
 
     return ListTile(

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/scoring/score.dart';
@@ -8,7 +7,8 @@ import '../../domain/db_element.dart';
 import '../../domain/db_element_options.dart';
 import '../db_calculator_providers.dart';
 import '../db_routine_providers.dart';
-import 'value_badge.dart';
+import '../../../../core/widgets/manual_value_field.dart';
+import '../../../../core/widgets/value_badge.dart';
 
 /// Short summary of how an element is performed, e.g. "Flat foot · Slow
 /// turn", or `null` when it uses the catalogue value as is.
@@ -323,38 +323,6 @@ class _AdjustElementSheetState extends ConsumerState<AdjustElementSheet> {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// A text field for a value such as `0.40`, with an error for invalid
-/// input.
-class ManualValueField extends StatelessWidget {
-  const ManualValueField({
-    super.key,
-    required this.controller,
-    required this.onChanged,
-  });
-
-  final TextEditingController controller;
-  final VoidCallback onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = controller.text;
-    return TextField(
-      controller: controller,
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
-      decoration: InputDecoration(
-        labelText: 'Value',
-        hintText: 'e.g. 0.40',
-        border: const OutlineInputBorder(),
-        errorText: text.isEmpty || Score.tryParse(text) != null
-            ? null
-            : 'Enter a value like 0.40',
-      ),
-      onChanged: (_) => onChanged(),
     );
   }
 }

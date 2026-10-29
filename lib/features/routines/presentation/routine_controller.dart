@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/scoring/apparatus.dart';
+import '../../da_calculator/domain/da_routine.dart';
 import '../../db_calculator/domain/db_routine.dart';
 import '../../levels/domain/competition_level.dart';
 import '../domain/routine.dart';
@@ -111,6 +112,11 @@ class RoutineController extends AsyncNotifier<Routine> {
   /// DB calculator feature (see `DbRoutineEditing`).
   void updateDb(DbRoutine Function(DbRoutine db) change) =>
       _update((routine) => routine.withDb(change(routine.db)));
+
+  /// Applies a change to the DA content. DA-specific helpers live in the
+  /// DA calculator feature (see `DaRoutineEditing`).
+  void updateDa(DaRoutine Function(DaRoutine da) change) =>
+      _update((routine) => routine.withDa(change(routine.da)));
 
   /// Saves now, e.g. to retry after a failure.
   void saveNow() => _save();
