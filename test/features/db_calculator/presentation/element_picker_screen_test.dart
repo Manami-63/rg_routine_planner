@@ -43,6 +43,19 @@ void main() {
     expect(find.text('Test Jump'), findsNothing);
   });
 
+  testWidgets('reopens on the body group shown last', (tester) async {
+    await pumpDbCalculator(tester);
+    await openElementPicker(tester);
+    await tester.tap(find.text('Balances'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Done'));
+    await tester.pumpAndSettle();
+
+    await openElementPicker(tester);
+    expect(find.text('Test Balance'), findsOneWidget);
+    expect(find.text('Test Jump'), findsNothing);
+  });
+
   testWidgets('search narrows the selected group', (tester) async {
     await pumpDbCalculator(tester);
     await openElementPicker(tester);

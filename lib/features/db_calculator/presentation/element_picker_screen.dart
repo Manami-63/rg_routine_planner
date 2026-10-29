@@ -21,6 +21,19 @@ bool matchesQuery(DbElement element, String query) {
       .every(text.contains);
 }
 
+/// The body group the picker last showed, so reopening it continues where
+/// the user left off. Kept for the app session only.
+final pickerGroupProvider = NotifierProvider<PickerGroup, DbElementGroup>(
+  PickerGroup.new,
+);
+
+class PickerGroup extends Notifier<DbElementGroup> {
+  @override
+  DbElementGroup build() => DbElementGroup.jump;
+
+  void select(DbElementGroup group) => state = group;
+}
+
 /// Full-screen catalogue for adding DB to a routine: one body group at a
 /// time, narrowed by a search, sectioned by catalogue row. Stays open so
 /// several elements can be added in a row.
@@ -48,7 +61,6 @@ class _ElementPickerScreenState extends ConsumerState<ElementPickerScreen> {
 
   // Its own messenger, so "Added ..." messages close with the picker.
   final _messenger = GlobalKey<ScaffoldMessengerState>();
-  DbElementGroup _group = DbElementGroup.jump;
 
   String get _query => _search.text.trim();
 
@@ -78,6 +90,7 @@ class _ElementPickerScreenState extends ConsumerState<ElementPickerScreen> {
   }
 
   Widget _buildScaffold(BuildContext context) {
+    final group = ref.watch(pickerGroupProvider);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add element'),
@@ -121,9 +134,10 @@ class _ElementPickerScreenState extends ConsumerState<ElementPickerScreen> {
                   for (final group in DbElementGroup.requirable)
                     ButtonSegment(value: group, label: Text(group.label)),
                 ],
-                selected: {_group},
-                onSelectionChanged: (selection) =>
-                    setState(() => _group = selection.single),
+                selected: {group},
+                onSelectionChanged: (selection) => ref
+                    .read(pickerGroupProvider.notifier)
+                    .select(selection.single),
               ),
             ),
           ),
@@ -170,6 +184,7 @@ class _ElementPickerScreenState extends ConsumerState<ElementPickerScreen> {
       );
     }
 
+    final group = ref.watch(pickerGroupProvider);
     final query = _query;
     final matching = [
       for (final element in catalogue)
@@ -177,7 +192,7 @@ class _ElementPickerScreenState extends ConsumerState<ElementPickerScreen> {
     ];
     final shown = [
       for (final element in matching)
-        if (element.group == _group) element,
+        if (element.group == group) element,
     ];
     if (shown.isEmpty) {
       // Point to the groups that do have matches, so a search is not a
@@ -191,7 +206,7 @@ class _ElementPickerScreenState extends ConsumerState<ElementPickerScreen> {
       return SliverToBoxAdapter(
         child: MessageView(
           icon: Icons.search_off,
-          title: 'No matches in ${_group.label}',
+          title: 'No matches in ${group.label}',
           message: elsewhere.isEmpty
               ? 'Try another word or code, or add it yourself below.'
               : 'Found in: ${elsewhere.join(', ')}',

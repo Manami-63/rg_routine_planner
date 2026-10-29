@@ -12,8 +12,8 @@ void main() {
 
     setUp(() async => elements = await repository.fetchElements());
 
-    test('stays unofficial until the transcription is checked', () {
-      expect(repository.ruleset.isOfficial, isFalse);
+    test('is official now that the transcription is checked', () {
+      expect(repository.ruleset.isOfficial, isTrue);
       expect(repository.ruleset.label, contains('FIG'));
     });
 
