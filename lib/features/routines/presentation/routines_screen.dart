@@ -8,6 +8,8 @@ import '../../../core/widgets/message_view.dart';
 import '../../db_calculator/presentation/db_calculator_providers.dart';
 import '../data/routine_repository.dart';
 import '../domain/routine.dart';
+import 'routine_actions.dart';
+import 'routine_details_form.dart';
 import 'routine_providers.dart';
 
 /// "My routines": lists saved routines and creates new ones.
@@ -62,13 +64,18 @@ class RoutinesScreen extends ConsumerWidget {
     );
   }
 
-  /// Creates and saves an empty routine, then opens it. Saving first means
-  /// it appears in the list even if the user leaves straight away.
+  /// Asks for the name, apparatus and level, then saves the new routine
+  /// and opens it. Saving first means it appears in the list even if the
+  /// user leaves straight away.
   Future<void> _createRoutine(BuildContext context, WidgetRef ref) async {
-    final routine = Routine.create(
-      id: const Uuid().v4(),
-      rulesetId: ref.read(dbScoringEngineProvider).ruleset.id,
-      now: DateTime.now().toUtc(),
+    final details = await RoutineDetailsForm.create(context);
+    if (details == null || !context.mounted) return;
+    final routine = details.applyTo(
+      Routine.create(
+        id: const Uuid().v4(),
+        rulesetId: ref.read(dbScoringEngineProvider).ruleset.id,
+        now: DateTime.now().toUtc(),
+      ),
     );
     try {
       await ref.read(routineRepositoryProvider).saveRoutine(routine);
@@ -80,19 +87,18 @@ class RoutinesScreen extends ConsumerWidget {
       return;
     }
     if (!context.mounted) return;
-    context.go(AppRoutes.dbCalculator(routine.id));
+    context.go(AppRoutes.routine(routine.id));
   }
 }
 
-enum _RoutineAction { duplicate, delete }
+enum _RoutineAction { edit, duplicate, delete }
 
 class _RoutineTile extends ConsumerWidget {
   const _RoutineTile({required this.summary});
 
   final RoutineSummary summary;
 
-  String get _displayName =>
-      summary.name.trim().isEmpty ? 'Untitled routine' : summary.name;
+  String get _displayName => routineDisplayName(summary.name);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -112,10 +118,22 @@ class _RoutineTile extends ConsumerWidget {
       trailing: PopupMenuButton<_RoutineAction>(
         tooltip: 'Options for $_displayName',
         onSelected: (action) => switch (action) {
-          _RoutineAction.duplicate => _duplicate(context, ref),
+          _RoutineAction.edit => _edit(context, ref),
+          _RoutineAction.duplicate => duplicateRoutine(
+            context,
+            ref,
+            () => ref.read(routineRepositoryProvider).fetchRoutine(summary.id),
+          ),
           _RoutineAction.delete => _confirmDelete(context, ref),
         },
         itemBuilder: (context) => const [
+          PopupMenuItem(
+            value: _RoutineAction.edit,
+            child: ListTile(
+              leading: Icon(Icons.edit_outlined),
+              title: Text('Edit details'),
+            ),
+          ),
           PopupMenuItem(
             value: _RoutineAction.duplicate,
             child: ListTile(
@@ -132,43 +150,38 @@ class _RoutineTile extends ConsumerWidget {
           ),
         ],
       ),
-      onTap: () => context.go(AppRoutes.dbCalculator(summary.id)),
+      onTap: () => context.go(AppRoutes.routine(summary.id)),
     );
   }
 
-  /// Saves a copy of the routine (DB, DA, apparatus and level) under a new
-  /// name. The copy is listed first, as the most recently updated.
-  Future<void> _duplicate(BuildContext context, WidgetRef ref) async {
+  /// Edits the name, apparatus and level without opening the routine.
+  Future<void> _edit(BuildContext context, WidgetRef ref) async {
     final repository = ref.read(routineRepositoryProvider);
     final messenger = ScaffoldMessenger.of(context);
-    final router = GoRouter.maybeOf(context);
-    final Routine copy;
+    Routine? routine;
     try {
-      final original = await repository.fetchRoutine(summary.id);
-      if (original == null) throw StateError('Routine not found');
-      copy = original.duplicate(
-        id: const Uuid().v4(),
-        name: '$_displayName (copy)',
-        now: DateTime.now().toUtc(),
-      );
-      await repository.saveRoutine(copy);
+      routine = await repository.fetchRoutine(summary.id);
     } on Object {
+      routine = null;
+    }
+    if (!context.mounted) return;
+    if (routine == null) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Could not duplicate the routine.')),
+        const SnackBar(content: Text('Could not open the routine.')),
       );
       return;
     }
-    messenger.showSnackBar(
-      SnackBar(
-        content: Text('Saved as "${copy.name}".'),
-        action: router == null
-            ? null
-            : SnackBarAction(
-                label: 'Open',
-                onPressed: () => router.go(AppRoutes.dbCalculator(copy.id)),
-              ),
-      ),
-    );
+    final details = await RoutineDetailsForm.edit(context, routine);
+    if (details == null) return;
+    try {
+      await repository.saveRoutine(
+        details.applyTo(routine).withUpdatedAt(DateTime.now().toUtc()),
+      );
+    } on Object {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Could not save the changes.')),
+      );
+    }
   }
 
   Future<void> _confirmDelete(BuildContext context, WidgetRef ref) async {

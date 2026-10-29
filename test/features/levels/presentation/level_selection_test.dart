@@ -21,14 +21,36 @@ void main() {
     container = containerOf(tester);
   }
 
+  /// Opens the routine details form, unless it is already open.
+  Future<void> openForm(WidgetTester tester) async {
+    if (find.text('Edit routine').evaluate().isNotEmpty) return;
+    await tester.tap(find.byTooltip('Edit details'));
+    await tester.pumpAndSettle();
+  }
+
+  /// Opens the level picker from the routine details form.
   Future<void> openPicker(WidgetTester tester) async {
+    await openForm(tester);
     await tester.tap(find.byIcon(Icons.flag_outlined));
     await tester.pumpAndSettle();
   }
 
+  /// Applies the picker's choice to the (still open) details form.
   Future<void> apply(WidgetTester tester) async {
     await tester.tap(find.text('Apply'));
     await tester.pumpAndSettle();
+  }
+
+  /// Saves the details form, which updates the routine.
+  Future<void> save(WidgetTester tester) async {
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> chooseFreehand(WidgetTester tester) async {
+    await openForm(tester);
+    await tester.tap(find.text('Freehand'));
+    await tester.pump();
   }
 
   /// Adds [times] Test Jumps. Repeating an element is not valid, so they
@@ -86,7 +108,7 @@ void main() {
   testWidgets('no level selected shows no count notice', (tester) async {
     await pumpScreen(tester);
 
-    expect(find.text('Select a level'), findsOneWidget);
+    expect(find.text('No apparatus · No level'), findsOneWidget);
     expect(find.byKey(const ValueKey('count-limit-notice')), findsNothing);
   });
 
@@ -99,12 +121,16 @@ void main() {
     await apply(tester);
 
     expect(
+      find.text(
+        'DB up to 6 · R up to 3 · DA up to 12 · '
+        'needs leap, balance, rotation',
+      ),
+      findsOneWidget,
+    );
+    await save(tester);
+    expect(
       container.read(routineProvider(testRoutineId)).level?.id,
       'fig-junior',
-    );
-    expect(
-      find.text('DB up to 6 · R up to 3 · needs leap, balance, rotation'),
-      findsOneWidget,
     );
     await addJumps(tester, 7);
     expect(
@@ -115,14 +141,14 @@ void main() {
 
   testWidgets('FIG level has no freehand requirements', (tester) async {
     await pumpScreen(tester);
-    await tester.tap(find.text('Freehand'));
-    await tester.pump();
+    await chooseFreehand(tester);
     await openPicker(tester);
     await tester.tap(find.text('FIG Senior'));
     await tester.pump();
     await apply(tester);
 
     expect(find.text('No freehand requirements'), findsOneWidget);
+    await save(tester);
     expect(
       noticeText(
         'FIG Senior has no freehand requirements in the app, '
@@ -142,15 +168,16 @@ void main() {
     await tapStepper(tester, 'Increase DB maximum');
     await tapStepper(tester, 'Increase DB maximum');
     await tapStepper(tester, 'Increase risks maximum');
-    // DA numbers are set on the DA page.
-    expect(find.text('Apparatus difficulties (DA)'), findsNothing);
+    // All numbers are edited together.
+    expect(find.text('Apparatus difficulties (DA)'), findsOneWidget);
     await apply(tester);
 
+    expect(find.text('DB up to 2 · R up to 1'), findsOneWidget);
+    await save(tester);
     expect(
       container.read(routineProvider(testRoutineId)).level?.requirements,
       const LevelRequirements(db: CountLimit(max: 2), risk: CountLimit(max: 1)),
     );
-    expect(find.text('DB up to 2 · R up to 1'), findsOneWidget);
 
     await addJumps(tester, 2);
     expect(noticeText('2 DB · meets the level (up to 2)'), findsOneWidget);
@@ -172,6 +199,7 @@ void main() {
     await tester.pump();
     await tapStepper(tester, 'Increase DB minimum');
     await apply(tester);
+    await save(tester);
 
     expect(noticeText('0 DB · 1 more needed (at least 1)'), findsOneWidget);
   });
@@ -189,6 +217,7 @@ void main() {
     await tester.tap(find.text('Remove minimums'));
     await tester.pump();
     await apply(tester);
+    await save(tester);
 
     expect(
       container.read(routineProvider(testRoutineId)).level?.requirements,
@@ -225,6 +254,7 @@ void main() {
     await tester.pump();
     expect(find.textContaining("Check your level's rules"), findsOneWidget);
     await apply(tester);
+    await save(tester);
 
     expect(
       container
@@ -240,8 +270,7 @@ void main() {
     tester,
   ) async {
     await pumpScreen(tester);
-    await tester.tap(find.text('Freehand'));
-    await tester.pump();
+    await chooseFreehand(tester);
     await openPicker(tester);
     await tester.tap(find.text('Non-FIG level'));
     await tester.pumpAndSettle();
@@ -297,6 +326,7 @@ void main() {
     await tester.tap(find.text('FIG Senior'));
     await tester.pump();
     await apply(tester);
+    await save(tester);
     await addJumps(tester, 1);
 
     expect(
@@ -323,6 +353,7 @@ void main() {
     await tester.tap(find.text('FIG Junior'));
     await tester.pump();
     await apply(tester);
+    await save(tester);
 
     await openPicker(tester);
     await tester.tap(find.text('FIG Senior'));
@@ -342,13 +373,15 @@ void main() {
     await tester.tap(find.text('FIG Junior'));
     await tester.pump();
     await apply(tester);
+    await save(tester);
 
     await openPicker(tester);
     await tester.tap(find.text('Remove level'));
     await tester.pumpAndSettle();
+    expect(find.text('Select a level'), findsOneWidget);
+    await save(tester);
 
     expect(container.read(routineProvider(testRoutineId)).level, isNull);
-    expect(find.text('Select a level'), findsOneWidget);
   });
 
   testWidgets('reopening a non-FIG level keeps its numbers', (tester) async {
@@ -364,11 +397,11 @@ void main() {
 
     await openPicker(tester);
 
-    // The DB maximum stepper shows the saved value; DA is not on this page
-    // but is kept when applying.
+    // The steppers show the saved values.
     expect(find.text('4'), findsOneWidget);
-    expect(find.text('Apparatus difficulties (DA)'), findsNothing);
+    expect(find.text('3'), findsOneWidget);
     await apply(tester);
+    await save(tester);
     expect(
       container.read(routineProvider(testRoutineId)).level?.requirements,
       requirements,
@@ -381,9 +414,12 @@ void main() {
     await tester.tap(find.text('FIG Senior'));
     await tester.pump();
     await apply(tester);
+    await save(tester);
     await addJumps(tester, 1);
 
-    await tester.tap(find.byTooltip('Clear all'));
+    await tester.tap(find.byTooltip('More options'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Clear DB and risks'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Clear'));
     await tester.pumpAndSettle();

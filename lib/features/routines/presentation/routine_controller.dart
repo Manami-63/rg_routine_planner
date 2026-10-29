@@ -7,6 +7,7 @@ import '../../da_calculator/domain/da_routine.dart';
 import '../../db_calculator/domain/db_routine.dart';
 import '../../levels/domain/competition_level.dart';
 import '../domain/routine.dart';
+import 'routine_details_form.dart';
 import 'routine_providers.dart';
 
 /// Thrown when the requested routine does not exist (e.g. it was deleted).
@@ -107,6 +108,9 @@ class RoutineController extends AsyncNotifier<Routine> {
 
   void selectLevel(CompetitionLevel? level) =>
       _update((routine) => routine.withLevel(level));
+
+  /// Applies the name, apparatus and level from the details form at once.
+  void updateDetails(RoutineDetails details) => _update(details.applyTo);
 
   /// Applies a change to the DB content. DB-specific helpers live in the
   /// DB calculator feature (see `DbRoutineEditing`).

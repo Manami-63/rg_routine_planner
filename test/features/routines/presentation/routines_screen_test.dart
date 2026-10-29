@@ -150,6 +150,30 @@ void main() {
     expect(find.text('Could not duplicate the routine.'), findsOneWidget);
   });
 
+  testWidgets('closing the new routine form creates nothing', (tester) async {
+    final repository = await pumpScreen(tester, []);
+
+    await tester.tap(find.text('New routine'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Close'));
+    await tester.pumpAndSettle();
+
+    expect(repository.routines, isEmpty);
+  });
+
+  testWidgets('edit details saves without opening the routine', (tester) async {
+    final repository = await pumpScreen(tester, [routine('r1', 'Hoop')]);
+
+    await chooseAction(tester, 'Hoop', 'Edit details');
+    await tester.enterText(find.byType(TextField), 'Hoop final');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+
+    expect(repository.routines['r1']!.name, 'Hoop final');
+    expect(repository.routines['r1']!.updatedAt.isAfter(base), isTrue);
+    expect(find.text('Hoop final'), findsOneWidget);
+  });
+
   test('formatDateTime uses day, short month, year and 24h time', () {
     final local = DateTime(2026, 10, 26, 14, 5);
     expect(formatDateTime(local), '26 Oct 2026, 14:05');

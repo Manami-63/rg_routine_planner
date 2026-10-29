@@ -23,9 +23,6 @@ enum DifficultyCategory {
   /// Name used after a number in messages, e.g. "3 risks".
   final String noun;
 
-  /// The DB and risk categories, edited on the DB page.
-  static const dbPage = [db, risk];
-
   CountLimit limitOf(LevelRequirements requirements) => switch (this) {
     db => requirements.db,
     risk => requirements.risk,
