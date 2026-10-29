@@ -56,7 +56,9 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
 - `DaRoutine` is the DA content (ruleset, `DaElement`s in performance
   order). DA helpers are `DaRoutineEditing` in `da_routine_providers.dart`.
 - Flow: Home -> `/routines` (My routines) -> `/routines/:id` (routine
-  page, `features/routine_editor/`). New routine opens the details form
+  page, `features/routine_editor/`). My routines can be searched (name and
+  notes) and filtered by apparatus and level (`RoutineFilter`, reset when
+  the screen closes). New routine opens the details form
   first (apparatus required for new routines). The routine page shows the
   name and "apparatus · level" in its app bar (edit with the pencil), and
   tabs DB | R | DA | Notes (`RoutineTab`; `?tab=risks|da|notes` opens
