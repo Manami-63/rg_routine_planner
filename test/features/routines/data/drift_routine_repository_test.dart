@@ -15,6 +15,7 @@ import 'package:rg_routine_planner/features/db_calculator/domain/risk.dart';
 import 'package:rg_routine_planner/features/levels/data/fig_levels.dart';
 import 'package:rg_routine_planner/features/levels/domain/competition_level.dart';
 import 'package:rg_routine_planner/features/levels/domain/count_limit.dart';
+import 'package:rg_routine_planner/features/music/domain/routine_music.dart';
 import 'package:rg_routine_planner/features/routines/data/drift_routine_repository.dart';
 import 'package:rg_routine_planner/features/routines/domain/routine.dart';
 
@@ -89,6 +90,18 @@ void main() {
     await repository.saveRoutine(original);
 
     expect((await repository.fetchRoutine('r1'))!.notes, original.notes);
+  });
+
+  test('round-trips music', () async {
+    final original = routine().withMusic(
+      const RoutineMusic(fileName: 'abc.mp3', title: 'Bolero'),
+    );
+
+    await repository.saveRoutine(original);
+    expect(await repository.fetchRoutine('r1'), original);
+
+    await repository.saveRoutine(original.withMusic(null));
+    expect((await repository.fetchRoutine('r1'))!.music, isNull);
   });
 
   test('round-trips element options and custom elements', () async {

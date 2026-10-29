@@ -68,6 +68,7 @@ void main() {
     expect(routine.db.elementOptions, [DbElementOptions.none]);
     expect(routine.da.elements, isEmpty);
     expect(routine.notes, isEmpty);
+    expect(routine.music, isNull);
     expect(
       routine.level,
       const CompetitionLevel.custom(

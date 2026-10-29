@@ -147,6 +147,28 @@ class $RoutinesTable extends Routines
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
+  static const VerificationMeta _musicFileNameMeta = const VerificationMeta(
+    'musicFileName',
+  );
+  @override
+  late final GeneratedColumn<String> musicFileName = GeneratedColumn<String>(
+    'music_file_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _musicTitleMeta = const VerificationMeta(
+    'musicTitle',
+  );
+  @override
+  late final GeneratedColumn<String> musicTitle = GeneratedColumn<String>(
+    'music_title',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -184,6 +206,8 @@ class $RoutinesTable extends Routines
     customDaMax,
     customRequiredBodyGroups,
     notes,
+    musicFileName,
+    musicTitle,
     createdAt,
     updatedAt,
   ];
@@ -301,6 +325,21 @@ class $RoutinesTable extends Routines
         notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
       );
     }
+    if (data.containsKey('music_file_name')) {
+      context.handle(
+        _musicFileNameMeta,
+        musicFileName.isAcceptableOrUnknown(
+          data['music_file_name']!,
+          _musicFileNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('music_title')) {
+      context.handle(
+        _musicTitleMeta,
+        musicTitle.isAcceptableOrUnknown(data['music_title']!, _musicTitleMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -378,6 +417,14 @@ class $RoutinesTable extends Routines
         DriftSqlType.string,
         data['${effectivePrefix}notes'],
       )!,
+      musicFileName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}music_file_name'],
+      ),
+      musicTitle: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}music_title'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -419,6 +466,8 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
 
   /// Free text from the user. Empty for none. Added in v7.
   final String notes;
+  final String? musicFileName;
+  final String? musicTitle;
   final DateTime createdAt;
   final DateTime updatedAt;
   const RoutineRow({
@@ -435,6 +484,8 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
     this.customDaMax,
     this.customRequiredBodyGroups,
     required this.notes,
+    this.musicFileName,
+    this.musicTitle,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -474,6 +525,12 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
       );
     }
     map['notes'] = Variable<String>(notes);
+    if (!nullToAbsent || musicFileName != null) {
+      map['music_file_name'] = Variable<String>(musicFileName);
+    }
+    if (!nullToAbsent || musicTitle != null) {
+      map['music_title'] = Variable<String>(musicTitle);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -512,6 +569,12 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
           ? const Value.absent()
           : Value(customRequiredBodyGroups),
       notes: Value(notes),
+      musicFileName: musicFileName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(musicFileName),
+      musicTitle: musicTitle == null && nullToAbsent
+          ? const Value.absent()
+          : Value(musicTitle),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -538,6 +601,8 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
         json['customRequiredBodyGroups'],
       ),
       notes: serializer.fromJson<String>(json['notes']),
+      musicFileName: serializer.fromJson<String?>(json['musicFileName']),
+      musicTitle: serializer.fromJson<String?>(json['musicTitle']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -561,6 +626,8 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
         customRequiredBodyGroups,
       ),
       'notes': serializer.toJson<String>(notes),
+      'musicFileName': serializer.toJson<String?>(musicFileName),
+      'musicTitle': serializer.toJson<String?>(musicTitle),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -580,6 +647,8 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
     Value<int?> customDaMax = const Value.absent(),
     Value<String?> customRequiredBodyGroups = const Value.absent(),
     String? notes,
+    Value<String?> musicFileName = const Value.absent(),
+    Value<String?> musicTitle = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => RoutineRow(
@@ -602,6 +671,10 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
         ? customRequiredBodyGroups.value
         : this.customRequiredBodyGroups,
     notes: notes ?? this.notes,
+    musicFileName: musicFileName.present
+        ? musicFileName.value
+        : this.musicFileName,
+    musicTitle: musicTitle.present ? musicTitle.value : this.musicTitle,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -634,6 +707,12 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
           ? data.customRequiredBodyGroups.value
           : this.customRequiredBodyGroups,
       notes: data.notes.present ? data.notes.value : this.notes,
+      musicFileName: data.musicFileName.present
+          ? data.musicFileName.value
+          : this.musicFileName,
+      musicTitle: data.musicTitle.present
+          ? data.musicTitle.value
+          : this.musicTitle,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -655,6 +734,8 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
           ..write('customDaMax: $customDaMax, ')
           ..write('customRequiredBodyGroups: $customRequiredBodyGroups, ')
           ..write('notes: $notes, ')
+          ..write('musicFileName: $musicFileName, ')
+          ..write('musicTitle: $musicTitle, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -676,6 +757,8 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
     customDaMax,
     customRequiredBodyGroups,
     notes,
+    musicFileName,
+    musicTitle,
     createdAt,
     updatedAt,
   );
@@ -696,6 +779,8 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
           other.customDaMax == this.customDaMax &&
           other.customRequiredBodyGroups == this.customRequiredBodyGroups &&
           other.notes == this.notes &&
+          other.musicFileName == this.musicFileName &&
+          other.musicTitle == this.musicTitle &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -714,6 +799,8 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
   final Value<int?> customDaMax;
   final Value<String?> customRequiredBodyGroups;
   final Value<String> notes;
+  final Value<String?> musicFileName;
+  final Value<String?> musicTitle;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -731,6 +818,8 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
     this.customDaMax = const Value.absent(),
     this.customRequiredBodyGroups = const Value.absent(),
     this.notes = const Value.absent(),
+    this.musicFileName = const Value.absent(),
+    this.musicTitle = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -749,6 +838,8 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
     this.customDaMax = const Value.absent(),
     this.customRequiredBodyGroups = const Value.absent(),
     this.notes = const Value.absent(),
+    this.musicFileName = const Value.absent(),
+    this.musicTitle = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -771,6 +862,8 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
     Expression<int>? customDaMax,
     Expression<String>? customRequiredBodyGroups,
     Expression<String>? notes,
+    Expression<String>? musicFileName,
+    Expression<String>? musicTitle,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -790,6 +883,8 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
       if (customRequiredBodyGroups != null)
         'custom_required_body_groups': customRequiredBodyGroups,
       if (notes != null) 'notes': notes,
+      if (musicFileName != null) 'music_file_name': musicFileName,
+      if (musicTitle != null) 'music_title': musicTitle,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -810,6 +905,8 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
     Value<int?>? customDaMax,
     Value<String?>? customRequiredBodyGroups,
     Value<String>? notes,
+    Value<String?>? musicFileName,
+    Value<String?>? musicTitle,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -829,6 +926,8 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
       customRequiredBodyGroups:
           customRequiredBodyGroups ?? this.customRequiredBodyGroups,
       notes: notes ?? this.notes,
+      musicFileName: musicFileName ?? this.musicFileName,
+      musicTitle: musicTitle ?? this.musicTitle,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -879,6 +978,12 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
     }
+    if (musicFileName.present) {
+      map['music_file_name'] = Variable<String>(musicFileName.value);
+    }
+    if (musicTitle.present) {
+      map['music_title'] = Variable<String>(musicTitle.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -907,6 +1012,8 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
           ..write('customDaMax: $customDaMax, ')
           ..write('customRequiredBodyGroups: $customRequiredBodyGroups, ')
           ..write('notes: $notes, ')
+          ..write('musicFileName: $musicFileName, ')
+          ..write('musicTitle: $musicTitle, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -2899,6 +3006,8 @@ typedef $$RoutinesTableCreateCompanionBuilder = RoutinesCompanion Function({
   Value<int?> customDaMax,
   Value<String?> customRequiredBodyGroups,
   Value<String> notes,
+  Value<String?> musicFileName,
+  Value<String?> musicTitle,
   required DateTime createdAt,
   required DateTime updatedAt,
   Value<int> rowid,
@@ -2917,6 +3026,8 @@ typedef $$RoutinesTableUpdateCompanionBuilder = RoutinesCompanion Function({
   Value<int?> customDaMax,
   Value<String?> customRequiredBodyGroups,
   Value<String> notes,
+  Value<String?> musicFileName,
+  Value<String?> musicTitle,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<int> rowid,
@@ -3065,6 +3176,16 @@ class $$RoutinesTableFilterComposer
 
   ColumnFilters<String> get notes => $composableBuilder(
     column: $table.notes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get musicFileName => $composableBuilder(
+    column: $table.musicFileName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get musicTitle => $composableBuilder(
+    column: $table.musicTitle,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3232,6 +3353,16 @@ class $$RoutinesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get musicFileName => $composableBuilder(
+    column: $table.musicFileName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get musicTitle => $composableBuilder(
+    column: $table.musicTitle,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -3304,6 +3435,16 @@ class $$RoutinesTableAnnotationComposer
 
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<String> get musicFileName => $composableBuilder(
+    column: $table.musicFileName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get musicTitle => $composableBuilder(
+    column: $table.musicTitle,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -3437,6 +3578,8 @@ class $$RoutinesTableTableManager
                 Value<int?> customDaMax = const Value.absent(),
                 Value<String?> customRequiredBodyGroups = const Value.absent(),
                 Value<String> notes = const Value.absent(),
+                Value<String?> musicFileName = const Value.absent(),
+                Value<String?> musicTitle = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -3454,6 +3597,8 @@ class $$RoutinesTableTableManager
                 customDaMax: customDaMax,
                 customRequiredBodyGroups: customRequiredBodyGroups,
                 notes: notes,
+                musicFileName: musicFileName,
+                musicTitle: musicTitle,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -3473,6 +3618,8 @@ class $$RoutinesTableTableManager
                 Value<int?> customDaMax = const Value.absent(),
                 Value<String?> customRequiredBodyGroups = const Value.absent(),
                 Value<String> notes = const Value.absent(),
+                Value<String?> musicFileName = const Value.absent(),
+                Value<String?> musicTitle = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -3490,6 +3637,8 @@ class $$RoutinesTableTableManager
                 customDaMax: customDaMax,
                 customRequiredBodyGroups: customRequiredBodyGroups,
                 notes: notes,
+                musicFileName: musicFileName,
+                musicTitle: musicTitle,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,

@@ -4,10 +4,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:rg_routine_planner/features/da_calculator/presentation/da_calculator_providers.dart';
 import 'package:rg_routine_planner/features/db_calculator/presentation/db_calculator_providers.dart';
 import 'package:rg_routine_planner/features/db_calculator/presentation/element_picker_screen.dart';
+import 'package:rg_routine_planner/features/music/presentation/music_providers.dart';
 import 'package:rg_routine_planner/features/routine_editor/presentation/routine_screen.dart';
 import 'package:rg_routine_planner/features/routines/domain/routine.dart';
 import 'package:rg_routine_planner/features/routines/presentation/routine_providers.dart';
 
+import '../music/fake_music.dart';
 import '../routines/fake_routine_repository.dart';
 import '../da_calculator/test_data.dart';
 import 'test_data.dart';
@@ -21,8 +23,8 @@ Routine emptyTestRoutine() => Routine.create(
 );
 
 /// Pumps the routine page for [routine] (default: an empty routine) on
-/// [initialTab], with fake catalogue and routine repositories. Returns the
-/// routine repository.
+/// [initialTab], with fake catalogue and routine repositories and fake
+/// [music]. Returns the routine repository.
 Future<FakeRoutineRepository> pumpDbCalculator(
   WidgetTester tester, {
   FakeDbCatalogueRepository? catalogue,
@@ -30,6 +32,7 @@ Future<FakeRoutineRepository> pumpDbCalculator(
   Routine? routine,
   RoutineTab initialTab = RoutineTab.db,
   double height = 2400,
+  FakeMusic? music,
 }) async {
   // A tall surface so the whole scroll view is built without scrolling.
   tester.view.physicalSize = Size(800, height);
@@ -37,6 +40,7 @@ Future<FakeRoutineRepository> pumpDbCalculator(
   addTearDown(tester.view.reset);
 
   final routines = FakeRoutineRepository([routine ?? emptyTestRoutine()]);
+  final fakeMusic = music ?? FakeMusic();
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
@@ -47,6 +51,9 @@ Future<FakeRoutineRepository> pumpDbCalculator(
           daCatalogue ?? FakeDaCatalogueRepository(),
         ),
         routineRepositoryProvider.overrideWithValue(routines),
+        musicLibraryProvider.overrideWithValue(fakeMusic.library),
+        musicPickerProvider.overrideWithValue(fakeMusic.picker),
+        musicPlayerProvider.overrideWith((ref, _) => fakeMusic.player),
       ],
       child: MaterialApp(
         home: RoutineScreen(routineId: testRoutineId, initialTab: initialTab),

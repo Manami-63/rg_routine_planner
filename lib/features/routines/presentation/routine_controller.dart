@@ -6,6 +6,7 @@ import '../../../core/scoring/apparatus.dart';
 import '../../da_calculator/domain/da_routine.dart';
 import '../../db_calculator/domain/db_routine.dart';
 import '../../levels/domain/competition_level.dart';
+import '../../music/domain/routine_music.dart';
 import '../domain/routine.dart';
 import 'routine_details_form.dart';
 import 'routine_providers.dart';
@@ -105,6 +106,9 @@ class RoutineController extends AsyncNotifier<Routine> {
 
   void updateNotes(String notes) =>
       _update((routine) => routine.withNotes(notes), debounce: true);
+
+  void setMusic(RoutineMusic? music) =>
+      _update((routine) => routine.withMusic(music));
 
   void selectApparatus(Apparatus? apparatus) =>
       _update((routine) => routine.withApparatus(apparatus));
