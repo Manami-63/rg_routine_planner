@@ -84,6 +84,8 @@ class RoutinesScreen extends ConsumerWidget {
   }
 }
 
+enum _RoutineAction { duplicate, delete }
+
 class _RoutineTile extends ConsumerWidget {
   const _RoutineTile({required this.summary});
 
@@ -107,12 +109,65 @@ class _RoutineTile extends ConsumerWidget {
       title: Text(_displayName),
       subtitle: Text('$details\nUpdated ${formatDateTime(summary.updatedAt)}'),
       isThreeLine: true,
-      trailing: IconButton(
-        tooltip: 'Delete $_displayName',
-        icon: const Icon(Icons.delete_outline),
-        onPressed: () => _confirmDelete(context, ref),
+      trailing: PopupMenuButton<_RoutineAction>(
+        tooltip: 'Options for $_displayName',
+        onSelected: (action) => switch (action) {
+          _RoutineAction.duplicate => _duplicate(context, ref),
+          _RoutineAction.delete => _confirmDelete(context, ref),
+        },
+        itemBuilder: (context) => const [
+          PopupMenuItem(
+            value: _RoutineAction.duplicate,
+            child: ListTile(
+              leading: Icon(Icons.copy_outlined),
+              title: Text('Duplicate'),
+            ),
+          ),
+          PopupMenuItem(
+            value: _RoutineAction.delete,
+            child: ListTile(
+              leading: Icon(Icons.delete_outline),
+              title: Text('Delete'),
+            ),
+          ),
+        ],
       ),
       onTap: () => context.go(AppRoutes.dbCalculator(summary.id)),
+    );
+  }
+
+  /// Saves a copy of the routine (DB, DA, apparatus and level) under a new
+  /// name. The copy is listed first, as the most recently updated.
+  Future<void> _duplicate(BuildContext context, WidgetRef ref) async {
+    final repository = ref.read(routineRepositoryProvider);
+    final messenger = ScaffoldMessenger.of(context);
+    final router = GoRouter.maybeOf(context);
+    final Routine copy;
+    try {
+      final original = await repository.fetchRoutine(summary.id);
+      if (original == null) throw StateError('Routine not found');
+      copy = original.duplicate(
+        id: const Uuid().v4(),
+        name: '$_displayName (copy)',
+        now: DateTime.now().toUtc(),
+      );
+      await repository.saveRoutine(copy);
+    } on Object {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Could not duplicate the routine.')),
+      );
+      return;
+    }
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text('Saved as "${copy.name}".'),
+        action: router == null
+            ? null
+            : SnackBarAction(
+                label: 'Open',
+                onPressed: () => router.go(AppRoutes.dbCalculator(copy.id)),
+              ),
+      ),
     );
   }
 
