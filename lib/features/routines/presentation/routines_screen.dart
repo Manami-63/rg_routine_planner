@@ -11,6 +11,8 @@ import '../domain/routine.dart';
 import '../../routine_editor/presentation/routine_score_providers.dart';
 import 'routine_actions.dart';
 import 'routine_details_form.dart';
+import 'routine_filter.dart';
+import 'routine_filter_bar.dart';
 import 'routine_providers.dart';
 
 /// "My routines": lists saved routines and creates new ones.
@@ -54,13 +56,7 @@ class RoutinesScreen extends ConsumerWidget {
                   message: 'Tap "New routine" to start planning.',
                 ),
               )
-            : ListView.builder(
-                // Leave room so the last item is not hidden by the button.
-                padding: const EdgeInsets.only(top: 8, bottom: 96),
-                itemCount: routines.length,
-                itemBuilder: (context, index) =>
-                    _RoutineTile(summary: routines[index]),
-              ),
+            : _FilteredRoutines(routines: routines),
       ),
     );
   }
@@ -89,6 +85,36 @@ class RoutinesScreen extends ConsumerWidget {
     }
     if (!context.mounted) return;
     context.go(AppRoutes.routine(routine.id));
+  }
+}
+
+/// The search and filters, with the routines that match them.
+class _FilteredRoutines extends ConsumerWidget {
+  const _FilteredRoutines({required this.routines});
+
+  final List<RoutineSummary> routines;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final shown = ref.watch(routineFilterProvider).apply(routines);
+    return Column(
+      children: [
+        RoutineFilterBar(routines: routines),
+        Expanded(
+          child: shown.isEmpty
+              ? const NoMatchingRoutines()
+              : ListView.builder(
+                  // Leave room so the last item is not hidden by the button.
+                  padding: const EdgeInsets.only(top: 8, bottom: 96),
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  itemCount: shown.length,
+                  itemBuilder: (context, index) =>
+                      _RoutineTile(summary: shown[index]),
+                ),
+        ),
+      ],
+    );
   }
 }
 

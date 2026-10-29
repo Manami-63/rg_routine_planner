@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rg_routine_planner/core/scoring/apparatus.dart';
+import 'package:rg_routine_planner/features/levels/domain/competition_level.dart';
 import 'package:rg_routine_planner/features/da_calculator/presentation/da_calculator_providers.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_routine.dart';
 import 'package:rg_routine_planner/features/db_calculator/presentation/db_calculator_providers.dart';
@@ -86,6 +88,95 @@ void main() {
     await tester.tap(find.text(action));
     await tester.pumpAndSettle();
   }
+
+  group('search and filters', () {
+    Routine detailed(
+      String id,
+      String name, {
+      required Apparatus apparatus,
+      CompetitionLevel? level,
+      String notes = '',
+    }) => routine(
+      id,
+      name,
+    ).withApparatus(apparatus).withLevel(level).withNotes(notes);
+
+    final routines = [
+      detailed(
+        'r1',
+        'Hoop final',
+        apparatus: Apparatus.hoop,
+        level: figSenior,
+        notes: 'Music: Bolero',
+      ),
+      detailed('r2', 'Ball', apparatus: Apparatus.ball, level: figJunior),
+      detailed('r3', 'Hoop old', apparatus: Apparatus.hoop),
+    ];
+    Finder tile(String id) => find.byKey(ValueKey('routine-$id'));
+
+    testWidgets('search matches names and notes', (tester) async {
+      await pumpScreen(tester, routines);
+
+      await tester.enterText(find.byType(SearchBar), 'bolero');
+      await tester.pump();
+      expect(tile('r1'), findsOneWidget);
+      expect(tile('r2'), findsNothing);
+      expect(tile('r3'), findsNothing);
+
+      await tester.tap(find.byTooltip('Clear search'));
+      await tester.pump();
+      expect(tile('r2'), findsOneWidget);
+      expect(tile('r3'), findsOneWidget);
+    });
+
+    testWidgets('chips filter by apparatus and level', (tester) async {
+      await pumpScreen(tester, routines);
+
+      await tester.tap(find.widgetWithText(FilterChip, 'Hoop'));
+      await tester.pump();
+      expect(tile('r1'), findsOneWidget);
+      expect(tile('r2'), findsNothing);
+      expect(tile('r3'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(FilterChip, 'No level'));
+      await tester.pump();
+      expect(tile('r1'), findsNothing);
+      expect(tile('r3'), findsOneWidget);
+
+      // Tapping a selected chip clears it.
+      await tester.tap(find.widgetWithText(FilterChip, 'Hoop'));
+      await tester.pump();
+      await tester.tap(find.widgetWithText(FilterChip, 'No level'));
+      await tester.pump();
+      expect(tile('r2'), findsOneWidget);
+    });
+
+    testWidgets('no match offers to clear the filters', (tester) async {
+      await pumpScreen(tester, routines);
+
+      await tester.tap(find.widgetWithText(FilterChip, 'Ball'));
+      await tester.enterText(find.byType(SearchBar), 'hoop');
+      await tester.pump();
+      expect(find.text('No matching routines'), findsOneWidget);
+
+      await tester.tap(find.text('Clear filters'));
+      await tester.pump();
+      expect(find.text('No matching routines'), findsNothing);
+      expect(tile('r1'), findsOneWidget);
+      expect(tile('r2'), findsOneWidget);
+      expect(
+        tester.widget<SearchBar>(find.byType(SearchBar)).controller!.text,
+        isEmpty,
+      );
+    });
+
+    testWidgets('chips only appear when there is a choice', (tester) async {
+      await pumpScreen(tester, [routine('r1', 'Hoop'), routine('r2', 'Ball')]);
+
+      expect(find.byType(SearchBar), findsOneWidget);
+      expect(find.byType(FilterChip), findsNothing);
+    });
+  });
 
   testWidgets('delete asks for confirmation', (tester) async {
     final repository = await pumpScreen(tester, [routine('r1', 'Hoop')]);

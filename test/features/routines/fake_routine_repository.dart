@@ -40,6 +40,7 @@ class FakeRoutineRepository implements RoutineRepository {
         riskCount: r.db.risks.length,
         daCount: r.da.elements.length,
         updatedAt: r.updatedAt,
+        notes: r.notes,
       ),
   ]..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
 

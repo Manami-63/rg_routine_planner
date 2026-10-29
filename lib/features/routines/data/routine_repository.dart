@@ -13,6 +13,7 @@ class RoutineSummary {
     required this.riskCount,
     required this.daCount,
     required this.updatedAt,
+    this.notes = '',
   });
 
   final String id;
@@ -25,6 +26,9 @@ class RoutineSummary {
   /// DA entries in the routine, whether or not they are valid DA.
   final int daCount;
   final DateTime updatedAt;
+
+  /// The routine's notes, so the list can search them.
+  final String notes;
 }
 
 /// Stores and loads routines.

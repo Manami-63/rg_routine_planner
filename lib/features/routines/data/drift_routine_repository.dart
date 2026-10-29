@@ -82,6 +82,7 @@ class DriftRoutineRepository implements RoutineRepository {
     riskCount: riskCount,
     daCount: daCount,
     updatedAt: row.updatedAt,
+    notes: row.notes,
   );
 
   @override
