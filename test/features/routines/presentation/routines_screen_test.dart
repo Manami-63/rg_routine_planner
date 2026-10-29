@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rg_routine_planner/features/da_calculator/presentation/da_calculator_providers.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_routine.dart';
+import 'package:rg_routine_planner/features/db_calculator/presentation/db_calculator_providers.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/risk.dart';
 import 'package:rg_routine_planner/features/levels/data/fig_levels.dart';
 import 'package:rg_routine_planner/features/routines/domain/routine.dart';
 import 'package:rg_routine_planner/features/routines/presentation/routine_providers.dart';
 import 'package:rg_routine_planner/features/routines/presentation/routines_screen.dart';
 
+import '../../da_calculator/test_data.dart';
 import '../../db_calculator/test_data.dart';
 import '../fake_routine_repository.dart';
 
@@ -148,6 +151,58 @@ void main() {
 
     expect(repository.routines, hasLength(1));
     expect(find.text('Could not duplicate the routine.'), findsOneWidget);
+  });
+
+  testWidgets('shows each routine\'s provisional total', (tester) async {
+    final repository = FakeRoutineRepository([
+      routine(
+        'r1',
+        'Hoop',
+        db: DbRoutine(
+          rulesetId: 'test-v1',
+          elements: const [testJump, testBalance],
+        ),
+      ),
+    ]);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          routineRepositoryProvider.overrideWithValue(repository),
+          dbCatalogueRepositoryProvider.overrideWithValue(
+            FakeDbCatalogueRepository(),
+          ),
+          daCatalogueRepositoryProvider.overrideWithValue(
+            FakeDaCatalogueRepository(),
+          ),
+        ],
+        child: const MaterialApp(home: RoutinesScreen()),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final total = find.byKey(const ValueKey('routine-total-r1'));
+
+    expect(tester.widget<Text>(total).data, '0.50');
+
+    // Recalculated after a change.
+    await repository.saveRoutine(
+      repository.routines['r1']!
+          .withDb(DbRoutine(rulesetId: 'test-v1', elements: const [testJump]))
+          .withUpdatedAt(base.add(const Duration(hours: 1))),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.widget<Text>(total).data, '0.30');
+  });
+
+  testWidgets('shows a dash when the total cannot be calculated', (
+    tester,
+  ) async {
+    // The test routines use a ruleset the app's catalogue does not have.
+    await pumpScreen(tester, [routine('r1', 'Hoop')]);
+
+    expect(
+      tester.widget<Text>(find.byKey(const ValueKey('routine-total-r1'))).data,
+      '–',
+    );
   });
 
   testWidgets('closing the new routine form creates nothing', (tester) async {

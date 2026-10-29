@@ -35,7 +35,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('No elements yet'), findsOneWidget);
     expect(subtotalText(tester), '0.00');
-    expect(find.text('Provisional DB subtotal'), findsOneWidget);
+    expect(find.text('Provisional difficulty total'), findsOneWidget);
   });
 
   testWidgets('adding elements updates the list and subtotal', (tester) async {

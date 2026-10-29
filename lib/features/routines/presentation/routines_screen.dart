@@ -8,6 +8,7 @@ import '../../../core/widgets/message_view.dart';
 import '../../db_calculator/presentation/db_calculator_providers.dart';
 import '../data/routine_repository.dart';
 import '../domain/routine.dart';
+import '../../routine_editor/presentation/routine_score_providers.dart';
 import 'routine_actions.dart';
 import 'routine_details_form.dart';
 import 'routine_providers.dart';
@@ -112,6 +113,7 @@ class _RoutineTile extends ConsumerWidget {
 
     return ListTile(
       key: ValueKey('routine-${summary.id}'),
+      leading: _RoutineTotal(summary: summary),
       title: Text(_displayName),
       subtitle: Text('$details\nUpdated ${formatDateTime(summary.updatedAt)}'),
       isThreeLine: true,
@@ -205,6 +207,44 @@ class _RoutineTile extends ConsumerWidget {
     if (confirmed ?? false) {
       await ref.read(routineRepositoryProvider).deleteRoutine(summary.id);
     }
+  }
+}
+
+/// The routine's provisional difficulty total, or a dash while it loads or
+/// when it cannot be calculated.
+class _RoutineTotal extends ConsumerWidget {
+  const _RoutineTotal({required this.summary});
+
+  final RoutineSummary summary;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final score = ref
+        .watch(savedRoutineScoreProvider((summary.id, summary.updatedAt)))
+        .value;
+    final theme = Theme.of(context);
+    // Scales down rather than wrapping, e.g. with large text sizes.
+    return SizedBox(
+      width: 56,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              score?.total.format() ?? '–',
+              key: ValueKey('routine-total-${summary.id}'),
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w700,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+            Text('total', style: theme.textTheme.labelSmall),
+          ],
+        ),
+      ),
+    );
   }
 }
 

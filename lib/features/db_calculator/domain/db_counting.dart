@@ -1,5 +1,7 @@
+import '../../../core/scoring/apparatus.dart';
 import '../../../core/scoring/score.dart';
 import '../../../core/utils/list_equality.dart';
+import '../../levels/domain/competition_level.dart';
 
 /// How many body difficulties and risks count towards DB.
 ///
@@ -7,6 +9,12 @@ import '../../../core/utils/list_equality.dart';
 /// contain more, the extra ones are simply not counted.
 class DbCountLimits {
   const DbCountLimits({this.maxElements, this.maxRisks});
+
+  /// The maximums of a level's [requirements] for a routine with
+  /// [apparatus]. Freehand routines have no throws, so no risk can count.
+  DbCountLimits.of(LevelRequirements? requirements, Apparatus? apparatus)
+    : maxElements = requirements?.db.max,
+      maxRisks = apparatus == Apparatus.freehand ? 0 : requirements?.risk.max;
 
   static const none = DbCountLimits();
 

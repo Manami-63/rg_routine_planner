@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/scoring/apparatus.dart';
 import '../../routines/presentation/routine_controller.dart';
 import '../domain/db_counting.dart';
 import '../../../core/scoring/score.dart';
@@ -19,14 +18,9 @@ final dbRoutineProvider = Provider.autoDispose.family<DbRoutine, String>(
 /// How many DB and risks count, from the routine's level and apparatus.
 final dbCountLimitsProvider = Provider.autoDispose
     .family<DbCountLimits, String>((ref, id) {
-      final requirements = ref.watch(routineRequirementsProvider(id));
-      final apparatus = ref.watch(
-        routineProvider(id).select((r) => r.apparatus),
-      );
-      return DbCountLimits(
-        maxElements: requirements?.db.max,
-        // Freehand routines have no throws, so no risk can count.
-        maxRisks: apparatus == Apparatus.freehand ? 0 : requirements?.risk.max,
+      return DbCountLimits.of(
+        ref.watch(routineRequirementsProvider(id)),
+        ref.watch(routineProvider(id).select((r) => r.apparatus)),
       );
     });
 
