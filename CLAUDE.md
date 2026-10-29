@@ -41,9 +41,10 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   test in `test/core/database/` that upgrades a hand-written old schema.
 - `features/routines/`: `Routine` (id = UUID, name, apparatus, level,
   timestamps, `db` and `da` content) and `RoutineRepository`
-  (`DriftRoutineRepository`). Shared calculator pieces live here too:
-  `RoutineLoader` (loading/errors/ruleset), `RoutineDetailsFields` (DB/DA
-  page switch, name, apparatus, level) and `SaveStatusIndicator`.
+  (`DriftRoutineRepository`). Shared pieces live here too: `RoutineLoader`
+  (loading/errors/ruleset), `RoutineDetailsForm` (name, apparatus, level;
+  used for New routine and Edit details), `duplicateRoutine` and
+  `SaveStatusIndicator`.
 - Routines store catalogue ids, never values; values resolve from the
   current catalogue on load. Missing ids, or a different ruleset, load as
   `.unknown(...)` placeholders that keep the id so re-saving loses nothing.
@@ -54,9 +55,13 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   extension in `db_routine_providers.dart`.
 - `DaRoutine` is the DA content (ruleset, `DaElement`s in performance
   order). DA helpers are `DaRoutineEditing` in `da_routine_providers.dart`.
-- Flow: Home -> `/routines` (My routines) -> `/routines/:id/db` or
-  `/routines/:id/da` (calculators; the header switches between them with
-  `context.go`, so Back returns to My routines).
+- Flow: Home -> `/routines` (My routines) -> `/routines/:id` (routine
+  page, `features/routine_editor/`). New routine opens the details form
+  first (apparatus required for new routines). The routine page shows the
+  name and "apparatus · level" in its app bar (edit with the pencil), and
+  tabs DB | R | DA (`RoutineTab`; `?tab=risks|da` opens another tab). Each
+  tab has its own add button and subtotal bar. The tab widgets live in
+  their features (`db_tabs.dart`, `da_tab.dart`).
 - `routineControllerProvider(id)` is an auto-disposing async family: loads
   by id, saves every change (name debounced 500 ms), flushes a pending save
   on dispose, and reports `routineSaveStatusProvider(id)`. Automatic retry
@@ -65,8 +70,9 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
 - Repository tests use `AppDatabase(NativeDatabase.memory())`. Widget and
   controller tests use `FakeRoutineRepository` (Drift's live queries leave
   timers that widget tests reject). `pumpDbCalculator` in
-  `test/features/db_calculator/pump_db_calculator.dart` sets up the screen
-  (`pumpDaCalculator` likewise for DA).
+  `test/features/db_calculator/pump_db_calculator.dart` sets up the routine
+  page with fake DB and DA catalogues (`pumpDaCalculator` opens the DA
+  tab).
 
 ## Scoring rules (important)
 
@@ -122,9 +128,9 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   the Gymnastics Victoria 2026 handbook p.60). Never add other official
   numbers without a source. "Non-FIG level" lets users enter their own
   maximums, optional minimums and required body groups. The level is one
-  choice per routine, but each page edits only its own numbers
-  (`LevelSelector.categories`: DB and R plus body groups on the DB page, DA
-  on the DA page).
+  choice per routine, set in the details form, where the picker edits all
+  numbers together. No other presets are planned (Australian levels were
+  dropped): other levels are entered by users.
 - A maximum means "only this many count", never "cannot add more":
   highest-valued N DB, first N risks, first N DA (`DifficultyCategory`).
   `DbCounting` picks what counts; the engine sums only that. Uncounted items

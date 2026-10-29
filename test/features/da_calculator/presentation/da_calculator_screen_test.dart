@@ -65,7 +65,10 @@ void main() {
     expect(find.text('Choose an apparatus'), findsOneWidget);
     expect(find.text('Build a DA'), findsNothing);
 
+    await tester.tap(find.byTooltip('Edit details'));
+    await tester.pumpAndSettle();
     await tapText(tester, 'Hoop');
+    await tapText(tester, 'Save');
     expect(find.text('Build a DA'), findsOneWidget);
     expect(find.text('No DA yet'), findsOneWidget);
   });
@@ -248,25 +251,34 @@ void main() {
     expect(find.text('Test Roll'), findsNothing);
     expect(find.textContaining('Manual value'), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Clear all'));
-    await tester.pumpAndSettle();
+    await chooseMenuItem(tester, 'Clear DA');
     await tapText(tester, 'Clear');
     expect(find.text('No DA yet'), findsOneWidget);
     expect(routines.routines[testRoutineId]!.da.elements, isEmpty);
   });
 
-  testWidgets('the level picker shows only DA numbers', (tester) async {
+  testWidgets('a DA maximum set in the level picker is checked', (
+    tester,
+  ) async {
     await pumpDaCalculator(tester);
+    await tester.tap(find.byTooltip('Edit details'));
+    await tester.pumpAndSettle();
     await tapText(tester, 'Select a level');
     await tapText(tester, 'Non-FIG level');
-
-    expect(find.text('Apparatus difficulties (DA)'), findsOneWidget);
-    expect(find.text('Body difficulties (DB)'), findsNothing);
-    expect(find.text('Required body groups'), findsNothing);
     await tester.tap(find.byTooltip('Increase DA maximum'));
     await tester.pump();
     await tapText(tester, 'Apply');
-
     expect(find.text('DA up to 1'), findsOneWidget);
+    await tapText(tester, 'Save');
+
+    expect(
+      daContainerOf(tester)
+          .read(routineProvider(testRoutineId))
+          .level
+          ?.requirements
+          ?.da,
+      const CountLimit(max: 1),
+    );
+    expect(find.text('0 DA · meets the level (up to 1)'), findsOneWidget);
   });
 }

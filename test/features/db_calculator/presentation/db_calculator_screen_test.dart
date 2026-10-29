@@ -71,14 +71,12 @@ void main() {
     await addFromCatalogue(tester, 'Test Jump');
 
     // Cancelling keeps the elements.
-    await tester.tap(find.byTooltip('Clear all'));
-    await tester.pumpAndSettle();
+    await chooseMenuItem(tester, 'Clear DB and risks');
     await tester.tap(find.text('Cancel'));
     await tester.pumpAndSettle();
     expect(subtotalText(tester), '0.30');
 
-    await tester.tap(find.byTooltip('Clear all'));
-    await tester.pumpAndSettle();
+    await chooseMenuItem(tester, 'Clear DB and risks');
     await tester.tap(find.text('Clear'));
     await tester.pumpAndSettle();
 
@@ -86,27 +84,36 @@ void main() {
     expect(subtotalText(tester), '0.00');
   });
 
-  testWidgets('clear all is disabled for an empty routine', (tester) async {
+  testWidgets('clearing is disabled for an empty routine', (tester) async {
     await pumpScreen(tester);
 
-    final button = tester.widget<IconButton>(
-      find.widgetWithIcon(IconButton, Icons.delete_sweep_outlined),
-    );
-    expect(button.onPressed, isNull);
+    await tester.tap(find.byTooltip('More options'));
+    await tester.pumpAndSettle();
+    for (final item in ['Clear DB and risks', 'Clear DA']) {
+      final menuItem = tester.widget<PopupMenuItem<Object?>>(
+        find.ancestor(
+          of: find.text(item),
+          matching: find.byWidgetPredicate((w) => w is PopupMenuItem),
+        ),
+      );
+      expect(menuItem.enabled, isFalse, reason: item);
+    }
   });
 
-  testWidgets('routine name is editable and survives clear all', (
-    tester,
-  ) async {
+  testWidgets('routine name is editable and survives clearing', (tester) async {
     await pumpScreen(tester);
     final container = containerOf(tester);
 
+    expect(find.text('Untitled routine'), findsOneWidget);
+    await tester.tap(find.byTooltip('Edit details'));
+    await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'Hoop routine');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
     expect(container.read(routineProvider(testRoutineId)).name, 'Hoop routine');
 
     await addFromCatalogue(tester, 'Test Jump');
-    await tester.tap(find.byTooltip('Clear all'));
-    await tester.pumpAndSettle();
+    await chooseMenuItem(tester, 'Clear DB and risks');
     await tester.tap(find.text('Clear'));
     await tester.pumpAndSettle();
 
@@ -166,7 +173,7 @@ void main() {
 
   group('risks tab', () {
     Future<void> openRisksTab(WidgetTester tester) async {
-      await tester.tap(find.text('Risks'));
+      await tester.tap(find.text('R'));
       await tester.pumpAndSettle();
     }
 
@@ -308,8 +315,7 @@ void main() {
       await tester.tap(find.text('Add risk'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byTooltip('Clear all'));
-      await tester.pumpAndSettle();
+      await chooseMenuItem(tester, 'Clear DB and risks');
       await tester.tap(find.text('Clear'));
       await tester.pumpAndSettle();
 
@@ -369,7 +375,7 @@ void main() {
       );
 
       expect(find.text('Different ruleset'), findsOneWidget);
-      expect(find.byTooltip('Clear all'), findsNothing);
+      expect(find.byTooltip('More options'), findsNothing);
     });
 
     testWidgets('explains items missing from the catalogue', (tester) async {

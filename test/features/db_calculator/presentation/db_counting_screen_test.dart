@@ -77,7 +77,7 @@ void main() {
         risks: 2,
       ),
     );
-    await tester.tap(find.text('Risks'));
+    await tester.tap(find.text('R'));
     await tester.pumpAndSettle();
 
     expect(find.text('Build a risk'), findsOneWidget);
@@ -92,13 +92,14 @@ void main() {
   testWidgets('choosing an apparatus saves it', (tester) async {
     final routines = await pumpDbCalculator(tester);
 
+    await tester.tap(find.byTooltip('Edit details'));
+    await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(ChoiceChip, 'Rope'));
     await tester.pump();
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
 
-    final chip = tester.widget<ChoiceChip>(
-      find.widgetWithText(ChoiceChip, 'Rope'),
-    );
-    expect(chip.selected, isTrue);
+    expect(find.text('Rope · No level'), findsOneWidget);
     expect(routines.routines[testRoutineId]!.apparatus, Apparatus.rope);
   });
 
@@ -109,7 +110,7 @@ void main() {
       tester,
       routine: routineWith(apparatus: Apparatus.freehand, risks: 1),
     );
-    await tester.tap(find.text('Risks'));
+    await tester.tap(find.text('R'));
     await tester.pumpAndSettle();
 
     expect(find.text('No risks in freehand'), findsOneWidget);

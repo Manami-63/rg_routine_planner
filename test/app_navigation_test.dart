@@ -42,33 +42,50 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('No routines yet'), findsOneWidget);
 
-    // New routine opens the calculator.
+    // New routine asks for the details first; the apparatus is required.
     await tester.tap(find.text('New routine'));
     await tester.pumpAndSettle();
-    expect(find.widgetWithText(AppBar, 'DB Calculator'), findsOneWidget);
-    expect(routines.routines, hasLength(1));
-
+    final create = find.widgetWithText(TextButton, 'Create');
+    expect(tester.widget<TextButton>(create).onPressed, isNull);
     await tester.enterText(find.byType(TextField), 'Ball final');
+    await tester.tap(find.text('Ball'));
+    await tester.pump();
+    await tester.tap(create);
+    await tester.pumpAndSettle();
+
+    // The routine page shows the name and details in its header.
+    expect(routines.routines, hasLength(1));
+    expect(find.widgetWithText(AppBar, 'Ball final'), findsOneWidget);
+    expect(find.text('Ball · No level'), findsOneWidget);
     await addFromCatalogue(tester, 'Test Jump');
 
-    // The DA page edits the same routine.
-    await tester.tap(find.text('Apparatus (DA)'));
+    // The DA tab edits the same routine.
+    await tester.tap(find.text('DA'));
     await tester.pumpAndSettle();
-    expect(find.widgetWithText(AppBar, 'DA Calculator'), findsOneWidget);
-    expect(find.widgetWithText(TextField, 'Ball final'), findsOneWidget);
+    expect(find.text('Build a DA'), findsOneWidget);
 
-    // Leaving straight away still saves the (debounced) name, and Back
-    // returns to the list rather than to the DB page.
+    // Back returns to the list.
     await tester.tap(find.byTooltip('Back'));
     await tester.pumpAndSettle();
     expect(find.text('Ball final'), findsOneWidget);
     expect(
-      find.textContaining('No level · 1 DB · 0 risks · 0 DA'),
+      find.textContaining('Ball · No level · 1 DB · 0 risks · 0 DA'),
       findsOneWidget,
     );
 
+    // The details can be edited from the list.
+    await tester.tap(find.byTooltip('Options for Ball final'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Edit details'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Ball semi');
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+    expect(find.text('Ball semi'), findsOneWidget);
+    expect(routines.routines.values.single.db.elements, hasLength(1));
+
     // Reopening shows the saved content.
-    await tester.tap(find.text('Ball final'));
+    await tester.tap(find.text('Ball semi'));
     await tester.pumpAndSettle();
     expect(find.byTooltip('Remove Test Jump'), findsOneWidget);
 

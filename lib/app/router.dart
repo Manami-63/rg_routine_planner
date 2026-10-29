@@ -1,16 +1,19 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../features/da_calculator/presentation/da_calculator_screen.dart';
-import '../features/db_calculator/presentation/db_calculator_screen.dart';
 import '../features/home/presentation/home_screen.dart';
+import '../features/routine_editor/presentation/routine_screen.dart';
 import '../features/routines/presentation/routines_screen.dart';
 
 abstract final class AppRoutes {
   static const home = '/';
   static const routines = '/routines';
-  static String dbCalculator(String routineId) => '/routines/$routineId/db';
-  static String daCalculator(String routineId) => '/routines/$routineId/da';
+
+  /// The routine page, opened on [tab].
+  static String routine(String routineId, [RoutineTab tab = RoutineTab.db]) =>
+      tab == RoutineTab.db
+      ? '/routines/$routineId'
+      : '/routines/$routineId?tab=${tab.name}';
 }
 
 /// Created per [ProviderScope], so each widget test gets a fresh router
@@ -24,20 +27,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const HomeScreen(),
         routes: [
           // Nested routes give each screen a back button to its parent:
-          // calculator (DB or DA) -> my routines -> home.
+          // routine -> my routines -> home.
           GoRoute(
             path: 'routines',
             builder: (context, state) => const RoutinesScreen(),
             routes: [
               GoRoute(
-                path: ':id/db',
-                builder: (context, state) =>
-                    DbCalculatorScreen(routineId: state.pathParameters['id']!),
-              ),
-              GoRoute(
-                path: ':id/da',
-                builder: (context, state) =>
-                    DaCalculatorScreen(routineId: state.pathParameters['id']!),
+                path: ':id',
+                builder: (context, state) => RoutineScreen(
+                  routineId: state.pathParameters['id']!,
+                  initialTab: RoutineTab.fromName(
+                    state.uri.queryParameters['tab'],
+                  ),
+                ),
               ),
             ],
           ),
