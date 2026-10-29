@@ -57,7 +57,11 @@ void main() {
     expect(find.text('Jumps / Leaps'), findsWidgets);
     expect(text(tester, 'db-subtotal'), '0.50');
     expect(text(tester, 'db-breakdown'), 'Body 0.50 (2 of 3) · Risks 0.00');
-    expect(find.textContaining('Only count limits applied'), findsOneWidget);
+    await tester.tap(find.byTooltip('About this total'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('DB: only count limits applied.'), findsOne);
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
 
     // Uncounted elements can still be removed.
     await tester.tap(find.byTooltip('Remove Test Rotation'));

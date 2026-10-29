@@ -3,16 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../da_calculator/presentation/da_routine_providers.dart';
 import '../../da_calculator/presentation/da_tab.dart';
-import '../../da_calculator/presentation/widgets/da_subtotal_bar.dart';
 import '../../db_calculator/presentation/db_calculator_providers.dart';
 import '../../db_calculator/presentation/db_routine_providers.dart';
 import '../../db_calculator/presentation/db_tabs.dart';
-import '../../db_calculator/presentation/widgets/subtotal_bar.dart';
 import '../../routines/presentation/routine_actions.dart';
 import '../../routines/presentation/routine_controller.dart';
 import '../../routines/presentation/routine_details_form.dart';
 import '../../routines/presentation/routine_loader.dart';
 import '../../routines/presentation/save_status_indicator.dart';
+import 'routine_total_bar.dart';
 
 /// The tabs of the routine page.
 enum RoutineTab {
@@ -31,7 +30,7 @@ enum RoutineTab {
 
 /// One saved routine: its name, apparatus and level in the header, and
 /// its body difficulties (DB), risks (R) and apparatus difficulties (DA)
-/// as tabs, each with a provisional subtotal.
+/// as tabs, with the provisional total below.
 class RoutineScreen extends ConsumerWidget {
   const RoutineScreen({
     super.key,
@@ -147,7 +146,7 @@ class _RoutinePage extends ConsumerWidget {
           DaTab(routineId: routineId),
         ],
       ),
-      // The add button and subtotal follow the selected tab.
+      // The add button and the total's breakdown follow the selected tab.
       floatingActionButton: ListenableBuilder(
         listenable: tabs,
         builder: (context, _) => switch (RoutineTab.values[tabs.index]) {
@@ -158,9 +157,10 @@ class _RoutinePage extends ConsumerWidget {
       ),
       bottomNavigationBar: ListenableBuilder(
         listenable: tabs,
-        builder: (context, _) => tabs.index == RoutineTab.da.index
-            ? DaSubtotalBar(routineId: routineId)
-            : SubtotalBar(routineId: routineId),
+        builder: (context, _) => RoutineTotalBar(
+          routineId: routineId,
+          showDa: tabs.index == RoutineTab.da.index,
+        ),
       ),
     );
   }

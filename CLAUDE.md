@@ -60,8 +60,16 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   first (apparatus required for new routines). The routine page shows the
   name and "apparatus · level" in its app bar (edit with the pencil), and
   tabs DB | R | DA (`RoutineTab`; `?tab=risks|da` opens another tab). Each
-  tab has its own add button and subtotal bar. The tab widgets live in
+  tab has its own add button; `RoutineTotalBar` below shows DB + DA = the
+  provisional total and the open tab's breakdown. The tab widgets live in
   their features (`db_tabs.dart`, `da_tab.dart`).
+- `RoutineScore` (`routine_editor/domain/`) is DB + DA for a routine, with
+  its level's limits (`DbCountLimits.of`, `daMaxCounted`). My routines
+  shows each routine's total (`savedRoutineScoreProvider`, keyed by id and
+  `updatedAt`). The routine page builds it from `dbScoreResultProvider` and
+  `daScoreResultProvider` in the widget: a provider combining them is
+  refreshed while the page resumes after a full-screen form, which
+  Riverpod rejects.
 - `routineControllerProvider(id)` is an auto-disposing async family: loads
   by id, saves every change (name debounced 500 ms), flushes a pending save
   on dispose, and reports `routineSaveStatusProvider(id)`. Automatic retry

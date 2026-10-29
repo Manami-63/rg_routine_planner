@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/scoring/apparatus.dart';
 import '../../routines/presentation/routine_controller.dart';
 import '../domain/da_element.dart';
 import '../domain/da_routine.dart';
@@ -18,10 +17,10 @@ final daMaxCountedProvider = Provider.autoDispose.family<int?, String>((
   ref,
   id,
 ) {
-  final apparatus = ref.watch(routineProvider(id).select((r) => r.apparatus));
-  // Freehand routines have no apparatus, so no DA can count.
-  if (apparatus == Apparatus.freehand) return 0;
-  return ref.watch(routineRequirementsProvider(id))?.da.max;
+  return daMaxCounted(
+    ref.watch(routineRequirementsProvider(id)),
+    ref.watch(routineProvider(id).select((r) => r.apparatus)),
+  );
 });
 
 /// Derived state: recalculated whenever the DA, apparatus or level change.

@@ -1,6 +1,7 @@
 import '../../../core/scoring/apparatus.dart';
 import '../../../core/scoring/ruleset.dart';
 import '../../../core/scoring/score.dart';
+import '../../levels/domain/competition_level.dart';
 import 'da_base.dart';
 import 'da_criterion.dart';
 import 'da_element.dart';
@@ -88,6 +89,11 @@ class DaScoreResult {
 
   bool isCounted(int index) => counted.contains(index);
 }
+
+/// How many DA count for a level's [requirements] in a routine with
+/// [apparatus]; `null` for no limit. Freehand routines have no DA.
+int? daMaxCounted(LevelRequirements? requirements, Apparatus? apparatus) =>
+    apparatus == Apparatus.freehand ? 0 : requirements?.da.max;
 
 /// Calculates a DA score for a routine under one specific ruleset.
 ///
