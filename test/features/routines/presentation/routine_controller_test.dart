@@ -118,6 +118,27 @@ void main() {
     expect(repository.routines[testRoutineId]!.name, 'Leaving quickly');
   });
 
+  test('notes save after a pause, and when leaving', () async {
+    final controller = await load();
+
+    controller
+      ..updateNotes('M')
+      ..updateNotes('Music');
+    await settle();
+    expect(repository.routines[testRoutineId]!.notes, isEmpty);
+
+    await Future<void>.delayed(
+      RoutineController.nameSaveDelay + const Duration(milliseconds: 50),
+    );
+    expect(repository.routines[testRoutineId]!.notes, 'Music');
+    expect(repository.saveCount, 1);
+
+    controller.updateNotes('Music: Bolero');
+    container.dispose();
+    await settle();
+    expect(repository.routines[testRoutineId]!.notes, 'Music: Bolero');
+  });
+
   test('a failed save is reported and can be retried', () async {
     final controller = await load();
     repository.saveError = StateError('disk full');

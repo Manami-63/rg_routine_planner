@@ -7,7 +7,8 @@ import '../db_routine_providers.dart';
 import 'adjust_element_sheet.dart';
 import '../../../../core/widgets/value_badge.dart';
 
-/// Sliver listing the elements in the routine, or an empty state.
+/// Sliver listing the elements in the routine in performance order, or an
+/// empty state. Drag the handle to reorder; tap an element to adjust it.
 class SelectedElementsSection extends ConsumerWidget {
   const SelectedElementsSection({super.key, required this.routineId});
 
@@ -24,6 +25,7 @@ class SelectedElementsSection extends ConsumerWidget {
     final result = ref.watch(dbScoreResultProvider(routineId));
     final muted = Theme.of(context).colorScheme.onSurface
         .withValues(alpha: 0.5);
+    final controller = ref.read(routineControllerProvider(routineId).notifier);
 
     if (elements.isEmpty) {
       return const SliverToBoxAdapter(
@@ -35,8 +37,9 @@ class SelectedElementsSection extends ConsumerWidget {
       );
     }
 
-    return SliverList.builder(
+    return SliverReorderableList(
       itemCount: elements.length,
+      onReorderItem: controller.moveElement,
       itemBuilder: (context, index) {
         final element = elements[index];
         final dbs = result.dbPerElement[index];
@@ -51,34 +54,45 @@ class SelectedElementsSection extends ConsumerWidget {
           else if (counted < dbs)
             '$counted of $dbs counted',
         ].join(' · ');
-        return ListTile(
+        // Material keeps the tile's ink visible while it is dragged.
+        return Material(
           key: ValueKey('selected-$index'),
-          // Greyed out (but still adjustable and removable) when it does
-          // not count.
-          textColor: counted > 0 ? null : muted,
-          leading: CircleAvatar(child: Text('${index + 1}')),
-          title: Text(element.name),
-          subtitle: Text(details),
-          onTap: () => AdjustElementSheet.show(
-            context,
-            routineId: routineId,
-            index: index,
-            element: element,
-            options: options[index],
-          ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // A series shows its total; a repetition is worth nothing.
-              ValueBadge(value: result.elementValues[index] * dbs),
-              IconButton(
-                tooltip: 'Remove ${element.name}',
-                icon: const Icon(Icons.remove_circle_outline),
-                onPressed: () => ref
-                    .read(routineControllerProvider(routineId).notifier)
-                    .removeElementAt(index),
-              ),
-            ],
+          child: ListTile(
+            // Greyed out (but still adjustable and removable) when it does
+            // not count.
+            textColor: counted > 0 ? null : muted,
+            leading: CircleAvatar(child: Text('${index + 1}')),
+            title: Text(element.name),
+            subtitle: Text(details),
+            onTap: () => AdjustElementSheet.show(
+              context,
+              routineId: routineId,
+              index: index,
+              element: element,
+              options: options[index],
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // A series shows its total; a repetition is worth nothing.
+                ValueBadge(value: result.elementValues[index] * dbs),
+                IconButton(
+                  tooltip: 'Remove ${element.name}',
+                  icon: const Icon(Icons.remove_circle_outline),
+                  onPressed: () => controller.removeElementAt(index),
+                ),
+                ReorderableDragStartListener(
+                  index: index,
+                  child: const Tooltip(
+                    message: 'Drag to reorder',
+                    child: Padding(
+                      padding: EdgeInsets.all(8),
+                      child: Icon(Icons.drag_handle),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },

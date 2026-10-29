@@ -92,6 +92,40 @@ void main() {
     expect(find.textContaining('Penalties are never deducted.'), findsOne);
   });
 
+  testWidgets('notes are edited on their own tab and saved', (tester) async {
+    final routines = await pumpDbCalculator(
+      tester,
+      routine: emptyTestRoutine().withNotes('Music: Bolero'),
+    );
+
+    await tester.tap(find.text('Notes'));
+    await tester.pumpAndSettle();
+    // No add button on the notes tab; the total stays visible.
+    expect(find.byType(FloatingActionButton), findsNothing);
+    expect(find.byKey(const ValueKey('routine-total')), findsOneWidget);
+    expect(find.text('Music: Bolero'), findsOneWidget);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('routine-notes')),
+      'Music: Bolero\nStart facing the judges',
+    );
+    await tester.pump(
+      RoutineController.nameSaveDelay + const Duration(milliseconds: 50),
+    );
+
+    expect(
+      routines.routines[testRoutineId]!.notes,
+      'Music: Bolero\nStart facing the judges',
+    );
+
+    // Notes are kept when switching tabs and back.
+    await tester.tap(find.text('DB'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Notes'));
+    await tester.pumpAndSettle();
+    expect(find.text('Music: Bolero\nStart facing the judges'), findsOneWidget);
+  });
+
   testWidgets('opens on the requested tab', (tester) async {
     await pumpDaCalculator(tester);
 
@@ -145,6 +179,7 @@ void main() {
     expect(AppRoutes.routine('r1'), '/routines/r1');
     expect(AppRoutes.routine('r1', RoutineTab.da), '/routines/r1?tab=da');
     expect(RoutineTab.fromName('risks'), RoutineTab.risks);
+    expect(RoutineTab.fromName('notes'), RoutineTab.notes);
     expect(RoutineTab.fromName('other'), RoutineTab.db);
     expect(RoutineTab.fromName(null), RoutineTab.db);
   });

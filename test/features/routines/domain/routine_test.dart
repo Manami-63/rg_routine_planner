@@ -23,13 +23,25 @@ void main() {
     final changed = routine
         .rename('Hoop')
         .withLevel(figSenior)
+        .withNotes('Music: Bolero')
         .withDb(routine.db.withElementAdded(testJump));
 
     expect(changed.name, 'Hoop');
+    expect(changed.notes, 'Music: Bolero');
     expect(changed.level, figSenior);
     expect(changed.db.elements, [testJump]);
     expect(changed.id, 'r1');
     expect(routine.name, isEmpty);
+    expect(routine.notes, isEmpty);
+  });
+
+  test('notes are kept by other changes', () {
+    final withNotes = routine.withNotes('Slow start');
+
+    expect(withNotes.withApparatus(Apparatus.ball).notes, 'Slow start');
+    expect(withNotes.withLevel(figSenior).notes, 'Slow start');
+    expect(withNotes.rename('Ball').notes, 'Slow start');
+    expect(withNotes, isNot(routine));
   });
 
   test('withLevel(null) removes the level', () {
@@ -60,6 +72,7 @@ void main() {
         .rename('Hoop')
         .withApparatus(Apparatus.hoop)
         .withLevel(figSenior)
+        .withNotes('Music: Bolero')
         .withDb(routine.db.withElementAdded(testJump));
     final later = now.add(const Duration(days: 1));
 
@@ -69,6 +82,7 @@ void main() {
     expect(copy.name, 'Hoop (copy)');
     expect(copy.apparatus, Apparatus.hoop);
     expect(copy.level, figSenior);
+    expect(copy.notes, 'Music: Bolero');
     expect(copy.db, original.db);
     expect(copy.da, original.da);
     expect(copy.createdAt, later);

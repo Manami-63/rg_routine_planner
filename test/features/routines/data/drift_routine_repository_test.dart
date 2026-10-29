@@ -83,6 +83,14 @@ void main() {
     expect(await repository.fetchRoutine('r1'), original);
   });
 
+  test('round-trips notes, including line breaks', () async {
+    final original = routine().withNotes('Music: Bolero\nStart facing judges');
+
+    await repository.saveRoutine(original);
+
+    expect((await repository.fetchRoutine('r1'))!.notes, original.notes);
+  });
+
   test('round-trips element options and custom elements', () async {
     const custom = DbElement.custom(
       name: 'New pivot',

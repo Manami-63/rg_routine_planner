@@ -137,6 +137,16 @@ class $RoutinesTable extends Routines
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+    'notes',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -173,6 +183,7 @@ class $RoutinesTable extends Routines
     customDaMin,
     customDaMax,
     customRequiredBodyGroups,
+    notes,
     createdAt,
     updatedAt,
   ];
@@ -284,6 +295,12 @@ class $RoutinesTable extends Routines
         ),
       );
     }
+    if (data.containsKey('notes')) {
+      context.handle(
+        _notesMeta,
+        notes.isAcceptableOrUnknown(data['notes']!, _notesMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -357,6 +374,10 @@ class $RoutinesTable extends Routines
         DriftSqlType.string,
         data['${effectivePrefix}custom_required_body_groups'],
       ),
+      notes: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}notes'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -395,6 +416,9 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
   /// Required body groups, as comma-separated `DbElementGroup.name`s (e.g.
   /// `jump,balance`). Null or empty for none. Added in v2.
   final String? customRequiredBodyGroups;
+
+  /// Free text from the user. Empty for none. Added in v7.
+  final String notes;
   final DateTime createdAt;
   final DateTime updatedAt;
   const RoutineRow({
@@ -410,6 +434,7 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
     this.customDaMin,
     this.customDaMax,
     this.customRequiredBodyGroups,
+    required this.notes,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -448,6 +473,7 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
         customRequiredBodyGroups,
       );
     }
+    map['notes'] = Variable<String>(notes);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -485,6 +511,7 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
       customRequiredBodyGroups: customRequiredBodyGroups == null && nullToAbsent
           ? const Value.absent()
           : Value(customRequiredBodyGroups),
+      notes: Value(notes),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -510,6 +537,7 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
       customRequiredBodyGroups: serializer.fromJson<String?>(
         json['customRequiredBodyGroups'],
       ),
+      notes: serializer.fromJson<String>(json['notes']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -532,6 +560,7 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
       'customRequiredBodyGroups': serializer.toJson<String?>(
         customRequiredBodyGroups,
       ),
+      'notes': serializer.toJson<String>(notes),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -550,6 +579,7 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
     Value<int?> customDaMin = const Value.absent(),
     Value<int?> customDaMax = const Value.absent(),
     Value<String?> customRequiredBodyGroups = const Value.absent(),
+    String? notes,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => RoutineRow(
@@ -571,6 +601,7 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
     customRequiredBodyGroups: customRequiredBodyGroups.present
         ? customRequiredBodyGroups.value
         : this.customRequiredBodyGroups,
+    notes: notes ?? this.notes,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -602,6 +633,7 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
       customRequiredBodyGroups: data.customRequiredBodyGroups.present
           ? data.customRequiredBodyGroups.value
           : this.customRequiredBodyGroups,
+      notes: data.notes.present ? data.notes.value : this.notes,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -622,6 +654,7 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
           ..write('customDaMin: $customDaMin, ')
           ..write('customDaMax: $customDaMax, ')
           ..write('customRequiredBodyGroups: $customRequiredBodyGroups, ')
+          ..write('notes: $notes, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -642,6 +675,7 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
     customDaMin,
     customDaMax,
     customRequiredBodyGroups,
+    notes,
     createdAt,
     updatedAt,
   );
@@ -661,6 +695,7 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
           other.customDaMin == this.customDaMin &&
           other.customDaMax == this.customDaMax &&
           other.customRequiredBodyGroups == this.customRequiredBodyGroups &&
+          other.notes == this.notes &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -678,6 +713,7 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
   final Value<int?> customDaMin;
   final Value<int?> customDaMax;
   final Value<String?> customRequiredBodyGroups;
+  final Value<String> notes;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -694,6 +730,7 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
     this.customDaMin = const Value.absent(),
     this.customDaMax = const Value.absent(),
     this.customRequiredBodyGroups = const Value.absent(),
+    this.notes = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -711,6 +748,7 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
     this.customDaMin = const Value.absent(),
     this.customDaMax = const Value.absent(),
     this.customRequiredBodyGroups = const Value.absent(),
+    this.notes = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -732,6 +770,7 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
     Expression<int>? customDaMin,
     Expression<int>? customDaMax,
     Expression<String>? customRequiredBodyGroups,
+    Expression<String>? notes,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -750,6 +789,7 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
       if (customDaMax != null) 'custom_da_max': customDaMax,
       if (customRequiredBodyGroups != null)
         'custom_required_body_groups': customRequiredBodyGroups,
+      if (notes != null) 'notes': notes,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -769,6 +809,7 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
     Value<int?>? customDaMin,
     Value<int?>? customDaMax,
     Value<String?>? customRequiredBodyGroups,
+    Value<String>? notes,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -787,6 +828,7 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
       customDaMax: customDaMax ?? this.customDaMax,
       customRequiredBodyGroups:
           customRequiredBodyGroups ?? this.customRequiredBodyGroups,
+      notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -834,6 +876,9 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
         customRequiredBodyGroups.value,
       );
     }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -861,6 +906,7 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
           ..write('customDaMin: $customDaMin, ')
           ..write('customDaMax: $customDaMax, ')
           ..write('customRequiredBodyGroups: $customRequiredBodyGroups, ')
+          ..write('notes: $notes, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -2852,6 +2898,7 @@ typedef $$RoutinesTableCreateCompanionBuilder = RoutinesCompanion Function({
   Value<int?> customDaMin,
   Value<int?> customDaMax,
   Value<String?> customRequiredBodyGroups,
+  Value<String> notes,
   required DateTime createdAt,
   required DateTime updatedAt,
   Value<int> rowid,
@@ -2869,6 +2916,7 @@ typedef $$RoutinesTableUpdateCompanionBuilder = RoutinesCompanion Function({
   Value<int?> customDaMin,
   Value<int?> customDaMax,
   Value<String?> customRequiredBodyGroups,
+  Value<String> notes,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<int> rowid,
@@ -3012,6 +3060,11 @@ class $$RoutinesTableFilterComposer
 
   ColumnFilters<String> get customRequiredBodyGroups => $composableBuilder(
     column: $table.customRequiredBodyGroups,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get notes => $composableBuilder(
+    column: $table.notes,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3174,6 +3227,11 @@ class $$RoutinesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get notes => $composableBuilder(
+    column: $table.notes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -3243,6 +3301,9 @@ class $$RoutinesTableAnnotationComposer
     column: $table.customRequiredBodyGroups,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -3375,6 +3436,7 @@ class $$RoutinesTableTableManager
                 Value<int?> customDaMin = const Value.absent(),
                 Value<int?> customDaMax = const Value.absent(),
                 Value<String?> customRequiredBodyGroups = const Value.absent(),
+                Value<String> notes = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -3391,6 +3453,7 @@ class $$RoutinesTableTableManager
                 customDaMin: customDaMin,
                 customDaMax: customDaMax,
                 customRequiredBodyGroups: customRequiredBodyGroups,
+                notes: notes,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -3409,6 +3472,7 @@ class $$RoutinesTableTableManager
                 Value<int?> customDaMin = const Value.absent(),
                 Value<int?> customDaMax = const Value.absent(),
                 Value<String?> customRequiredBodyGroups = const Value.absent(),
+                Value<String> notes = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -3425,6 +3489,7 @@ class $$RoutinesTableTableManager
                 customDaMin: customDaMin,
                 customDaMax: customDaMax,
                 customRequiredBodyGroups: customRequiredBodyGroups,
+                notes: notes,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,

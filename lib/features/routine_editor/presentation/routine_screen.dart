@@ -11,13 +11,15 @@ import '../../routines/presentation/routine_controller.dart';
 import '../../routines/presentation/routine_details_form.dart';
 import '../../routines/presentation/routine_loader.dart';
 import '../../routines/presentation/save_status_indicator.dart';
+import 'notes_tab.dart';
 import 'routine_total_bar.dart';
 
 /// The tabs of the routine page.
 enum RoutineTab {
   db('DB'),
   risks('R'),
-  da('DA');
+  da('DA'),
+  notes('Notes');
 
   const RoutineTab(this.label);
 
@@ -30,7 +32,7 @@ enum RoutineTab {
 
 /// One saved routine: its name, apparatus and level in the header, and
 /// its body difficulties (DB), risks (R) and apparatus difficulties (DA)
-/// as tabs, with the provisional total below.
+/// and notes as tabs, with the provisional total below.
 class RoutineScreen extends ConsumerWidget {
   const RoutineScreen({
     super.key,
@@ -95,16 +97,16 @@ class _RoutinePage extends ConsumerWidget {
                 context,
                 title: 'Clear DB and risks?',
                 message:
-                    'This removes all body difficulties and risks. DA, the '
-                    'routine name, apparatus and level are kept.',
+                    'This removes all body difficulties and risks. DA, '
+                    'notes, the routine name, apparatus and level are kept.',
                 onClear: controller.clearDb,
               ),
               _MenuAction.clearDa => _confirmClear(
                 context,
                 title: 'Clear DA?',
                 message:
-                    'This removes all DA. Body difficulties, risks, the '
-                    'routine name, apparatus and level are kept.',
+                    'This removes all DA. Body difficulties, risks, notes, '
+                    'the routine name, apparatus and level are kept.',
                 onClear: controller.clearDa,
               ),
             },
@@ -144,6 +146,7 @@ class _RoutinePage extends ConsumerWidget {
           DbBodyTab(routineId: routineId),
           DbRisksTab(routineId: routineId),
           DaTab(routineId: routineId),
+          NotesTab(routineId: routineId),
         ],
       ),
       // The add button and the total's breakdown follow the selected tab.
@@ -153,6 +156,7 @@ class _RoutinePage extends ConsumerWidget {
           RoutineTab.db => AddElementButton(routineId: routineId),
           RoutineTab.risks => BuildRiskButton(routineId: routineId),
           RoutineTab.da => BuildDaButton(routineId: routineId),
+          RoutineTab.notes => const SizedBox.shrink(),
         },
       ),
       bottomNavigationBar: ListenableBuilder(

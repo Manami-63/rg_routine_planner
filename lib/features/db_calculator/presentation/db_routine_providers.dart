@@ -45,6 +45,10 @@ extension DbRoutineEditing on RoutineController {
   void removeElementAt(int index) =>
       updateDb((db) => db.withElementRemovedAt(index));
 
+  /// Moves an element to another place in the performance order.
+  void moveElement(int from, int to) =>
+      updateDb((db) => db.withElementMoved(from, to));
+
   void setElementOptionsAt(int index, DbElementOptions options) =>
       updateDb((db) => db.withElementOptionsAt(index, options));
 
@@ -56,6 +60,11 @@ extension DbRoutineEditing on RoutineController {
   void addRisk(RiskElement risk) => updateDb((db) => db.withRiskAdded(risk));
 
   void removeRiskAt(int index) => updateDb((db) => db.withRiskRemovedAt(index));
+
+  /// Moves a risk to another place in the performance order. Which risks
+  /// count can change, because the first N count.
+  void moveRisk(int from, int to) =>
+      updateDb((db) => db.withRiskMoved(from, to));
 
   /// Removes all DB content; the routine's name and level are kept.
   void clearDb() => updateDb((db) => db.cleared());

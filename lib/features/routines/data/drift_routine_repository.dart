@@ -141,6 +141,7 @@ class DriftRoutineRepository implements RoutineRepository {
       name: row.name,
       apparatus: Apparatus.fromName(row.apparatus),
       level: _resolveLevel(row),
+      notes: row.notes,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
       db: DbRoutine(
@@ -278,6 +279,7 @@ class DriftRoutineRepository implements RoutineRepository {
             customRequiredBodyGroups: Value(
               custom == null ? null : _formatGroups(custom.requiredBodyGroups),
             ),
+            notes: Value(routine.notes),
             // Always stored in UTC (shown in local time by the UI), so data
             // from devices in different time zones sorts and syncs cleanly.
             createdAt: routine.createdAt.toUtc(),
