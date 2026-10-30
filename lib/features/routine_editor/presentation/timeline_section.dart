@@ -5,10 +5,12 @@ import '../../../core/scoring/apparatus.dart';
 import '../../music/presentation/music_providers.dart';
 import '../../routines/presentation/routine_controller.dart';
 import '../domain/routine_timeline.dart';
+import 'play_mode_screen.dart';
 import 'timeline_editing.dart';
 
 /// Shown below the music player: buttons that mark the next DB, R, DA or S
-/// at the music's position, and the marked items by time with −/+ nudges.
+/// at the music's position, and the marked items by time with −/+ nudges
+/// and a button to open Play mode.
 class TimelineSection extends ConsumerWidget {
   const TimelineSection({super.key, required this.routineId});
 
@@ -68,6 +70,16 @@ class TimelineSection extends ConsumerWidget {
               ),
           ],
         ),
+        if (entries.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: FilledButton.icon(
+              onPressed: () =>
+                  PlayModeScreen.show(context, routineId: routineId),
+              icon: const Icon(Icons.slideshow),
+              label: const Text('Play mode'),
+            ),
+          ),
         if (entries.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
