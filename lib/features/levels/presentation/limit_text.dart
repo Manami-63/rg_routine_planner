@@ -38,7 +38,7 @@ String describeLevel(
       'needs ${[for (final group in DbElementGroup.requirable)
         if (requirements.requiredBodyGroups.contains(group)) group.singular].join(', ')}',
     if (categories.contains(DifficultyCategory.db))
-      if (requirements.minDanceSteps case final min?) 'at least $min S',
+      if (requirements.minDanceSteps case final min?) 'at least $min\u00A0S',
   ];
   return parts.isEmpty ? 'No limits set' : parts.join(' · ');
 }

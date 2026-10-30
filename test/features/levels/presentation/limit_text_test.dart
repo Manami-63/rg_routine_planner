@@ -41,7 +41,7 @@ void main() {
     expect(
       describeLevel(custom, Apparatus.hoop),
       'DB up to 8 · R 1–2 · DA at least 1 · needs leap, balance · '
-      'at least 2 S',
+      'at least 2\u00A0S',
     );
   });
 
@@ -49,7 +49,7 @@ void main() {
     const custom = CompetitionLevel.custom(
       LevelRequirements(da: CountLimit(max: 3), minDanceSteps: 1),
     );
-    expect(describeLevel(custom, Apparatus.freehand), 'at least 1 S');
+    expect(describeLevel(custom, Apparatus.freehand), 'at least 1\u00A0S');
     expect(
       describeLevel(
         custom,

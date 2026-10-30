@@ -39,7 +39,7 @@ class LevelSelector extends StatelessWidget {
           level == null
               ? 'Used to decide which difficulties count'
               : describeLevel(level, apparatus),
-          maxLines: 2,
+          maxLines: 3,
           overflow: TextOverflow.ellipsis,
         ),
         trailing: const Icon(Icons.chevron_right),

@@ -282,8 +282,8 @@ void main() {
 
       expect(saved(routines).db.elementTimes, [const Duration(seconds: 7)]);
       expect(saved(routines).db.elementCells, [FloorCell.left]);
-      expect(find.text('Together with DA 1'), findsOneWidget);
-      expect(find.text('Together with DB 1'), findsOneWidget);
+      expect(find.text('With DA 1'), findsOneWidget);
+      expect(find.text('With DB 1'), findsOneWidget);
     });
 
     testWidgets('a tap while paused after a drop is also together', (
@@ -319,7 +319,7 @@ void main() {
       await dropOn(tester, TimelineKind.db, 5);
 
       expect(saved(routines).db.elementTimes, [const Duration(seconds: 10)]);
-      expect(find.textContaining('Together with'), findsNothing);
+      expect(find.textContaining('With D'), findsNothing);
     });
 
     testWidgets('a second DA while paused is not paired', (tester) async {
@@ -359,7 +359,7 @@ void main() {
       expect(saved(routines).db.elementTimes, [
         const Duration(milliseconds: 5100),
       ]);
-      expect(find.textContaining('Together with'), findsNothing);
+      expect(find.textContaining('With D'), findsNothing);
 
       await tester.tap(find.byTooltip('Pair DB 1 with a DA'));
       await tester.pumpAndSettle();
@@ -368,7 +368,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(saved(routines).db.elementTimes, [const Duration(seconds: 5)]);
-      expect(find.text('Together with DA 1'), findsOneWidget);
+      expect(find.text('With DA 1'), findsOneWidget);
     });
 
     testWidgets('Play mode shows the pair as one', (tester) async {

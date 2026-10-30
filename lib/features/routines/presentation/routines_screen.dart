@@ -129,13 +129,14 @@ class _RoutineTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Non-breaking spaces keep each part ("0 DA") on one line.
     final details = [
       ?summary.apparatus?.label,
       summary.level?.label ?? 'No level',
       '${summary.elementCount} DB',
       '${summary.riskCount} ${summary.riskCount == 1 ? 'risk' : 'risks'}',
       '${summary.daCount} DA',
-    ].join(' · ');
+    ].map((part) => part.replaceAll(' ', '\u00A0')).join(' · ');
 
     return ListTile(
       key: ValueKey('routine-${summary.id}'),
