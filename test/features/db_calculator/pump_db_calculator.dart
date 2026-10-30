@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rg_routine_planner/core/device/screen_awake.dart';
 import 'package:rg_routine_planner/features/da_calculator/presentation/da_calculator_providers.dart';
 import 'package:rg_routine_planner/features/db_calculator/presentation/db_calculator_providers.dart';
 import 'package:rg_routine_planner/features/db_calculator/presentation/element_picker_screen.dart';
@@ -9,6 +10,7 @@ import 'package:rg_routine_planner/features/routine_editor/presentation/routine_
 import 'package:rg_routine_planner/features/routines/domain/routine.dart';
 import 'package:rg_routine_planner/features/routines/presentation/routine_providers.dart';
 
+import '../../core/device/fake_screen_awake.dart';
 import '../music/fake_music.dart';
 import '../routines/fake_routine_repository.dart';
 import '../da_calculator/test_data.dart';
@@ -23,8 +25,8 @@ Routine emptyTestRoutine() => Routine.create(
 );
 
 /// Pumps the routine page for [routine] (default: an empty routine) on
-/// [initialTab], with fake catalogue and routine repositories and fake
-/// [music]. Returns the routine repository.
+/// [initialTab], with fake catalogue and routine repositories, fake
+/// [music] and a fake [screenAwake]. Returns the routine repository.
 Future<FakeRoutineRepository> pumpDbCalculator(
   WidgetTester tester, {
   FakeDbCatalogueRepository? catalogue,
@@ -33,6 +35,7 @@ Future<FakeRoutineRepository> pumpDbCalculator(
   RoutineTab initialTab = RoutineTab.db,
   double height = 2400,
   FakeMusic? music,
+  FakeScreenAwake? screenAwake,
 }) async {
   // A tall surface so the whole scroll view is built without scrolling.
   tester.view.physicalSize = Size(800, height);
@@ -54,6 +57,7 @@ Future<FakeRoutineRepository> pumpDbCalculator(
         musicLibraryProvider.overrideWithValue(fakeMusic.library),
         musicPickerProvider.overrideWithValue(fakeMusic.picker),
         musicPlayerProvider.overrideWith((ref, _) => fakeMusic.player),
+        screenAwakeProvider.overrideWithValue(screenAwake ?? FakeScreenAwake()),
       ],
       child: MaterialApp(
         home: RoutineScreen(routineId: testRoutineId, initialTab: initialTab),

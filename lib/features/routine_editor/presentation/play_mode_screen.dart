@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/device/screen_awake.dart';
 import '../../music/presentation/music_providers.dart';
 import '../../music/presentation/music_tab.dart';
 import '../../routines/presentation/routine_details_form.dart';
@@ -13,8 +14,8 @@ import 'dance_step_conflicts.dart';
 /// R, DA and S at its time, with a countdown during S.
 ///
 /// Uses the routine page's player, so the music keeps its position when
-/// switching between the two.
-class PlayModeScreen extends ConsumerWidget {
+/// switching between the two. Keeps the screen on while open.
+class PlayModeScreen extends ConsumerStatefulWidget {
   const PlayModeScreen({super.key, required this.routineId});
 
   final String routineId;
@@ -29,7 +30,29 @@ class PlayModeScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PlayModeScreen> createState() => _PlayModeScreenState();
+}
+
+class _PlayModeScreenState extends ConsumerState<PlayModeScreen> {
+  // Kept so `dispose` does not need `ref`.
+  late final ScreenAwake _screenAwake = ref.read(screenAwakeProvider);
+
+  String get routineId => widget.routineId;
+
+  @override
+  void initState() {
+    super.initState();
+    _screenAwake.enable();
+  }
+
+  @override
+  void dispose() {
+    _screenAwake.disable();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final name = ref.watch(routineProvider(routineId).select((r) => r.name));
     final entries = ref.watch(
       routineProvider(routineId).select((r) => r.timelineEntries),
