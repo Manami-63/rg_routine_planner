@@ -83,8 +83,14 @@ void main() {
         .widgetList<ListTile>(find.byType(ListTile))
         .map((tile) => (tile.title! as Text).data);
     expect(titles, ['Ribbon', 'Untitled routine', 'Old hoop']);
-    expect(find.textContaining('FIG Senior · 2 DB · 1 risk'), findsOneWidget);
-    expect(find.textContaining('No level · 0 DB · 0 risks'), findsNWidgets(2));
+    expect(
+      find.textContaining('FIG\u00A0Senior · 2\u00A0DB · 1\u00A0risk'),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('No\u00A0level · 0\u00A0DB · 0\u00A0risks'),
+      findsNWidgets(2),
+    );
   });
 
   Future<void> chooseAction(

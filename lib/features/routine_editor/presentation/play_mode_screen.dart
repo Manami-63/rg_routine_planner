@@ -581,9 +581,22 @@ class _DanceStepOverlay extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            Text(
-              '${_itemLabel(entry)} · Dance steps',
-              style: theme.textTheme.titleLarge?.copyWith(color: green),
+            // On a dark pill, so the mat underneath does not show through.
+            DecoratedBox(
+              decoration: ShapeDecoration(
+                color: Colors.black.withValues(alpha: 0.7),
+                shape: const StadiumBorder(),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 6,
+                ),
+                child: Text(
+                  '${_itemLabel(entry)} · Dance steps',
+                  style: theme.textTheme.titleLarge?.copyWith(color: green),
+                ),
+              ),
             ),
           ],
         ),

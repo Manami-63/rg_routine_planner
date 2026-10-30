@@ -69,7 +69,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Ball final'), findsOneWidget);
     expect(
-      find.textContaining('Ball · No level · 1 DB · 0 risks · 0 DA'),
+      find.textContaining(
+        'Ball · No\u00A0level · 1\u00A0DB · 0\u00A0risks · 0\u00A0DA',
+      ),
       findsOneWidget,
     );
 

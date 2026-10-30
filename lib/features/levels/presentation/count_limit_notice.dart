@@ -56,13 +56,14 @@ class CountLimitNotice extends StatelessWidget {
         icon: Icons.check_circle_outline,
         background: colors.primaryContainer,
         foreground: colors.onPrimaryContainer,
-        message: '$count $noun · meets the level ($range)',
+        message: '$count ${category.nounFor(count)} · meets the level ($range)',
       ),
       CountStatus.belowMinimum => LevelNotice(
         icon: Icons.info_outline,
         background: colors.secondaryContainer,
         foreground: colors.onSecondaryContainer,
-        message: '$count $noun · ${limit.min! - count} more needed ($range)',
+        message:
+            '$count ${category.nounFor(count)} · ${limit.min! - count} more needed ($range)',
       ),
       // Not an error: extra elements are allowed, they just do not count.
       CountStatus.aboveMaximum => LevelNotice(
@@ -70,7 +71,7 @@ class CountLimitNotice extends StatelessWidget {
         background: colors.tertiaryContainer,
         foreground: colors.onTertiaryContainer,
         message:
-            '$count $noun · ${count - limit.max!} not counted '
+            '$count ${category.nounFor(count)} · ${count - limit.max!} not counted '
             '(${category.countedRule(limit.max!)})',
       ),
     };

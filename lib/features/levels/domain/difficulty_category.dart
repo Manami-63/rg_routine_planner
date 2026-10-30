@@ -20,8 +20,11 @@ enum DifficultyCategory {
   /// Short name used in summaries, e.g. "R".
   final String label;
 
-  /// Name used after a number in messages, e.g. "3 risks".
+  /// Name used for several, e.g. "the number of risks".
   final String noun;
+
+  /// Name used after [count], e.g. "1 risk" or "3 risks".
+  String nounFor(int count) => this == risk && count == 1 ? 'risk' : noun;
 
   CountLimit limitOf(LevelRequirements requirements) => switch (this) {
     db => requirements.db,

@@ -123,7 +123,7 @@ void main() {
     expect(
       find.text(
         'DB up to 6 · R up to 3 · DA up to 12 · '
-        'needs leap, balance, rotation · at least 2 S',
+        'needs leap, balance, rotation · at least 2\u00A0S',
       ),
       findsOneWidget,
     );
@@ -238,7 +238,7 @@ void main() {
     await tapStepper(tester, 'Decrease S minimum');
     await apply(tester);
 
-    expect(find.text('at least 1 S'), findsOneWidget);
+    expect(find.text('at least 1\u00A0S'), findsOneWidget);
     await save(tester);
     expect(
       container.read(routineProvider(testRoutineId)).level?.requirements,

@@ -486,102 +486,145 @@ class _TimelineRow extends StatelessWidget {
     final item = '${entry.kind.label} ${entry.index + 1}';
     final conflictWith = this.conflictWith;
     final error = theme.colorScheme.error;
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
+    final muted = theme.colorScheme.onSurfaceVariant;
+    // Two lines, so the name gets the full width on a phone: time, item and
+    // name on top; together / S notes and the buttons below.
+    return InkWell(
       onTap: onTap,
-      leading: Text(
-        formatTimelineTime(entry.time),
-        style: theme.textTheme.titleSmall?.copyWith(
-          color: conflictWith == null ? null : error,
-          fontFeatures: const [FontFeature.tabularFigures()],
-        ),
-      ),
-      title: Text(
-        item,
-        style: TextStyle(
-          color: ItemColours.of(entry.kind, theme.colorScheme).colour,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-      subtitle: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(entry.name, maxLines: 1, overflow: TextOverflow.ellipsis),
-          if (partner case final partner?)
+      child: Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
               children: [
-                const Icon(Icons.link, size: 16),
-                const SizedBox(width: 4),
-                Expanded(child: Text('Together with $partner')),
-              ],
-            ),
-          if (conflictWith != null)
-            Row(
-              children: [
-                Icon(Icons.warning_amber_rounded, size: 16, color: error),
-                const SizedBox(width: 4),
+                SizedBox(
+                  width: 64,
+                  child: Text(
+                    formatTimelineTime(entry.time),
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: conflictWith == null ? null : error,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                ),
+                Text(
+                  item,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: ItemColours.of(entry.kind, theme.colorScheme).colour,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    danceStepConflictText(conflictWith),
-                    style: TextStyle(color: error),
+                    entry.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium,
                   ),
                 ),
               ],
             ),
-        ],
-      ),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            tooltip: 'Move $item earlier',
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.remove),
-            onPressed: entry.time == Duration.zero
-                ? null
-                : () => onNudge(-TimelineSection.nudge),
-          ),
-          IconButton(
-            tooltip: 'Move $item later',
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.add),
-            onPressed: () => onNudge(TimelineSection.nudge),
-          ),
-          if (onPair case final onPair?)
-            IconButton(
-              tooltip: partner == null
-                  ? 'Pair $item with a ${entry.kind.partnerKind!.label}'
-                  : 'Split $item from $partner',
-              visualDensity: VisualDensity.compact,
-              icon: Icon(partner == null ? Icons.link : Icons.link_off),
-              onPressed: onPair,
-            ),
-          IconButton(
-            tooltip: 'Set where $item starts',
-            visualDensity: VisualDensity.compact,
-            icon: switch (entry.cell) {
-              null => const Icon(Icons.grid_on),
-              final cell => CircleAvatar(
-                radius: 12,
-                child: Text(
-                  '${cell.number}',
-                  key: ValueKey('cell-${entry.kind.name}-${entry.index}'),
-                  style: theme.textTheme.labelMedium,
+            Row(
+              children: [
+                const SizedBox(width: 64),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (partner case final partner?)
+                        _RowNote(
+                          icon: Icons.link,
+                          text: 'With $partner',
+                          color: muted,
+                        ),
+                      if (conflictWith != null)
+                        _RowNote(
+                          icon: Icons.warning_amber_rounded,
+                          text: danceStepConflictText(conflictWith),
+                          color: error,
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-            },
-            onPressed: onPickCell,
-          ),
-          IconButton(
-            tooltip: 'Clear the time of $item',
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(Icons.close),
-            onPressed: onClear,
-          ),
-        ],
+                IconButton(
+                  tooltip: 'Move $item earlier',
+                  visualDensity: VisualDensity.compact,
+                  icon: const Icon(Icons.remove),
+                  onPressed: entry.time == Duration.zero
+                      ? null
+                      : () => onNudge(-TimelineSection.nudge),
+                ),
+                IconButton(
+                  tooltip: 'Move $item later',
+                  visualDensity: VisualDensity.compact,
+                  icon: const Icon(Icons.add),
+                  onPressed: () => onNudge(TimelineSection.nudge),
+                ),
+                if (onPair case final onPair?)
+                  IconButton(
+                    tooltip: partner == null
+                        ? 'Pair $item with a ${entry.kind.partnerKind!.label}'
+                        : 'Split $item from $partner',
+                    visualDensity: VisualDensity.compact,
+                    icon: Icon(partner == null ? Icons.link : Icons.link_off),
+                    onPressed: onPair,
+                  ),
+                IconButton(
+                  tooltip: 'Set where $item starts',
+                  visualDensity: VisualDensity.compact,
+                  icon: switch (entry.cell) {
+                    null => const Icon(Icons.grid_on),
+                    final cell => CircleAvatar(
+                      radius: 12,
+                      child: Text(
+                        '${cell.number}',
+                        key: ValueKey('cell-${entry.kind.name}-${entry.index}'),
+                        style: theme.textTheme.labelMedium,
+                      ),
+                    ),
+                  },
+                  onPressed: onPickCell,
+                ),
+                IconButton(
+                  tooltip: 'Clear the time of $item',
+                  visualDensity: VisualDensity.compact,
+                  icon: const Icon(Icons.close),
+                  onPressed: onClear,
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
+}
+
+/// A short note under a timeline row, e.g. "With DA 1".
+class _RowNote extends StatelessWidget {
+  const _RowNote({required this.icon, required this.text, required this.color});
+
+  final IconData icon;
+  final String text;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Icon(icon, size: 16, color: color),
+      const SizedBox(width: 4),
+      Expanded(
+        child: Text(
+          text,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: color),
+        ),
+      ),
+    ],
+  );
 }
 
 /// e.g. "1:05.3": minutes, seconds and tenths.
