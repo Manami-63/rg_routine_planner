@@ -2,6 +2,7 @@ import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rg_routine_planner/core/database/app_database.dart';
+import 'package:rg_routine_planner/core/floor/floor_cell.dart';
 import 'package:rg_routine_planner/features/da_calculator/domain/da_element.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/db_element_options.dart';
 import 'package:rg_routine_planner/features/levels/data/fig_levels.dart';
@@ -152,7 +153,7 @@ void main() {
     expect(await repository.fetchRoutine('r1'), withDa);
   });
 
-  test('v9 S counts become S rows without times', () async {
+  test('v9 S counts become S rows without times or cells', () async {
     driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
     final db = AppDatabase(
       NativeDatabase.memory(
@@ -183,8 +184,11 @@ void main() {
     expect(routine.da.times, [null]);
     expect((await repository.fetchRoutine('r2'))!.danceStepTimes, isEmpty);
 
-    // The upgraded tables take times.
-    final timed = routine.withDanceStepTimeAt(0, const Duration(seconds: 3));
+    // The upgraded tables take times and cells.
+    final timed = routine
+        .withDanceStepTimeAt(0, const Duration(seconds: 3))
+        .withDanceStepCellAt(0, FloorCell.centre)
+        .withDa(routine.da.withElementCellAt(0, FloorCell.back));
     await repository.saveRoutine(timed);
     expect(await repository.fetchRoutine('r1'), timed);
   });

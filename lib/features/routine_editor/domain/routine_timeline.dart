@@ -1,3 +1,4 @@
+import '../../../core/floor/floor_cell.dart';
 import '../../routines/domain/routine.dart';
 
 /// The kinds of item that can be marked on the music.
@@ -20,6 +21,7 @@ class TimelineEntry {
     required this.index,
     required this.name,
     required this.time,
+    this.cell,
   });
 
   final TimelineKind kind;
@@ -31,16 +33,20 @@ class TimelineEntry {
   final String name;
   final Duration time;
 
+  /// Where on the floor it starts, or `null` when not set.
+  final FloorCell? cell;
+
   @override
   bool operator ==(Object other) =>
       other is TimelineEntry &&
       other.kind == kind &&
       other.index == index &&
       other.name == name &&
-      other.time == time;
+      other.time == time &&
+      other.cell == cell;
 
   @override
-  int get hashCode => Object.hash(kind, index, name, time);
+  int get hashCode => Object.hash(kind, index, name, time, cell);
 
   @override
   String toString() => 'TimelineEntry(${kind.label} $index, $time)';
@@ -57,6 +63,14 @@ extension RoutineTimeline on Routine {
     TimelineKind.risk => db.riskTimes,
     TimelineKind.da => da.times,
     TimelineKind.danceStep => danceStepTimes,
+  };
+
+  /// The cells of the items of [kind], in list order (`null` = not set).
+  List<FloorCell?> cellsOf(TimelineKind kind) => switch (kind) {
+    TimelineKind.db => db.elementCells,
+    TimelineKind.risk => db.riskCells,
+    TimelineKind.da => da.cells,
+    TimelineKind.danceStep => danceStepCells,
   };
 
   /// The first item of [kind] without a time, or `null` when all are
@@ -77,6 +91,7 @@ extension RoutineTimeline on Routine {
               index: i,
               name: _nameOf(kind, i),
               time: time,
+              cell: cellsOf(kind)[i],
             ),
     ];
     // `sort` is not stable, so ties are broken explicitly.
@@ -110,7 +125,17 @@ extension RoutineTimeline on Routine {
     };
   }
 
-  /// Clears every time; the lists keep their order.
+  /// Sets where on the floor the item of [kind] at [index] starts (`null`
+  /// clears it).
+  Routine withCell(TimelineKind kind, int index, FloorCell? cell) =>
+      switch (kind) {
+        TimelineKind.db => withDb(db.withElementCellAt(index, cell)),
+        TimelineKind.risk => withDb(db.withRiskCellAt(index, cell)),
+        TimelineKind.da => withDa(da.withElementCellAt(index, cell)),
+        TimelineKind.danceStep => withDanceStepCellAt(index, cell),
+      };
+
+  /// Clears every time and cell; the lists keep their order.
   Routine withTimesCleared() =>
       withDb(db.withTimesCleared())
           .withDa(da.withTimesCleared())

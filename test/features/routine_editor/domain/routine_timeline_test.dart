@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rg_routine_planner/core/floor/floor_cell.dart';
 import 'package:rg_routine_planner/features/da_calculator/domain/da_element.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/risk.dart';
 import 'package:rg_routine_planner/features/routine_editor/domain/routine_timeline.dart';
@@ -100,5 +101,33 @@ void main() {
     final cleared = marked.withTimesCleared();
 
     expect(cleared, routine);
+  });
+
+  test('cells go with their items and are cleared with the time', () {
+    final marked = routine
+        .withCell(TimelineKind.db, 1, FloorCell.centre)
+        .withTime(TimelineKind.db, 1, s(4))
+        .withTime(TimelineKind.db, 0, s(9));
+
+    // The balance (index 1) moved first, with its cell.
+    expect(marked.cellsOf(TimelineKind.db), [FloorCell.centre, null]);
+    expect(marked.timelineEntries.first.cell, FloorCell.centre);
+    expect(marked.withTime(TimelineKind.db, 0, null).cellsOf(TimelineKind.db), [
+      null,
+      null,
+    ]);
+    final cleared = marked.withTimesCleared();
+    expect(cleared.cellsOf(TimelineKind.db), [null, null]);
+    expect(cleared.hasTimes, isFalse);
+  });
+
+  test('S cells follow their S', () {
+    final marked = routine
+        .withDanceStepCellAt(1, FloorCell.front)
+        .withDanceStepTimeAt(1, s(2))
+        .withDanceStepTimeAt(0, s(7));
+
+    expect(marked.danceStepCells, [FloorCell.front, null]);
+    expect(marked.withDanceStepCount(1).danceStepCells, [FloorCell.front]);
   });
 }

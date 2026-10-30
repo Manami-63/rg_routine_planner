@@ -103,6 +103,19 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   Setting a time puts the timed items of that kind in time order
   (`timeOrder`; untimed items keep their places), so the first N risks and
   DA follow the music.
+- Floor locations: each DB, risk, DA and S can also have a `FloorCell`
+  (`lib/core/floor/`: a 3 x 3 grid of the floor, front/judges at the
+  bottom; corners and centre stand for the 5 zones of CoP #9.2.1.A),
+  parallel to the times (`elementCells`, `riskCells`, `DaRoutine.cells`,
+  `danceStepCells`; `floor_cell` columns hold 1-9). Cells are only kept
+  for timed items (clearing a time clears its cell). Dragging a "Next"
+  button onto `FloorMat` marks the time (taken at finger down) and the
+  cell; a timeline row's grid button changes it. `floor_checks.dart`:
+  zones visited, zones only crossed by a straight move between items
+  (`FloorCell.crossedTo`, a guess), and 3+ Difficulties in a row in one
+  cell (#9.4.1; R and jumps excluded, a DB and a DA within 2 s count as
+  one, the app's guess). Shown by `FloorNotices` under the mat; Play mode
+  shows a mini mat.
 - Play mode (`PlayModeScreen`, opened from the timeline): full-screen and
   dark, sharing the routine page's player. `playModeFrameAt`
   (`routine_editor/domain/play_mode.dart`) decides what shows: each item

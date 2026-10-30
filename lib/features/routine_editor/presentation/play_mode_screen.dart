@@ -9,6 +9,7 @@ import '../../routines/presentation/routine_controller.dart';
 import '../domain/play_mode.dart';
 import '../domain/routine_timeline.dart';
 import 'dance_step_conflicts.dart';
+import 'floor_mat.dart';
 
 /// Full-screen rehearsal view: plays the music and pops up each marked DB,
 /// R, DA and S at its time, with a countdown during S.
@@ -228,6 +229,10 @@ class _ItemView extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.headlineSmall?.copyWith(color: foreground),
             ),
+            if (entry.cell != null) ...[
+              const SizedBox(height: 12),
+              _MiniMat(entry: entry),
+            ],
             if (conflictWith case final s?) ...[
               const SizedBox(height: 12),
               Chip(
@@ -303,6 +308,10 @@ class _DanceStepView extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text('Dance steps', style: theme.textTheme.titleLarge),
+          if (entry.cell != null) ...[
+            const SizedBox(height: 12),
+            _MiniMat(entry: entry),
+          ],
         ],
       ),
     );
@@ -358,6 +367,20 @@ class _WaitingView extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Where the item starts, on a small floor mat.
+class _MiniMat extends StatelessWidget {
+  const _MiniMat({required this.entry});
+
+  final TimelineEntry entry;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    key: const ValueKey('play-mini-mat'),
+    width: 96,
+    child: FloorMat<Object>(highlighted: entry.cell),
+  );
 }
 
 /// e.g. "DB 3".

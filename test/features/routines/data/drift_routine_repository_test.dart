@@ -2,6 +2,7 @@ import 'package:drift/drift.dart' show driftRuntimeOptions;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rg_routine_planner/core/database/app_database.dart';
+import 'package:rg_routine_planner/core/floor/floor_cell.dart';
 import 'package:rg_routine_planner/core/scoring/apparatus.dart';
 import 'package:rg_routine_planner/core/scoring/score.dart';
 import 'package:rg_routine_planner/features/da_calculator/domain/da_base.dart';
@@ -114,6 +115,29 @@ void main() {
 
     await repository.saveRoutine(original.withDanceStepCount(0));
     expect((await repository.fetchRoutine('r1'))!.danceStepTimes, isEmpty);
+  });
+
+  test('round-trips floor cells', () async {
+    final base = routine();
+    final original = base
+        .withDb(
+          base.db
+              .withElementAdded(testJump)
+              .withElementCellAt(0, FloorCell.backLeft)
+              .withRiskAdded(RiskElement(rotation: testTwoRotations))
+              .withRiskCellAt(0, FloorCell.frontRight),
+        )
+        .withDa(
+          base.da
+              .withElementAdded(DaElement(base: testRoll))
+              .withElementCellAt(0, FloorCell.centre),
+        )
+        .withDanceStepCount(1)
+        .withDanceStepCellAt(0, FloorCell.front);
+
+    await repository.saveRoutine(original);
+
+    expect(await repository.fetchRoutine('r1'), original);
   });
 
   test('round-trips DB, risk and DA music times', () async {

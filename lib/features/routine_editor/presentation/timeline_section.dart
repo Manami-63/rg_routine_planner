@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/floor/floor_cell.dart';
 import '../../../core/scoring/apparatus.dart';
 import '../../music/presentation/music_providers.dart';
 import '../../routines/presentation/routine_controller.dart';
 import '../domain/routine_timeline.dart';
 import 'dance_step_conflicts.dart';
+import 'floor_mat.dart';
+import 'floor_notices.dart';
 import 'play_mode_screen.dart';
 import 'timeline_editing.dart';
 
 /// Shown below the music player: buttons that mark the next DB, R, DA or S
-/// at the music's position, and the marked items by time with −/+ nudges
-/// and a button to open Play mode.
+/// at the music's position (dragged onto the floor mat to also mark where),
+/// the mat with use-of-space notices, and the marked items by time with
+/// −/+ nudges and a button to open Play mode.
 class TimelineSection extends ConsumerWidget {
   const TimelineSection({super.key, required this.routineId});
 
@@ -40,7 +44,8 @@ class TimelineSection extends ConsumerWidget {
         const SizedBox(height: 16),
         Text('Mark times', style: theme.textTheme.titleMedium),
         Text(
-          'Play the music and tap when each one starts.',
+          'Play the music and tap when each one starts. Drag onto the mat '
+          'to also mark where.',
           style: theme.textTheme.bodySmall,
         ),
         const SizedBox(height: 8),
@@ -53,12 +58,25 @@ class TimelineSection extends ConsumerWidget {
                   child: _MarkButton(
                     kind: kind,
                     times: routine.timesOf(kind),
-                    onPressed: () => controller.markNext(kind, player.position),
+                    position: () => player.position,
+                    onMark: (time) => controller.markNext(kind, time),
                   ),
                 ),
               ),
           ],
         ),
+        const SizedBox(height: 12),
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 320),
+            child: FloorMat<_PendingMark>(
+              entries: entries,
+              onDrop: (mark, cell) =>
+                  controller.markNext(mark.kind, mark.time, cell),
+            ),
+          ),
+        ),
+        FloorNotices(routine: routine),
         const SizedBox(height: 16),
         Row(
           children: [
@@ -105,10 +123,54 @@ class TimelineSection extends ConsumerWidget {
                 entry.time + offset,
               ),
               onClear: () => controller.setTime(entry.kind, entry.index, null),
+              onPickCell: () async {
+                final cell = await _pickCell(context, entry);
+                if (cell == null) return;
+                controller.setCell(entry.kind, entry.index, cell.cell);
+              },
             ),
       ],
     );
   }
+
+  /// Asks where [entry] starts. `null` when dismissed.
+  Future<({FloorCell? cell})?> _pickCell(
+    BuildContext context,
+    TimelineEntry entry,
+  ) => showModalBottomSheet<({FloorCell? cell})>(
+    context: context,
+    showDragHandle: true,
+    builder: (context) => SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Where does ${entry.kind.label} ${entry.index + 1} start?',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 12),
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 280),
+                child: FloorMat<Object>(
+                  highlighted: entry.cell,
+                  onTap: (cell) => Navigator.of(context).pop((cell: cell)),
+                ),
+              ),
+            ),
+            if (entry.cell != null)
+              TextButton(
+                onPressed: () => Navigator.of(context).pop((cell: null)),
+                child: const Text('No location'),
+              ),
+          ],
+        ),
+      ),
+    ),
+  );
 
   Future<void> _confirmClear(
     BuildContext context,
@@ -119,8 +181,8 @@ class TimelineSection extends ConsumerWidget {
       builder: (context) => AlertDialog(
         title: const Text('Clear all times?'),
         content: const Text(
-          'The DB, risks, DA and S stay in the routine, in their current '
-          'order.',
+          'Times and floor locations are cleared. The DB, risks, DA and S '
+          'stay in the routine, in their current order.',
         ),
         actions: [
           TextButton(
@@ -140,36 +202,86 @@ class TimelineSection extends ConsumerWidget {
 
 /// "Next DB" with how many are marked, e.g. "2 of 5". Disabled when all
 /// are marked or there are none.
-class _MarkButton extends StatelessWidget {
+/// The data of a "Next" button being dragged: what it marks, and the
+/// music time when the finger went down.
+class _PendingMark {
+  _PendingMark(this.kind);
+
+  final TimelineKind kind;
+  Duration time = Duration.zero;
+}
+
+/// "Next DB" with how many are marked, e.g. "2 of 5". Tap to mark the time;
+/// drag onto the floor mat to mark the time and where (dropped elsewhere,
+/// only the time). Disabled when all are marked or there are none.
+class _MarkButton extends StatefulWidget {
   const _MarkButton({
     required this.kind,
     required this.times,
-    required this.onPressed,
+    required this.position,
+    required this.onMark,
   });
 
   final TimelineKind kind;
   final List<Duration?> times;
-  final VoidCallback onPressed;
+
+  /// The music position now.
+  final Duration Function() position;
+
+  /// Marks the time only.
+  final ValueChanged<Duration> onMark;
+
+  @override
+  State<_MarkButton> createState() => _MarkButtonState();
+}
+
+class _MarkButtonState extends State<_MarkButton> {
+  late final _mark = _PendingMark(widget.kind);
 
   @override
   Widget build(BuildContext context) {
-    final marked = times.where((time) => time != null).length;
-    final done = marked == times.length;
-    return FilledButton.tonal(
-      key: ValueKey('mark-${kind.name}'),
+    final marked = widget.times.where((time) => time != null).length;
+    final done = marked == widget.times.length;
+    final button = FilledButton.tonal(
+      key: ValueKey('mark-${widget.kind.name}'),
       style: FilledButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 12),
       ),
-      onPressed: done ? null : onPressed,
+      onPressed: done ? null : () => widget.onMark(_mark.time),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Next ${kind.label}'),
+          Text('Next ${widget.kind.label}'),
           Text(
-            times.isEmpty ? 'none' : '$marked of ${times.length}',
+            widget.times.isEmpty ? 'none' : '$marked of ${widget.times.length}',
             style: Theme.of(context).textTheme.labelSmall,
           ),
         ],
+      ),
+    );
+    if (done) return button;
+    // The time is taken when the finger goes down, so a drag is as exact
+    // as a tap.
+    return Listener(
+      onPointerDown: (_) => _mark.time = widget.position(),
+      child: Draggable<_PendingMark>(
+        data: _mark,
+        onDraggableCanceled: (_, _) => widget.onMark(_mark.time),
+        feedback: Material(
+          color: Theme.of(context).colorScheme.primary,
+          shape: const StadiumBorder(),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text(
+              widget.kind.label,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onPrimary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+        child: button,
       ),
     );
   }
@@ -183,6 +295,7 @@ class _TimelineRow extends StatelessWidget {
     required this.onTap,
     required this.onNudge,
     required this.onClear,
+    required this.onPickCell,
   });
 
   final TimelineEntry entry;
@@ -192,6 +305,7 @@ class _TimelineRow extends StatelessWidget {
   final VoidCallback onTap;
   final ValueChanged<Duration> onNudge;
   final VoidCallback onClear;
+  final VoidCallback onPickCell;
 
   @override
   Widget build(BuildContext context) {
@@ -245,6 +359,22 @@ class _TimelineRow extends StatelessWidget {
             visualDensity: VisualDensity.compact,
             icon: const Icon(Icons.add),
             onPressed: () => onNudge(TimelineSection.nudge),
+          ),
+          IconButton(
+            tooltip: 'Set where $item starts',
+            visualDensity: VisualDensity.compact,
+            icon: switch (entry.cell) {
+              null => const Icon(Icons.grid_on),
+              final cell => CircleAvatar(
+                radius: 12,
+                child: Text(
+                  '${cell.number}',
+                  key: ValueKey('cell-${entry.kind.name}-${entry.index}'),
+                  style: theme.textTheme.labelMedium,
+                ),
+              ),
+            },
+            onPressed: onPickCell,
           ),
           IconButton(
             tooltip: 'Clear the time of $item',

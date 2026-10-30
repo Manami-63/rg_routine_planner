@@ -26,7 +26,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'rg_routine_planner'));
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -107,6 +107,20 @@ class AppDatabase extends _$AppDatabase {
             'ON n.i < r.dance_step_count ORDER BY r.id, n.i',
           );
           await m.alterTable(TableMigration(routines));
+        }
+      }
+      if (from < 11) {
+        // Floor cells. Tables created above already have the column.
+        await m.addColumn(routineBodyElements, routineBodyElements.floorCell);
+        await m.addColumn(routineRisks, routineRisks.floorCell);
+        if (from >= 6) {
+          await m.addColumn(
+            routineApparatusDifficulties,
+            routineApparatusDifficulties.floorCell,
+          );
+        }
+        if (from >= 10) {
+          await m.addColumn(routineDanceSteps, routineDanceSteps.floorCell);
         }
       }
     },
