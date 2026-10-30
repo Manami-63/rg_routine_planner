@@ -156,4 +156,27 @@ void main() {
       expect(tester.getRect(mat), where, reason: 'at $seconds s');
     }
   });
+
+  testWidgets('keeps the speed chosen on the Music tab', (tester) async {
+    final music = FakeMusic();
+    await music.player.setSpeed(0.75);
+    music.library.files[bolero.fileName] = '/picked/Bolero.mp3';
+    await pumpDbCalculator(
+      tester,
+      routine: timedRoutine(),
+      music: music,
+      initialTab: RoutineTab.music,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Play mode'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.descendant(
+        of: find.byType(PlayModeScreen),
+        matching: find.text('0.75×'),
+      ),
+      findsOneWidget,
+    );
+  });
 }
