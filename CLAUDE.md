@@ -40,7 +40,8 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   local time. Bump `schemaVersion` and add a migration on any change, with a
   test in `test/core/database/` that upgrades a hand-written old schema.
 - `features/routines/`: `Routine` (id = UUID, name, apparatus, level,
-  free-text `notes`, optional `music`, timestamps, `db` and `da` content) and `RoutineRepository`
+  free-text `notes`, optional `music`, `danceStepCount`, timestamps, `db`
+  and `da` content) and `RoutineRepository`
   (`DriftRoutineRepository`). Shared pieces live here too: `RoutineLoader`
   (loading/errors/ruleset), `RoutineDetailsForm` (name, apparatus, level;
   used for New routine and Edit details), `duplicateRoutine` and
@@ -81,8 +82,12 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   (`deleteRoutine`). `MusicPicker` (file_picker) and `MusicPlayer`
   (just_audio) are wrapped so widget tests use the fakes in
   `test/features/music/fake_music.dart` (`pumpDbCalculator` sets them up).
-  Planned next: dance steps combinations (S, no details, only a count:
-  FIG 2, user-set for Non-FIG), marking each DB/R/DA/S time by tapping
+- Dance steps combinations (S, `features/dance_steps/`): only a count per
+  routine (`Routine.danceStepCount`), set with `DanceStepsCard` at the top
+  of the DB tab. Levels have an optional `minDanceSteps` (FIG 2, CoP
+  #5.3.1; Non-FIG set in the level picker). S are artistry, not
+  difficulty: a missing one is only a notice and never affects the total.
+  Planned next: marking each DB/R/DA/S time by tapping
   while the music plays, and a Play mode with an 8 s S countdown.
 - `routineControllerProvider(id)` is an auto-disposing async family: loads
   by id, saves every change (name and notes debounced 500 ms), flushes a pending save

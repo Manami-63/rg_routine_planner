@@ -123,7 +123,7 @@ void main() {
     expect(
       find.text(
         'DB up to 6 · R up to 3 · DA up to 12 · '
-        'needs leap, balance, rotation',
+        'needs leap, balance, rotation · at least 2 S',
       ),
       findsOneWidget,
     );
@@ -164,7 +164,7 @@ void main() {
 
     await tester.tap(find.text('Non-FIG level'));
     await tester.pumpAndSettle();
-    expect(find.text('Minimum'), findsNothing);
+    expect(find.byTooltip('Increase DB minimum'), findsNothing);
     await tapStepper(tester, 'Increase DB maximum');
     await tapStepper(tester, 'Increase DB maximum');
     await tapStepper(tester, 'Increase risks maximum');
@@ -222,6 +222,27 @@ void main() {
     expect(
       container.read(routineProvider(testRoutineId)).level?.requirements,
       const LevelRequirements(db: CountLimit(max: 4)),
+    );
+  });
+
+  testWidgets('non-FIG level sets a dance steps minimum', (tester) async {
+    await pumpScreen(tester);
+    await openPicker(tester);
+
+    await tester.tap(find.text('Non-FIG level'));
+    await tester.pumpAndSettle();
+    // Always shown: S only have a minimum.
+    await tester.ensureVisible(find.byTooltip('Increase S minimum'));
+    await tapStepper(tester, 'Increase S minimum');
+    await tapStepper(tester, 'Increase S minimum');
+    await tapStepper(tester, 'Decrease S minimum');
+    await apply(tester);
+
+    expect(find.text('at least 1 S'), findsOneWidget);
+    await save(tester);
+    expect(
+      container.read(routineProvider(testRoutineId)).level?.requirements,
+      const LevelRequirements(minDanceSteps: 1),
     );
   });
 

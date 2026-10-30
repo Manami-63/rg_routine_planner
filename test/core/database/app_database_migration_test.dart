@@ -69,6 +69,7 @@ void main() {
     expect(routine.da.elements, isEmpty);
     expect(routine.notes, isEmpty);
     expect(routine.music, isNull);
+    expect(routine.danceStepCount, 0);
     expect(
       routine.level,
       const CompetitionLevel.custom(
@@ -80,7 +81,7 @@ void main() {
     );
   });
 
-  test('upgraded databases can save DA and notes', () async {
+  test('upgraded databases can save DA, notes and dance steps', () async {
     final db = _v1Database(const []);
     addTearDown(db.close);
     final repository = DriftRoutineRepository(
@@ -92,7 +93,11 @@ void main() {
     final routine = (await repository.fetchRoutine('r1'))!;
     final withDa = routine
         .withDa(routine.da.withElementAdded(DaElement(base: testThrow)))
-        .withNotes('New music');
+        .withNotes('New music')
+        .withDanceStepCount(2)
+        .withLevel(
+          const CompetitionLevel.custom(LevelRequirements(minDanceSteps: 2)),
+        );
 
     await repository.saveRoutine(withDa);
 

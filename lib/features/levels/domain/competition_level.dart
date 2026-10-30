@@ -5,8 +5,8 @@ import '../../../core/utils/list_equality.dart';
 import 'count_limit.dart';
 import 'difficulty_category.dart';
 
-/// How many DB, risks (R) and DA a level allows, and which body groups it
-/// requires.
+/// How many DB, risks (R) and DA a level allows, and which body groups and
+/// how many dance steps combinations (S) it requires.
 ///
 /// What a maximum means depends on the category (see `DifficultyCategory`):
 /// extra elements may still be performed, they are just not counted.
@@ -17,6 +17,7 @@ class LevelRequirements {
     this.da = CountLimit.none,
     this.requiredBodyGroups = const {},
     this.missingBodyGroupPenalty,
+    this.minDanceSteps,
   });
 
   final CountLimit db;
@@ -32,6 +33,11 @@ class LevelRequirements {
   /// it (shown in the alert only). `null` when unknown.
   final Score? missingBodyGroupPenalty;
 
+  /// The minimum number of dance steps combinations (S), or `null` for no
+  /// requirement. S are not difficulty: a missing one only produces an
+  /// advisory alert.
+  final int? minDanceSteps;
+
   bool get isValid => db.isValid && risk.isValid && da.isValid;
 
   LevelRequirements copyWith({
@@ -45,6 +51,18 @@ class LevelRequirements {
     da: da ?? this.da,
     requiredBodyGroups: requiredBodyGroups ?? this.requiredBodyGroups,
     missingBodyGroupPenalty: missingBodyGroupPenalty,
+    minDanceSteps: minDanceSteps,
+  );
+
+  // Set separately, because `copyWith` cannot tell "set to null" from
+  // "keep".
+  LevelRequirements withMinDanceSteps(int? value) => LevelRequirements(
+    db: db,
+    risk: risk,
+    da: da,
+    requiredBodyGroups: requiredBodyGroups,
+    missingBodyGroupPenalty: missingBodyGroupPenalty,
+    minDanceSteps: value,
   );
 
   /// A copy with [limit] for [category].
@@ -62,7 +80,8 @@ class LevelRequirements {
       other.risk == risk &&
       other.da == da &&
       setEqual(other.requiredBodyGroups, requiredBodyGroups) &&
-      other.missingBodyGroupPenalty == missingBodyGroupPenalty;
+      other.missingBodyGroupPenalty == missingBodyGroupPenalty &&
+      other.minDanceSteps == minDanceSteps;
 
   @override
   int get hashCode => Object.hash(
@@ -71,12 +90,13 @@ class LevelRequirements {
     da,
     Object.hashAllUnordered(requiredBodyGroups),
     missingBodyGroupPenalty,
+    minDanceSteps,
   );
 
   @override
   String toString() =>
       'LevelRequirements(db: $db, risk: $risk, da: $da, '
-      'groups: $requiredBodyGroups)';
+      'groups: $requiredBodyGroups, S: $minDanceSteps)';
 }
 
 /// A competition level a routine is planned for.

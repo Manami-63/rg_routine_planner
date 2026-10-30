@@ -17,7 +17,7 @@ String describeLimit(CountLimit limit) {
 
 /// One-line summary of a level's requirements for a routine with
 /// [apparatus], for the selector. Only [categories] are described (e.g. DA
-/// on the DA page); body groups belong to DB.
+/// on the DA page); body groups and dance steps (S) go with DB.
 String describeLevel(
   CompetitionLevel level,
   Apparatus? apparatus, {
@@ -37,6 +37,8 @@ String describeLevel(
         requirements.requiredBodyGroups.isNotEmpty)
       'needs ${[for (final group in DbElementGroup.requirable)
         if (requirements.requiredBodyGroups.contains(group)) group.singular].join(', ')}',
+    if (categories.contains(DifficultyCategory.db))
+      if (requirements.minDanceSteps case final min?) 'at least $min S',
   ];
   return parts.isEmpty ? 'No limits set' : parts.join(' · ');
 }

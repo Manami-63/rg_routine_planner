@@ -211,7 +211,7 @@ class _LevelPickerSheetState extends ConsumerState<LevelPickerSheet> {
   }
 }
 
-/// The numbers and required body groups of a non-FIG level.
+/// The numbers, required body groups and dance steps of a non-FIG level.
 class _CustomRequirementsEditor extends StatelessWidget {
   const _CustomRequirementsEditor({
     required this.requirements,
@@ -287,6 +287,20 @@ class _CustomRequirementsEditor extends StatelessWidget {
                 onSelected: (selected) => _toggleGroup(group, selected),
               ),
           ],
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Required dance steps combinations (S)',
+          style: theme.textTheme.titleSmall,
+        ),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: _OptionalCountStepper(
+            label: 'Minimum',
+            semanticName: 'S minimum',
+            value: requirements.minDanceSteps,
+            onChanged: (min) => onChanged(requirements.withMinDanceSteps(min)),
+          ),
         ),
         const SizedBox(height: 12),
         Row(

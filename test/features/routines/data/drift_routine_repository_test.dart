@@ -104,6 +104,14 @@ void main() {
     expect((await repository.fetchRoutine('r1'))!.music, isNull);
   });
 
+  test('round-trips the dance step count', () async {
+    final original = routine().withDanceStepCount(3);
+
+    await repository.saveRoutine(original);
+
+    expect(await repository.fetchRoutine('r1'), original);
+  });
+
   test('round-trips element options and custom elements', () async {
     const custom = DbElement.custom(
       name: 'New pivot',
@@ -211,6 +219,7 @@ void main() {
         risk: CountLimit(min: 1, max: 2),
         da: CountLimit(max: 3),
         requiredBodyGroups: {DbElementGroup.rotation, DbElementGroup.jump},
+        minDanceSteps: 2,
       ),
     );
 
