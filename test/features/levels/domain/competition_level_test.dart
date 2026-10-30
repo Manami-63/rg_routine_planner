@@ -23,6 +23,7 @@ void main() {
         requiredBodyGroups: allGroups,
         missingBodyGroupPenalty: Score.hundredths(30),
         minDanceSteps: 2,
+        missingDanceStepPenalty: Score.hundredths(30),
       ),
     );
     expect(
@@ -34,6 +35,7 @@ void main() {
         requiredBodyGroups: allGroups,
         missingBodyGroupPenalty: Score.hundredths(30),
         minDanceSteps: 2,
+        missingDanceStepPenalty: Score.hundredths(30),
       ),
     );
   });

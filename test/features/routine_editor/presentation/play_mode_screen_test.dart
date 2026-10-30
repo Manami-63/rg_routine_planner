@@ -86,6 +86,8 @@ void main() {
     await seek(tester, music, 13.5);
     expect(text(tester, 'current-item'), 'DA 1');
     expect(find.text('S · 5 s left'), findsOneWidget);
+    // And the DA is flagged as not allowed there.
+    expect(find.text('Not allowed during S 1'), findsOneWidget);
   });
 
   testWidgets('fits a phone screen', (tester) async {
