@@ -107,7 +107,10 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   dark, sharing the routine page's player. `playModeFrameAt`
   (`routine_editor/domain/play_mode.dart`) decides what shows: each item
   pops up for 3 s at its time, an S shows an 8 s countdown (kept as a chip
-  if another item starts during it), plus the next item.
+  if another item starts during it), plus the next item. It keeps the
+  screen on while open (`ScreenAwake` in `lib/core/device/`, wrapping
+  wakelock_plus; widget tests get `FakeScreenAwake` from
+  `pumpDbCalculator`).
 - `routineControllerProvider(id)` is an auto-disposing async family: loads
   by id, saves every change (name and notes debounced 500 ms), flushes a pending save
   on dispose, and reports `routineSaveStatusProvider(id)`. Automatic retry

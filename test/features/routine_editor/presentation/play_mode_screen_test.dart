@@ -7,6 +7,7 @@ import 'package:rg_routine_planner/features/routine_editor/presentation/play_mod
 import 'package:rg_routine_planner/features/routine_editor/presentation/routine_screen.dart';
 import 'package:rg_routine_planner/features/routines/domain/routine.dart';
 
+import '../../../core/device/fake_screen_awake.dart';
 import '../../da_calculator/test_data.dart';
 import '../../db_calculator/pump_db_calculator.dart';
 import '../../db_calculator/test_data.dart';
@@ -29,6 +30,7 @@ void main() {
   Future<FakeMusic> openPlayMode(
     WidgetTester tester, {
     Routine? routine,
+    FakeScreenAwake? screenAwake,
   }) async {
     final music = FakeMusic();
     music.library.files[bolero.fileName] = '/picked/Bolero.mp3';
@@ -37,6 +39,7 @@ void main() {
       routine: routine ?? timedRoutine(),
       music: music,
       initialTab: RoutineTab.music,
+      screenAwake: screenAwake,
     );
     await tester.pumpAndSettle();
     await tester.tap(find.text('Play mode'));
@@ -101,14 +104,17 @@ void main() {
     }
   });
 
-  testWidgets('close returns to the routine page', (tester) async {
-    await openPlayMode(tester);
+  testWidgets('keeps the screen on until closed', (tester) async {
+    final screenAwake = FakeScreenAwake();
+    await openPlayMode(tester, screenAwake: screenAwake);
+    expect(screenAwake.enabled, isTrue);
 
     await tester.tap(find.byTooltip('Close Play mode'));
     await tester.pumpAndSettle();
 
     expect(find.byType(PlayModeScreen), findsNothing);
     expect(find.text('Timeline'), findsOneWidget);
+    expect(screenAwake.enabled, isFalse);
   });
 
   testWidgets('no Play mode button until something is marked', (tester) async {
