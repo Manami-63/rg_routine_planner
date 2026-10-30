@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rg_routine_planner/features/da_calculator/domain/da_element.dart';
 import 'package:rg_routine_planner/features/levels/data/fig_levels.dart';
 import 'package:rg_routine_planner/features/levels/domain/competition_level.dart';
 import 'package:rg_routine_planner/features/levels/domain/count_limit.dart';
 
+import '../../da_calculator/test_data.dart';
 import '../../db_calculator/pump_db_calculator.dart';
+import '../../db_calculator/test_data.dart';
 
 void main() {
   String countText(WidgetTester tester) =>
@@ -54,7 +57,9 @@ void main() {
     );
 
     expect(
-      notice('1 S · 1 more needed (at least 2): you may get a penalty.'),
+      notice(
+        '1 S · 1 more needed (at least 2): you may get a 0.30 penalty for each.',
+      ),
       findsOneWidget,
     );
 
@@ -77,5 +82,38 @@ void main() {
     );
 
     expect(find.byKey(const ValueKey('dance-steps-notice')), findsNothing);
+  });
+
+  testWidgets('warns when a DA or a 0.20+ DB is marked during an S', (
+    tester,
+  ) async {
+    final empty = emptyTestRoutine();
+    final routine = empty
+        .withDb(
+          empty.db
+              .withElementAdded(testJump)
+              .withElementAdded(testRotation)
+              .withElementTimeAt(0, const Duration(seconds: 12))
+              .withElementTimeAt(1, const Duration(seconds: 13)),
+        )
+        .withDa(
+          empty.da
+              .withElementAdded(DaElement(base: testRoll))
+              .withElementTimeAt(0, const Duration(seconds: 15)),
+        )
+        .withDanceStepCount(2)
+        .withDanceStepTimeAt(0, const Duration(seconds: 10));
+    await pumpDbCalculator(tester, routine: routine);
+
+    // The 0.10 rotation is allowed; the unmarked 2nd S is not checked.
+    expect(
+      find.text(
+        'S 1 may not be valid: DA 1, DB 1 (0.30) are marked during it. '
+        'Risks, DA and DB worth 0.20 or more are not allowed in an S '
+        '(CoP #5.2.5).',
+      ),
+      findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('dance-step-conflict-1')), findsNothing);
   });
 }

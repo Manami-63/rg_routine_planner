@@ -5,6 +5,7 @@ import '../../../core/scoring/apparatus.dart';
 import '../../music/presentation/music_providers.dart';
 import '../../routines/presentation/routine_controller.dart';
 import '../domain/routine_timeline.dart';
+import 'dance_step_conflicts.dart';
 import 'play_mode_screen.dart';
 import 'timeline_editing.dart';
 
@@ -25,6 +26,7 @@ class TimelineSection extends ConsumerWidget {
     final controller = ref.read(routineControllerProvider(routineId).notifier);
     final player = ref.watch(musicPlayerProvider(routineId));
     final entries = routine.timelineEntries;
+    final conflicts = watchDanceStepConflicts(ref, routineId);
     final theme = Theme.of(context);
 
     // Freehand routines have no risks or DA to mark.
@@ -95,6 +97,7 @@ class TimelineSection extends ConsumerWidget {
             _TimelineRow(
               key: ValueKey('timeline-${entry.kind.name}-${entry.index}'),
               entry: entry,
+              conflictWith: conflicts[(entry.kind, entry.index)],
               onTap: () => player.seek(entry.time),
               onNudge: (offset) => controller.setTime(
                 entry.kind,
@@ -176,12 +179,16 @@ class _TimelineRow extends StatelessWidget {
   const _TimelineRow({
     super.key,
     required this.entry,
+    required this.conflictWith,
     required this.onTap,
     required this.onNudge,
     required this.onClear,
   });
 
   final TimelineEntry entry;
+
+  /// The S this item may not be performed during, or `null`.
+  final int? conflictWith;
   final VoidCallback onTap;
   final ValueChanged<Duration> onNudge;
   final VoidCallback onClear;
@@ -190,17 +197,38 @@ class _TimelineRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final item = '${entry.kind.label} ${entry.index + 1}';
+    final conflictWith = this.conflictWith;
+    final error = theme.colorScheme.error;
     return ListTile(
       contentPadding: EdgeInsets.zero,
       onTap: onTap,
       leading: Text(
         formatTimelineTime(entry.time),
         style: theme.textTheme.titleSmall?.copyWith(
+          color: conflictWith == null ? null : error,
           fontFeatures: const [FontFeature.tabularFigures()],
         ),
       ),
       title: Text(item),
-      subtitle: Text(entry.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(entry.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+          if (conflictWith != null)
+            Row(
+              children: [
+                Icon(Icons.warning_amber_rounded, size: 16, color: error),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    danceStepConflictText(conflictWith),
+                    style: TextStyle(color: error),
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

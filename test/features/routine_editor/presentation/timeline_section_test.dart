@@ -159,6 +159,29 @@ void main() {
     expect(routines.routines[testRoutineId]!.danceStepTimes, [null]);
   });
 
+  testWidgets('items marked during an S are flagged', (tester) async {
+    final (_, music) = await pumpMusicTab(
+      tester,
+      routine: routineWithContent().withDanceStepTimeAt(
+        0,
+        const Duration(seconds: 10),
+      ),
+    );
+
+    await music.player.seek(const Duration(seconds: 12));
+    await tester.tap(find.byKey(const ValueKey('mark-da')));
+    await tester.pump();
+
+    expect(
+      find.descendant(
+        of: rowOf('timeline-da-0'),
+        matching: find.text('Not allowed during S 1'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Not allowed during S 1'), findsOneWidget);
+  });
+
   testWidgets('freehand has no R or DA buttons', (tester) async {
     await pumpMusicTab(
       tester,

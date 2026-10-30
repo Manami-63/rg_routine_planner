@@ -1,10 +1,12 @@
+import '../../dance_steps/domain/dance_step_checks.dart';
 import 'routine_timeline.dart';
 
 /// How long an item stays on screen in Play mode after its time.
 const playModePopUp = Duration(seconds: 3);
 
-/// How long the countdown shown for a dance steps combination (S) lasts.
-const danceStepCountdown = Duration(seconds: 8);
+/// How long the countdown shown for a dance steps combination (S) lasts:
+/// its minimum duration.
+const danceStepCountdown = danceStepDuration;
 
 /// What Play mode shows at one moment of the music.
 class PlayModeFrame {

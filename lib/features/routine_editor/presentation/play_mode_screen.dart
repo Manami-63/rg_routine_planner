@@ -7,6 +7,7 @@ import '../../routines/presentation/routine_details_form.dart';
 import '../../routines/presentation/routine_controller.dart';
 import '../domain/play_mode.dart';
 import '../domain/routine_timeline.dart';
+import 'dance_step_conflicts.dart';
 
 /// Full-screen rehearsal view: plays the music and pops up each marked DB,
 /// R, DA and S at its time, with a countdown during S.
@@ -35,6 +36,7 @@ class PlayModeScreen extends ConsumerWidget {
     );
     final player = ref.watch(musicPlayerProvider(routineId));
     final duration = ref.watch(loadedMusicProvider(routineId)).value;
+    final conflicts = watchDanceStepConflicts(ref, routineId);
 
     // Dark, so the pop-ups stand out from across a gym.
     final theme = Theme.of(context);
@@ -67,6 +69,7 @@ class PlayModeScreen extends ConsumerWidget {
                     initialData: player.position,
                     builder: (context, snapshot) => _FrameView(
                       frame: playModeFrameAt(entries, snapshot.data!),
+                      conflicts: conflicts,
                     ),
                   ),
                 ),
@@ -86,9 +89,12 @@ class PlayModeScreen extends ConsumerWidget {
 /// The current item (or what comes next), any running S countdown, and
 /// the next item.
 class _FrameView extends StatelessWidget {
-  const _FrameView({required this.frame});
+  const _FrameView({required this.frame, required this.conflicts});
 
   final PlayModeFrame frame;
+
+  /// Items marked during an S they may not be in, and that S.
+  final Map<(TimelineKind, int), int> conflicts;
 
   @override
   Widget build(BuildContext context) {
@@ -130,7 +136,11 @@ class _FrameView extends StatelessWidget {
                 entry: current,
                 remaining: frame.danceStepRemaining!,
               ),
-              _ => _ItemView(key: ValueKey(current), entry: current),
+              _ => _ItemView(
+                key: ValueKey(current),
+                entry: current,
+                conflictWith: conflicts[(current.kind, current.index)],
+              ),
             },
           ),
         ),
@@ -157,9 +167,12 @@ class _FrameView extends StatelessWidget {
 
 /// A DB, R or DA that has just started.
 class _ItemView extends StatelessWidget {
-  const _ItemView({super.key, required this.entry});
+  const _ItemView({super.key, required this.entry, this.conflictWith});
 
   final TimelineEntry entry;
+
+  /// The S this item may not be performed during, or `null`.
+  final int? conflictWith;
 
   @override
   Widget build(BuildContext context) {
@@ -192,6 +205,21 @@ class _ItemView extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.headlineSmall?.copyWith(color: foreground),
             ),
+            if (conflictWith case final s?) ...[
+              const SizedBox(height: 12),
+              Chip(
+                key: const ValueKey('play-conflict'),
+                avatar: Icon(
+                  Icons.warning_amber_rounded,
+                  color: theme.colorScheme.onErrorContainer,
+                ),
+                backgroundColor: theme.colorScheme.errorContainer,
+                label: Text(
+                  danceStepConflictText(s),
+                  style: TextStyle(color: theme.colorScheme.onErrorContainer),
+                ),
+              ),
+            ],
           ],
         ),
       ),

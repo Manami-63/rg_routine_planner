@@ -85,9 +85,14 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
 - Dance steps combinations (S, `features/dance_steps/`): no details, only
   an optional music time each (`Routine.danceStepTimes`; the count is its
   length), set with `DanceStepsCard` at the top of the DB tab. Levels have
-  an optional `minDanceSteps` (FIG 2, CoP #5.3.1; Non-FIG set in the level
-  picker). S are artistry, not difficulty: a missing one is only a notice
-  and never affects the total.
+  an optional `minDanceSteps` (FIG 2 and 0.30 per missing S, CoP #5.3.1
+  p.108, Junior by annex #9.1 p.133; Non-FIG set in the level picker). S
+  are artistry, not difficulty: a missing one is only a notice and never
+  affects the total. `danceStepConflicts` (`dance_steps/domain/`) flags
+  risks (high throws), DA and DB worth 0.20 or more marked within 8 s of an
+  S's time (#5.2.1, #5.2.5), shown on the S card, the timeline rows and in
+  Play mode (advisory, like all notices). Pre-acrobatic elements outside
+  DA/R are not recorded, so not checked.
 - Music times: each DB, risk, DA and S has an optional time
   (`DbRoutine.elementTimes`/`riskTimes`, `DaRoutine.times`, parallel to
   their lists and moved with them; `time_ms` columns and the
@@ -102,8 +107,7 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   dark, sharing the routine page's player. `playModeFrameAt`
   (`routine_editor/domain/play_mode.dart`) decides what shows: each item
   pops up for 3 s at its time, an S shows an 8 s countdown (kept as a chip
-  if another item starts during it), plus the next item. Planned next:
-  advisory checks during S (#5.2.5).
+  if another item starts during it), plus the next item.
 - `routineControllerProvider(id)` is an auto-disposing async family: loads
   by id, saves every change (name and notes debounced 500 ms), flushes a pending save
   on dispose, and reports `routineSaveStatusProvider(id)`. Automatic retry

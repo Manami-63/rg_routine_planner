@@ -18,6 +18,7 @@ class LevelRequirements {
     this.requiredBodyGroups = const {},
     this.missingBodyGroupPenalty,
     this.minDanceSteps,
+    this.missingDanceStepPenalty,
   });
 
   final CountLimit db;
@@ -38,6 +39,10 @@ class LevelRequirements {
   /// advisory alert.
   final int? minDanceSteps;
 
+  /// The penalty for each missing S, when the level's rules state it
+  /// (shown in the alert only). `null` when unknown.
+  final Score? missingDanceStepPenalty;
+
   bool get isValid => db.isValid && risk.isValid && da.isValid;
 
   LevelRequirements copyWith({
@@ -52,6 +57,7 @@ class LevelRequirements {
     requiredBodyGroups: requiredBodyGroups ?? this.requiredBodyGroups,
     missingBodyGroupPenalty: missingBodyGroupPenalty,
     minDanceSteps: minDanceSteps,
+    missingDanceStepPenalty: missingDanceStepPenalty,
   );
 
   // Set separately, because `copyWith` cannot tell "set to null" from
@@ -63,6 +69,7 @@ class LevelRequirements {
     requiredBodyGroups: requiredBodyGroups,
     missingBodyGroupPenalty: missingBodyGroupPenalty,
     minDanceSteps: value,
+    missingDanceStepPenalty: missingDanceStepPenalty,
   );
 
   /// A copy with [limit] for [category].
@@ -81,7 +88,8 @@ class LevelRequirements {
       other.da == da &&
       setEqual(other.requiredBodyGroups, requiredBodyGroups) &&
       other.missingBodyGroupPenalty == missingBodyGroupPenalty &&
-      other.minDanceSteps == minDanceSteps;
+      other.minDanceSteps == minDanceSteps &&
+      other.missingDanceStepPenalty == missingDanceStepPenalty;
 
   @override
   int get hashCode => Object.hash(
@@ -91,6 +99,7 @@ class LevelRequirements {
     Object.hashAllUnordered(requiredBodyGroups),
     missingBodyGroupPenalty,
     minDanceSteps,
+    missingDanceStepPenalty,
   );
 
   @override
