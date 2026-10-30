@@ -77,6 +77,10 @@ class RoutineBodyElements extends Table {
   /// When the element starts in the music, in milliseconds. Null when not
   /// marked. Added in v10.
   IntColumn get timeMs => integer().nullable()();
+
+  /// Where on the floor it starts: `FloorCell.number` (1-9), or null.
+  /// Added in v11.
+  IntColumn get floorCell => integer().nullable()();
 }
 
 @DataClassName('RoutineRiskRow')
@@ -89,6 +93,10 @@ class RoutineRisks extends Table {
 
   /// Music time in milliseconds, or null. Added in v10.
   IntColumn get timeMs => integer().nullable()();
+
+  /// Where on the floor it starts: `FloorCell.number` (1-9), or null.
+  /// Added in v11.
+  IntColumn get floorCell => integer().nullable()();
 }
 
 @DataClassName('RoutineRiskCriterionRow')
@@ -129,6 +137,10 @@ class RoutineApparatusDifficulties extends Table {
 
   /// Music time in milliseconds, or null. Added in v10.
   IntColumn get timeMs => integer().nullable()();
+
+  /// Where on the floor it starts: `FloorCell.number` (1-9), or null.
+  /// Added in v11.
+  IntColumn get floorCell => integer().nullable()();
 }
 
 /// One dance steps combination (S) of a routine. S have no details, only
@@ -142,4 +154,8 @@ class RoutineDanceSteps extends Table {
 
   /// Music time in milliseconds, or null.
   IntColumn get timeMs => integer().nullable()();
+
+  /// Where on the floor it starts: `FloorCell.number` (1-9), or null.
+  /// Added in v11.
+  IntColumn get floorCell => integer().nullable()();
 }

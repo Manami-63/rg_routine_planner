@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rg_routine_planner/core/floor/floor_cell.dart';
 import 'package:rg_routine_planner/features/da_calculator/domain/da_element.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/risk.dart';
 import 'package:rg_routine_planner/features/routine_editor/domain/routine_timeline.dart';
@@ -100,5 +101,75 @@ void main() {
     final cleared = marked.withTimesCleared();
 
     expect(cleared, routine);
+  });
+
+  test('cells go with their items and are cleared with the time', () {
+    final marked = routine
+        .withCell(TimelineKind.db, 1, FloorCell.centre)
+        .withTime(TimelineKind.db, 1, s(4))
+        .withTime(TimelineKind.db, 0, s(9));
+
+    // The balance (index 1) moved first, with its cell.
+    expect(marked.cellsOf(TimelineKind.db), [FloorCell.centre, null]);
+    expect(marked.timelineEntries.first.cell, FloorCell.centre);
+    expect(marked.withTime(TimelineKind.db, 0, null).cellsOf(TimelineKind.db), [
+      null,
+      null,
+    ]);
+    final cleared = marked.withTimesCleared();
+    expect(cleared.cellsOf(TimelineKind.db), [null, null]);
+    expect(cleared.hasTimes, isFalse);
+  });
+
+  test('S cells follow their S', () {
+    final marked = routine
+        .withDanceStepCellAt(1, FloorCell.front)
+        .withDanceStepTimeAt(1, s(2))
+        .withDanceStepTimeAt(0, s(7));
+
+    expect(marked.danceStepCells, [FloorCell.front, null]);
+    expect(marked.withDanceStepCount(1).danceStepCells, [FloorCell.front]);
+  });
+
+  group('DB and DA together', () {
+    test('the same time pairs a DB with a DA', () {
+      final marked = routine
+          .withTime(TimelineKind.db, 1, s(12))
+          .withTime(TimelineKind.da, 0, s(12))
+          .withTime(TimelineKind.risk, 0, s(12));
+
+      expect(marked.partnerOf(TimelineKind.db, 1), 0);
+      expect(marked.partnerOf(TimelineKind.da, 0), 1);
+      expect(marked.partnerOf(TimelineKind.risk, 0), isNull);
+    });
+
+    test('a different time, or no time, is not together', () {
+      final marked = routine
+          .withTime(TimelineKind.db, 0, s(12))
+          .withTime(TimelineKind.da, 0, s(13));
+
+      expect(marked.partnerOf(TimelineKind.db, 0), isNull);
+      expect(marked.partnerOf(TimelineKind.db, 1), isNull);
+    });
+
+    test('moving one time moves its partner too', () {
+      final marked = routine
+          .withTime(TimelineKind.db, 0, s(12))
+          .withTime(TimelineKind.da, 0, s(12))
+          .withTimeMoved(TimelineKind.da, 0, -s(13));
+
+      expect(marked.db.elementTimes.first, Duration.zero);
+      expect(marked.da.times, [Duration.zero]);
+    });
+
+    test('moving an unpaired time moves only it', () {
+      final marked = routine
+          .withTime(TimelineKind.db, 0, s(12))
+          .withTime(TimelineKind.da, 0, s(14))
+          .withTimeMoved(TimelineKind.db, 0, s(1));
+
+      expect(marked.db.elementTimes.first, s(13));
+      expect(marked.da.times, [s(14)]);
+    });
   });
 }

@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
 import '../../../core/database/app_database.dart';
+import '../../../core/floor/floor_cell.dart';
 import '../../../core/scoring/apparatus.dart';
 import '../../../core/scoring/score.dart';
 import '../../da_calculator/data/da_catalogue_repository.dart';
@@ -150,6 +151,9 @@ class DriftRoutineRepository implements RoutineRepository {
       level: _resolveLevel(row),
       notes: row.notes,
       danceStepTimes: [for (final s in danceStepRows) _time(s.timeMs)],
+      danceStepCells: [
+        for (final s in danceStepRows) FloorCell.fromNumber(s.floorCell),
+      ],
       music: row.musicFileName == null
           ? null
           : RoutineMusic(
@@ -186,6 +190,9 @@ class DriftRoutineRepository implements RoutineRepository {
             ),
         ],
         elementTimes: [for (final e in elementRows) _time(e.timeMs)],
+        elementCells: [
+          for (final e in elementRows) FloorCell.fromNumber(e.floorCell),
+        ],
         risks: [
           for (final r in riskRows)
             RiskElement(
@@ -208,6 +215,9 @@ class DriftRoutineRepository implements RoutineRepository {
             ),
         ],
         riskTimes: [for (final r in riskRows) _time(r.timeMs)],
+        riskCells: [
+          for (final r in riskRows) FloorCell.fromNumber(r.floorCell),
+        ],
       ),
       da: DaRoutine(
         rulesetId: row.rulesetId,
@@ -233,6 +243,7 @@ class DriftRoutineRepository implements RoutineRepository {
             ),
         ],
         times: [for (final a in daRows) _time(a.timeMs)],
+        cells: [for (final a in daRows) FloorCell.fromNumber(a.floorCell)],
       ),
     );
   }
@@ -335,11 +346,18 @@ class DriftRoutineRepository implements RoutineRepository {
             element,
             routine.db.elementOptions[i],
             routine.db.elementTimes[i],
+            routine.db.elementCells[i],
           ),
       ]);
       batch.insertAll(_db.routineApparatusDifficulties, [
         for (final (i, element) in routine.da.elements.indexed)
-          _daRow(routine.id, i, element, routine.da.times[i]),
+          _daRow(
+            routine.id,
+            i,
+            element,
+            routine.da.times[i],
+            routine.da.cells[i],
+          ),
       ]);
       batch.insertAll(_db.routineDanceSteps, [
         for (final (i, time) in routine.danceStepTimes.indexed)
@@ -347,6 +365,7 @@ class DriftRoutineRepository implements RoutineRepository {
             routineId: routine.id,
             position: i,
             timeMs: Value(time?.inMilliseconds),
+            floorCell: Value(routine.danceStepCells[i]?.number),
           ),
       ]);
     });
@@ -360,6 +379,7 @@ class DriftRoutineRepository implements RoutineRepository {
               rotationOptionId: risk.rotation.id,
               position: i,
               timeMs: Value(routine.db.riskTimes[i]?.inMilliseconds),
+              floorCell: Value(routine.db.riskCells[i]?.number),
             ),
           );
       await _db.batch((batch) {
@@ -381,6 +401,7 @@ class DriftRoutineRepository implements RoutineRepository {
     DbElement element,
     DbElementOptions options,
     Duration? time,
+    FloorCell? cell,
   ) => RoutineBodyElementsCompanion.insert(
     routineId: routineId,
     elementId: element.id,
@@ -393,6 +414,7 @@ class DriftRoutineRepository implements RoutineRepository {
     customName: Value(element.isCustom ? element.name : null),
     customGroup: Value(element.isCustom ? element.group.name : null),
     timeMs: Value(time?.inMilliseconds),
+    floorCell: Value(cell?.number),
   );
 
   static RoutineApparatusDifficultiesCompanion _daRow(
@@ -400,6 +422,7 @@ class DriftRoutineRepository implements RoutineRepository {
     int position,
     DaElement element,
     Duration? time,
+    FloorCell? cell,
   ) => RoutineApparatusDifficultiesCompanion.insert(
     routineId: routineId,
     position: position,
@@ -410,6 +433,7 @@ class DriftRoutineRepository implements RoutineRepository {
     manualValue: Value(element.manualValue?.hundredths),
     customName: Value(element.isCustom ? element.base.name : null),
     timeMs: Value(time?.inMilliseconds),
+    floorCell: Value(cell?.number),
   );
 
   @override

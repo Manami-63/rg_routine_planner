@@ -52,8 +52,19 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  String text(WidgetTester tester, String key) =>
-      tester.widget<Text>(find.byKey(ValueKey(key))).data!;
+  /// The text shown under [key], also for coloured (rich) labels.
+  String text(WidgetTester tester, String key) {
+    final text = tester.widget<Text>(
+      find
+          .descendant(
+            of: find.byKey(ValueKey(key)),
+            matching: find.byType(Text),
+            matchRoot: true,
+          )
+          .first,
+    );
+    return text.data ?? text.textSpan!.toPlainText();
+  }
 
   testWidgets('shows what comes next before the first item', (tester) async {
     await openPlayMode(tester);
@@ -85,12 +96,16 @@ void main() {
     await seek(tester, music, 12.2);
     expect(text(tester, 'dance-step-countdown'), '6');
 
-    // A DA during the S: the countdown moves to a chip.
+    // A DA during the S: it shows under the countdown, which goes on.
     await seek(tester, music, 13.5);
     expect(text(tester, 'current-item'), 'DA 1');
-    expect(find.text('S · 5 s left'), findsOneWidget);
+    expect(text(tester, 'dance-step-countdown'), '5');
     // And the DA is flagged as not allowed there.
     expect(find.text('Not allowed during S 1'), findsOneWidget);
+
+    // The countdown is gone after 8 s.
+    await seek(tester, music, 18);
+    expect(find.byKey(const ValueKey('dance-step-overlay')), findsNothing);
   });
 
   testWidgets('fits a phone screen', (tester) async {
@@ -129,5 +144,16 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Play mode'), findsNothing);
+  });
+
+  testWidgets('the layout stays in place between items', (tester) async {
+    final music = await openPlayMode(tester);
+    final mat = find.byKey(const ValueKey('play-mat'));
+    final where = tester.getRect(mat);
+
+    for (final seconds in [5, 10, 13, 30]) {
+      await seek(tester, music, seconds);
+      expect(tester.getRect(mat), where, reason: 'at $seconds s');
+    }
   });
 }

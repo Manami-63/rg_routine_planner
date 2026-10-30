@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/device/screen_awake.dart';
+import '../../../core/floor/floor_cell.dart';
 import '../../music/presentation/music_providers.dart';
 import '../../music/presentation/music_tab.dart';
 import '../../routines/presentation/routine_details_form.dart';
@@ -109,8 +110,10 @@ class _PlayModeScreenState extends ConsumerState<PlayModeScreen> {
   }
 }
 
-/// The current item (or what comes next), any running S countdown, and
-/// the next item.
+/// One fixed layout, so nothing jumps while the music plays: the current
+/// item (or what comes next) at the top, the floor mat filling the middle,
+/// and the next item below it. During an S, a see-through countdown covers
+/// the page.
 class _FrameView extends StatelessWidget {
   const _FrameView({required this.frame, required this.conflicts});
 
@@ -122,141 +125,406 @@ class _FrameView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final current = frame.current;
+    final partner = frame.currentPartner;
     final danceStep = frame.danceStep;
-    final next = frame.next;
-    return Column(
+    int? conflictOf(TimelineEntry? entry) =>
+        entry == null ? null : conflicts[(entry.kind, entry.index)];
+
+    return Stack(
       children: [
-        // Another item started during an S: keep its countdown visible.
-        SizedBox(
-          height: 48,
-          child: danceStep != null && current != danceStep
-              ? Center(
-                  child: Chip(
-                    key: const ValueKey('dance-step-chip'),
-                    avatar: const Icon(Icons.timer_outlined),
-                    label: Text(
-                      'S · ${_seconds(frame.danceStepRemaining!)} s left',
-                    ),
-                  ),
-                )
-              : null,
-        ),
-        Expanded(
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 250),
-            transitionBuilder: (child, animation) => ScaleTransition(
-              scale: Tween(begin: 0.85, end: 1.0).animate(animation),
-              child: FadeTransition(opacity: animation, child: child),
-            ),
-            child: switch (current) {
-              null => _WaitingView(
-                key: const ValueKey('waiting'),
-                next: next,
-                untilNext: frame.untilNext,
+        Column(
+          children: [
+            SizedBox(
+              height: 136,
+              child: _NowSlot(
+                frame: frame,
+                conflictWith: conflictOf(current) ?? conflictOf(partner),
               ),
-              TimelineEntry(kind: TimelineKind.danceStep) => _DanceStepView(
-                key: ValueKey(current),
-                entry: current,
+            ),
+            Expanded(
+              child: _PlayMat(
+                current: [?current, ?partner],
+                next: [?frame.next, ?frame.nextPartner],
+              ),
+            ),
+            SizedBox(height: 48, child: _NextSlot(frame: frame)),
+          ],
+        ),
+        if (danceStep != null)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: _DanceStepOverlay(
+                entry: danceStep,
                 remaining: frame.danceStepRemaining!,
               ),
-              _ => _ItemView(
-                key: ValueKey(current),
-                entry: current,
-                conflictWith: conflicts[(current.kind, current.index)],
-              ),
-            },
+            ),
           ),
-        ),
-        SizedBox(
-          height: 56,
-          child: current != null && next != null
-              ? Center(
-                  child: Text(
-                    'Next: ${_itemLabel(next)} · ${next.name} in '
-                    '${_seconds(frame.untilNext!)} s',
-                    key: const ValueKey('next-line'),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                )
-              : null,
-        ),
       ],
     );
   }
 }
 
-/// A DB, R or DA that has just started.
-class _ItemView extends StatelessWidget {
-  const _ItemView({super.key, required this.entry, this.conflictWith});
+/// The current item in its colours (a DB and a DA together: both), its
+/// name and any S conflict. With nothing current: what comes next, dimmed,
+/// and when.
+class _NowSlot extends StatelessWidget {
+  const _NowSlot({required this.frame, required this.conflictWith});
 
-  final TimelineEntry entry;
+  final PlayModeFrame frame;
 
-  /// The S this item may not be performed during, or `null`.
+  /// The S the current item may not be performed during, or `null`.
   final int? conflictWith;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final (background, foreground) = _colorsOf(entry.kind, theme.colorScheme);
-    return Center(
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: background,
-          borderRadius: BorderRadius.circular(28),
+    final muted = theme.colorScheme.onSurfaceVariant;
+    final current = frame.current;
+    final next = frame.next;
+    final labelStyle = theme.textTheme.displaySmall?.copyWith(
+      fontWeight: FontWeight.w700,
+    );
+
+    final List<Widget> children;
+    if (current != null) {
+      children = [
+        _ColouredLabel(
+          key: const ValueKey('current-item'),
+          entry: current,
+          partner: frame.currentPartner,
+          style: labelStyle,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              _itemLabel(entry),
-              key: const ValueKey('current-item'),
-              style: theme.textTheme.displayLarge?.copyWith(
-                color: foreground,
-                fontWeight: FontWeight.w700,
+        const SizedBox(height: 4),
+        Text(
+          _pairName(current, frame.currentPartner, ' · '),
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.titleMedium,
+        ),
+        if (conflictWith case final s?)
+          Row(
+            key: const ValueKey('play-conflict'),
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.warning_amber_rounded,
+                size: 18,
+                color: theme.colorScheme.error,
               ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              entry.name,
-              textAlign: TextAlign.center,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.headlineSmall?.copyWith(color: foreground),
-            ),
-            if (conflictWith case final s?) ...[
-              const SizedBox(height: 12),
-              Chip(
-                key: const ValueKey('play-conflict'),
-                avatar: Icon(
-                  Icons.warning_amber_rounded,
-                  color: theme.colorScheme.onErrorContainer,
-                ),
-                backgroundColor: theme.colorScheme.errorContainer,
-                label: Text(
-                  danceStepConflictText(s),
-                  style: TextStyle(color: theme.colorScheme.onErrorContainer),
-                ),
+              const SizedBox(width: 4),
+              Text(
+                danceStepConflictText(s),
+                style: TextStyle(color: theme.colorScheme.error),
               ),
             ],
-          ],
+          ),
+      ];
+    } else if (next != null) {
+      children = [
+        Text(
+          'Next',
+          style: theme.textTheme.titleMedium?.copyWith(color: muted),
         ),
+        Opacity(
+          opacity: 0.6,
+          child: _ColouredLabel(
+            key: const ValueKey('waiting-next'),
+            entry: next,
+            partner: frame.nextPartner,
+            style: labelStyle,
+          ),
+        ),
+        Text(
+          'in ${_seconds(frame.untilNext!)} s',
+          style: theme.textTheme.titleMedium?.copyWith(color: muted),
+        ),
+      ];
+    } else {
+      children = [
+        Text(
+          'No more marked items',
+          style: theme.textTheme.headlineSmall?.copyWith(color: muted),
+        ),
+      ];
+    }
+    return ClipRect(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: children,
       ),
     );
   }
 }
 
-/// A dance steps combination, with its countdown.
-class _DanceStepView extends StatelessWidget {
-  const _DanceStepView({
+/// "Next: R 1 · 2 rotations in 4 s" while an item is current; empty
+/// otherwise (the top slot already shows what comes next).
+class _NextSlot extends StatelessWidget {
+  const _NextSlot({required this.frame});
+
+  final PlayModeFrame frame;
+
+  @override
+  Widget build(BuildContext context) {
+    final next = frame.next;
+    if (frame.current == null || next == null) return const SizedBox.shrink();
+    final style = Theme.of(context).textTheme.titleMedium;
+    return Center(
+      child: Text.rich(
+        key: const ValueKey('next-line'),
+        TextSpan(
+          style: style,
+          children: [
+            const TextSpan(text: 'Next: '),
+            ..._labelSpans(next, frame.nextPartner),
+            TextSpan(
+              text:
+                  ' · ${_pairName(next, frame.nextPartner, ' + ')} in '
+                  '${_seconds(frame.untilNext!)} s',
+            ),
+          ],
+        ),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.center,
+      ),
+    );
+  }
+}
+
+/// e.g. "DB 2 + DA 3", each label in its kind's colour.
+class _ColouredLabel extends StatelessWidget {
+  const _ColouredLabel({
     super.key,
     required this.entry,
-    required this.remaining,
+    required this.partner,
+    required this.style,
   });
+
+  final TimelineEntry entry;
+  final TimelineEntry? partner;
+  final TextStyle? style;
+
+  @override
+  Widget build(BuildContext context) => FittedBox(
+    fit: BoxFit.scaleDown,
+    child: Text.rich(
+      TextSpan(style: style, children: _labelSpans(entry, partner)),
+    ),
+  );
+}
+
+List<TextSpan> _labelSpans(TimelineEntry entry, TimelineEntry? partner) => [
+  TextSpan(
+    text: _itemLabel(entry),
+    style: TextStyle(color: kindColour(entry.kind)),
+  ),
+  if (partner != null) ...[
+    const TextSpan(text: ' + '),
+    TextSpan(
+      text: _itemLabel(partner),
+      style: TextStyle(color: kindColour(partner.kind)),
+    ),
+  ],
+];
+
+/// The floor as large as fits: the current item's cell filled in its
+/// colour (purple for a DB and a DA together in one cell), the next item's
+/// cell outlined, and a line between them.
+class _PlayMat extends StatelessWidget {
+  const _PlayMat({required this.current, required this.next});
+
+  /// The current item and its partner, if any.
+  final List<TimelineEntry> current;
+
+  /// The next item and its partner, if any.
+  final List<TimelineEntry> next;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final nowCells = _byCell(current);
+    final nextCells = _byCell(next);
+    final from = current.map((e) => e.cell).nonNulls.firstOrNull;
+    final to = next.map((e) => e.cell).nonNulls.firstOrNull;
+
+    return Column(
+      children: [
+        Expanded(
+          child: Center(
+            child: AspectRatio(
+              aspectRatio: 1,
+              child: Container(
+                key: const ValueKey('play-mat'),
+                decoration: BoxDecoration(
+                  border: Border.all(color: colors.outline),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Column(
+                      children: [
+                        for (var row = 0; row < 3; row++)
+                          Expanded(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                for (var column = 0; column < 3; column++)
+                                  Expanded(
+                                    child: _cell(
+                                      context,
+                                      FloorCell.at(row, column),
+                                      now: nowCells,
+                                      next: nextCells,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                    if (from != null && to != null && from != to)
+                      IgnorePointer(
+                        child: CustomPaint(
+                          painter: _MovePainter(
+                            from: from,
+                            to: to,
+                            color: colors.onSurface.withValues(alpha: 0.5),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            'Front · Judges',
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: colors.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  static Map<FloorCell, List<TimelineEntry>> _byCell(
+    List<TimelineEntry> entries,
+  ) {
+    final byCell = <FloorCell, List<TimelineEntry>>{};
+    for (final entry in entries) {
+      if (entry.cell case final cell?) {
+        (byCell[cell] ??= []).add(entry);
+      }
+    }
+    return byCell;
+  }
+
+  Widget _cell(
+    BuildContext context,
+    FloorCell cell, {
+    required Map<FloorCell, List<TimelineEntry>> now,
+    required Map<FloorCell, List<TimelineEntry>> next,
+  }) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final here = now[cell];
+    final nextHere = next[cell];
+    final fill = here == null ? null : _cellColour(here);
+    return Container(
+      key: ValueKey('play-cell-${cell.number}'),
+      decoration: BoxDecoration(
+        color:
+            fill ??
+            (cell.isZone ? colors.surfaceContainerHighest : colors.surface),
+        border: nextHere == null
+            ? Border.all(color: colors.outlineVariant, width: 0.5)
+            : Border.all(color: _cellColour(nextHere), width: 4),
+      ),
+      padding: const EdgeInsets.all(6),
+      child: Stack(
+        children: [
+          Text(
+            '${cell.number}',
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: fill == null ? colors.onSurfaceVariant : Colors.black54,
+            ),
+          ),
+          if (here != null)
+            Center(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  here.map(_itemLabel).join('\n'),
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    color: Colors.black,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          if (nextHere != null)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Text(
+                'Next',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: here == null ? _cellColour(nextHere) : Colors.black,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// A kind's colour; purple for a DB and a DA together.
+  static Color _cellColour(List<TimelineEntry> entries) =>
+      entries.length > 1 ? pairColour : kindColour(entries.first.kind);
+}
+
+/// A straight line from the middle of one cell to the middle of another.
+class _MovePainter extends CustomPainter {
+  _MovePainter({required this.from, required this.to, required this.color});
+
+  final FloorCell from;
+  final FloorCell to;
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    Offset middle(FloorCell cell) => Offset(
+      (cell.column + 0.5) * size.width / 3,
+      (cell.row + 0.5) * size.height / 3,
+    );
+    canvas.drawLine(
+      middle(from),
+      middle(to),
+      Paint()
+        ..color = color
+        ..strokeWidth = 3
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_MovePainter old) =>
+      old.from != from || old.to != to || old.color != color;
+}
+
+/// A see-through layer over the page during an S: a large green countdown,
+/// with the items and the mat still visible underneath.
+class _DanceStepOverlay extends StatelessWidget {
+  const _DanceStepOverlay({required this.entry, required this.remaining});
 
   final TimelineEntry entry;
   final Duration remaining;
@@ -264,115 +532,75 @@ class _DanceStepView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final (background, foreground) = _colorsOf(entry.kind, theme.colorScheme);
+    final green = kindColour(TimelineKind.danceStep);
     final progress =
         remaining.inMilliseconds / danceStepCountdown.inMilliseconds;
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            _itemLabel(entry),
-            key: const ValueKey('current-item'),
-            style: theme.textTheme.headlineMedium,
-          ),
-          const SizedBox(height: 16),
-          SizedBox.square(
-            dimension: 200,
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                CircularProgressIndicator(
-                  value: progress.clamp(0, 1),
-                  strokeWidth: 12,
-                  color: foreground,
-                  backgroundColor: background,
-                ),
-                Center(
-                  child: Text(
-                    '${_seconds(remaining)}',
-                    key: const ValueKey('dance-step-countdown'),
-                    style: theme.textTheme.displayLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      fontFeatures: const [FontFeature.tabularFigures()],
+    return ColoredBox(
+      key: const ValueKey('dance-step-overlay'),
+      color: Colors.black.withValues(alpha: 0.55),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox.square(
+              dimension: 200,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  CircularProgressIndicator(
+                    value: progress.clamp(0, 1),
+                    strokeWidth: 12,
+                    color: green,
+                    backgroundColor: green.withValues(alpha: 0.2),
+                  ),
+                  Center(
+                    child: Text(
+                      '${_seconds(remaining)}',
+                      key: const ValueKey('dance-step-countdown'),
+                      style: theme.textTheme.displayLarge?.copyWith(
+                        color: green,
+                        fontWeight: FontWeight.w700,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 16),
-          Text('Dance steps', style: theme.textTheme.titleLarge),
-        ],
-      ),
-    );
-  }
-}
-
-/// Nothing on screen: what comes next and when, or the end.
-class _WaitingView extends StatelessWidget {
-  const _WaitingView({super.key, required this.next, required this.untilNext});
-
-  final TimelineEntry? next;
-  final Duration? untilNext;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final muted = theme.colorScheme.onSurfaceVariant;
-    final next = this.next;
-    if (next == null) {
-      return Center(
-        child: Text(
-          'No more marked items',
-          style: theme.textTheme.headlineSmall?.copyWith(color: muted),
+            const SizedBox(height: 12),
+            Text(
+              '${_itemLabel(entry)} · Dance steps',
+              style: theme.textTheme.titleLarge?.copyWith(color: green),
+            ),
+          ],
         ),
-      );
-    }
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'Next',
-            style: theme.textTheme.titleLarge?.copyWith(color: muted),
-          ),
-          Text(
-            _itemLabel(next),
-            key: const ValueKey('waiting-next'),
-            style: theme.textTheme.displayMedium?.copyWith(color: muted),
-          ),
-          Text(
-            next.name,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.titleMedium?.copyWith(color: muted),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'in ${_seconds(untilNext!)} s',
-            style: theme.textTheme.headlineSmall?.copyWith(color: muted),
-          ),
-        ],
       ),
     );
   }
 }
+
+/// The colour of each kind of item in Play mode, chosen to read well on
+/// the dark background: DB blue, DA red, risks yellow, S green.
+Color kindColour(TimelineKind kind) => switch (kind) {
+  TimelineKind.db => const Color(0xFF64B5F6),
+  TimelineKind.da => const Color(0xFFEF5350),
+  TimelineKind.risk => const Color(0xFFFFD54F),
+  TimelineKind.danceStep => const Color(0xFF81C784),
+};
+
+/// A DB and a DA together in one cell.
+const pairColour = Color(0xFFBA68C8);
 
 /// e.g. "DB 3".
 String _itemLabel(TimelineEntry entry) =>
     '${entry.kind.label} ${entry.index + 1}';
 
+/// The names of [entry] and [partner], joined by [separator].
+String _pairName(
+  TimelineEntry entry,
+  TimelineEntry? partner,
+  String separator,
+) => [entry.name, if (partner != null) partner.name].join(separator);
+
 /// Whole seconds, rounded up, so a countdown shows 1 until it ends.
 int _seconds(Duration time) => (time.inMilliseconds / 1000).ceil();
-
-(Color, Color) _colorsOf(
-  TimelineKind kind,
-  ColorScheme colors,
-) => switch (kind) {
-  TimelineKind.db => (colors.primaryContainer, colors.onPrimaryContainer),
-  TimelineKind.risk => (colors.tertiaryContainer, colors.onTertiaryContainer),
-  TimelineKind.da => (colors.secondaryContainer, colors.onSecondaryContainer),
-  TimelineKind.danceStep => (colors.surfaceContainerHighest, colors.primary),
-};

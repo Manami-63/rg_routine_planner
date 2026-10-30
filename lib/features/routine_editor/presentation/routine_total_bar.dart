@@ -59,21 +59,27 @@ class RoutineTotalBar extends ConsumerWidget {
                           : 'Difficulty total',
                       style: theme.textTheme.labelLarge,
                     ),
-                    Row(
-                      children: [
-                        Text('DB ', style: partStyle),
-                        Text(
-                          score.db.subtotal.format(),
-                          key: const ValueKey('db-subtotal'),
-                          style: partStyle,
-                        ),
-                        Text(' + DA ', style: partStyle),
-                        Text(
-                          score.da.subtotal.format(),
-                          key: const ValueKey('da-subtotal'),
-                          style: partStyle,
-                        ),
-                      ],
+                    // Shrinks rather than overflowing on narrow phones.
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('DB ', style: partStyle),
+                          Text(
+                            score.db.subtotal.format(),
+                            key: const ValueKey('db-subtotal'),
+                            style: partStyle,
+                          ),
+                          Text(' + DA ', style: partStyle),
+                          Text(
+                            score.da.subtotal.format(),
+                            key: const ValueKey('da-subtotal'),
+                            style: partStyle,
+                          ),
+                        ],
+                      ),
                     ),
                     Text(
                       showDa ? _daBreakdown(score.da) : _dbBreakdown(score.db),
