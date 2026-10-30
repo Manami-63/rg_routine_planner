@@ -142,6 +142,15 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   screen on while open (`ScreenAwake` in `lib/core/device/`, wrapping
   wakelock_plus; widget tests get `FakeScreenAwake` from
   `pumpDbCalculator`).
+- Welcome (`features/welcome/`): `WelcomeScreen` (`/welcome`) shows the
+  intro video (`IntroVideo`, video_player, `assets/videos/intro.mp4`,
+  muted and looping; an icon while the file is missing) and three short
+  steps. It opens on the first launch: `main` reads `WelcomeStore`
+  (shared_preferences `welcome_version`, not the database) and overrides
+  `startWithWelcomeProvider`. Bump `welcomeVersion` to show it again once.
+  Home's "How it works" opens it again. No login (planned as optional with
+  the backend). Tests override `introVideoProvider` and use
+  `FakeWelcomeStore`.
 - `routineControllerProvider(id)` is an auto-disposing async family: loads
   by id, saves every change (name and notes debounced 500 ms), flushes a pending save
   on dispose, and reports `routineSaveStatusProvider(id)`. Automatic retry
