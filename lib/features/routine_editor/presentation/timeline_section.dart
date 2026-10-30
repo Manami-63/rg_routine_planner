@@ -11,6 +11,7 @@ import 'dance_step_conflicts.dart';
 import 'floor_mat.dart';
 import 'floor_notices.dart';
 import 'play_mode_screen.dart';
+import 'timeline_colours.dart';
 import 'timeline_editing.dart';
 
 /// Shown below the music player: buttons that mark the next DB, R, DA or S
@@ -402,10 +403,13 @@ class _MarkButtonState extends State<_MarkButton> {
   Widget build(BuildContext context) {
     final marked = widget.times.where((time) => time != null).length;
     final done = marked == widget.times.length;
+    final colours = ItemColours.of(widget.kind, Theme.of(context).colorScheme);
     final button = FilledButton.tonal(
       key: ValueKey('mark-${widget.kind.name}'),
       style: FilledButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 12),
+        backgroundColor: colours.container,
+        foregroundColor: colours.onContainer,
       ),
       onPressed: done ? null : () => widget.onMark(_mark.time),
       child: Column(
@@ -428,14 +432,14 @@ class _MarkButtonState extends State<_MarkButton> {
         data: _mark,
         onDraggableCanceled: (_, _) => widget.onMark(_mark.time),
         feedback: Material(
-          color: Theme.of(context).colorScheme.primary,
+          color: colours.colour,
           shape: const StadiumBorder(),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Text(
               widget.kind.label,
               style: TextStyle(
-                color: Theme.of(context).colorScheme.onPrimary,
+                color: colours.onColour,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -492,7 +496,13 @@ class _TimelineRow extends StatelessWidget {
           fontFeatures: const [FontFeature.tabularFigures()],
         ),
       ),
-      title: Text(item),
+      title: Text(
+        item,
+        style: TextStyle(
+          color: ItemColours.of(entry.kind, theme.colorScheme).colour,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

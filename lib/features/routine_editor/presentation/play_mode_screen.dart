@@ -10,6 +10,7 @@ import '../../routines/presentation/routine_controller.dart';
 import '../domain/play_mode.dart';
 import '../domain/routine_timeline.dart';
 import 'dance_step_conflicts.dart';
+import 'timeline_colours.dart';
 
 /// Full-screen rehearsal view: plays the music and pops up each marked DB,
 /// R, DA and S at its time, with a countdown during S.
@@ -276,7 +277,7 @@ class _NextSlot extends StatelessWidget {
           style: style,
           children: [
             const TextSpan(text: 'Next: '),
-            ..._labelSpans(next, frame.nextPartner),
+            ..._labelSpans(context, next, frame.nextPartner),
             TextSpan(
               text:
                   ' · ${_pairName(next, frame.nextPartner, ' + ')} in '
@@ -309,24 +310,26 @@ class _ColouredLabel extends StatelessWidget {
   Widget build(BuildContext context) => FittedBox(
     fit: BoxFit.scaleDown,
     child: Text.rich(
-      TextSpan(style: style, children: _labelSpans(entry, partner)),
+      TextSpan(style: style, children: _labelSpans(context, entry, partner)),
     ),
   );
 }
 
-List<TextSpan> _labelSpans(TimelineEntry entry, TimelineEntry? partner) => [
-  TextSpan(
-    text: _itemLabel(entry),
-    style: TextStyle(color: kindColour(entry.kind)),
-  ),
-  if (partner != null) ...[
-    const TextSpan(text: ' + '),
-    TextSpan(
-      text: _itemLabel(partner),
-      style: TextStyle(color: kindColour(partner.kind)),
-    ),
-  ],
-];
+List<TextSpan> _labelSpans(
+  BuildContext context,
+  TimelineEntry entry,
+  TimelineEntry? partner,
+) {
+  final scheme = Theme.of(context).colorScheme;
+  TextSpan label(TimelineEntry e) => TextSpan(
+    text: _itemLabel(e),
+    style: TextStyle(color: ItemColours.of(e.kind, scheme).colour),
+  );
+  return [
+    label(entry),
+    if (partner != null) ...[const TextSpan(text: ' + '), label(partner)],
+  ];
+}
 
 /// The floor as large as fits: the current item's cell filled in its
 /// colour (purple for a DB and a DA together in one cell), the next item's
@@ -437,16 +440,17 @@ class _PlayMat extends StatelessWidget {
     final colors = theme.colorScheme;
     final here = now[cell];
     final nextHere = next[cell];
-    final fill = here == null ? null : _cellColour(here);
+    final fill = here == null ? null : _cellColours(here, colors);
+    final outline = nextHere == null ? null : _cellColours(nextHere, colors);
     return Container(
       key: ValueKey('play-cell-${cell.number}'),
       decoration: BoxDecoration(
         color:
-            fill ??
+            fill?.colour ??
             (cell.isZone ? colors.surfaceContainerHighest : colors.surface),
-        border: nextHere == null
+        border: outline == null
             ? Border.all(color: colors.outlineVariant, width: 0.5)
-            : Border.all(color: _cellColour(nextHere), width: 4),
+            : Border.all(color: outline.colour, width: 4),
       ),
       padding: const EdgeInsets.all(6),
       child: Stack(
@@ -454,7 +458,9 @@ class _PlayMat extends StatelessWidget {
           Text(
             '${cell.number}',
             style: theme.textTheme.labelMedium?.copyWith(
-              color: fill == null ? colors.onSurfaceVariant : Colors.black54,
+              color:
+                  fill?.onColour.withValues(alpha: 0.7) ??
+                  colors.onSurfaceVariant,
             ),
           ),
           if (here != null)
@@ -465,19 +471,19 @@ class _PlayMat extends StatelessWidget {
                   here.map(_itemLabel).join('\n'),
                   textAlign: TextAlign.center,
                   style: theme.textTheme.headlineMedium?.copyWith(
-                    color: Colors.black,
+                    color: fill!.onColour,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
             ),
-          if (nextHere != null)
+          if (outline != null)
             Align(
               alignment: Alignment.bottomCenter,
               child: Text(
                 'Next',
                 style: theme.textTheme.labelMedium?.copyWith(
-                  color: here == null ? _cellColour(nextHere) : Colors.black,
+                  color: fill?.onColour ?? outline.colour,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -487,9 +493,13 @@ class _PlayMat extends StatelessWidget {
     );
   }
 
-  /// A kind's colour; purple for a DB and a DA together.
-  static Color _cellColour(List<TimelineEntry> entries) =>
-      entries.length > 1 ? pairColour : kindColour(entries.first.kind);
+  /// A kind's colours; purple for a DB and a DA together.
+  static ItemColours _cellColours(
+    List<TimelineEntry> entries,
+    ColorScheme scheme,
+  ) => entries.length > 1
+      ? ItemColours.pair(scheme)
+      : ItemColours.of(entries.first.kind, scheme);
 }
 
 /// A straight line from the middle of one cell to the middle of another.
@@ -532,7 +542,10 @@ class _DanceStepOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final green = kindColour(TimelineKind.danceStep);
+    final green = ItemColours.of(
+      TimelineKind.danceStep,
+      theme.colorScheme,
+    ).colour;
     final progress =
         remaining.inMilliseconds / danceStepCountdown.inMilliseconds;
     return ColoredBox(
@@ -578,18 +591,6 @@ class _DanceStepOverlay extends StatelessWidget {
     );
   }
 }
-
-/// The colour of each kind of item in Play mode, chosen to read well on
-/// the dark background: DB blue, DA red, risks yellow, S green.
-Color kindColour(TimelineKind kind) => switch (kind) {
-  TimelineKind.db => const Color(0xFF64B5F6),
-  TimelineKind.da => const Color(0xFFEF5350),
-  TimelineKind.risk => const Color(0xFFFFD54F),
-  TimelineKind.danceStep => const Color(0xFF81C784),
-};
-
-/// A DB and a DA together in one cell.
-const pairColour = Color(0xFFBA68C8);
 
 /// e.g. "DB 3".
 String _itemLabel(TimelineEntry entry) =>

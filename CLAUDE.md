@@ -125,15 +125,19 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   both (`withTimeMoved`); a timeline row's link button splits (moves only
   that item 0.1 s) or pairs (takes the chosen item's time). Play mode shows
   a pair together ("DB 2 + DA 3", `PlayModeFrame.currentPartner`).
+- Item colours (`ItemColours` in `routine_editor/presentation/`): DB
+  blue, DA red, R amber, S green, a DB and a DA together purple. Each hue
+  is harmonised towards the theme's primary (material_color_utilities)
+  and taken at Material's custom-colour tones for light or dark, so they
+  fit the plum theme but stay distinct. Used by the Next buttons, mat
+  labels and timeline rows, and in Play mode. Add new kinds' hues there.
 - Play mode (`PlayModeScreen`, opened from the timeline): full-screen and
   dark, sharing the routine page's player. `playModeFrameAt`
   (`routine_editor/domain/play_mode.dart`) decides what shows: each item
   for 3 s from its time, an S's 8 s countdown, and the next item. One
   fixed layout so nothing jumps: the current item (or the next, dimmed) at
   the top, a large floor mat (current cell filled, next cell outlined),
-  the next item, then the player. Colours per kind (`kindColour`): DB
-  blue, DA red, R yellow, S green; a DB and a DA together in one cell are
-  purple. During an S a see-through layer with the countdown covers the
+  the next item, then the player. During an S a see-through layer with the countdown covers the
   page. It keeps the
   screen on while open (`ScreenAwake` in `lib/core/device/`, wrapping
   wakelock_plus; widget tests get `FakeScreenAwake` from
