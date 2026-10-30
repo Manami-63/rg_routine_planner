@@ -58,6 +58,7 @@ class FloorMat<T extends Object> extends StatelessWidget {
                     for (var row = 0; row < 3; row++)
                       Expanded(
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             for (var column = 0; column < 3; column++)
                               Expanded(

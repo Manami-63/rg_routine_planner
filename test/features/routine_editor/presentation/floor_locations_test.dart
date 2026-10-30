@@ -4,6 +4,7 @@ import 'package:rg_routine_planner/core/floor/floor_cell.dart';
 import 'package:rg_routine_planner/features/da_calculator/domain/da_element.dart';
 import 'package:rg_routine_planner/features/music/domain/routine_music.dart';
 import 'package:rg_routine_planner/features/routine_editor/domain/routine_timeline.dart';
+import 'package:rg_routine_planner/features/routine_editor/presentation/play_mode_screen.dart';
 import 'package:rg_routine_planner/features/routine_editor/presentation/routine_screen.dart';
 import 'package:rg_routine_planner/features/routines/domain/routine.dart';
 
@@ -200,7 +201,13 @@ void main() {
     await music.player.seek(const Duration(seconds: 5));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const ValueKey('play-mini-mat')), findsOneWidget);
+    final cell = tester.widget<Container>(
+      find.byKey(const ValueKey('play-cell-5')),
+    );
+    expect(
+      (cell.decoration! as BoxDecoration).color,
+      kindColour(TimelineKind.da),
+    );
     expect(tester.takeException(), isNull);
   });
 
@@ -371,8 +378,11 @@ void main() {
       await music.player.seek(const Duration(seconds: 5));
       await tester.pumpAndSettle();
       expect(
-        tester.widget<Text>(find.byKey(const ValueKey('current-item'))).data,
-        'DB 1 + DA 1',
+        find.descendant(
+          of: find.byKey(const ValueKey('current-item')),
+          matching: find.text('DB 1 + DA 1'),
+        ),
+        findsOneWidget,
       );
     });
   });

@@ -114,19 +114,24 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   zones visited, zones only crossed by a straight move between items
   (`FloorCell.crossedTo`, a guess), and 3+ Difficulties in a row in one
   cell (#9.4.1; R and jumps excluded, a DB and a DA together count as
-  one). Shown by `FloorNotices` under the mat; Play mode shows a mini mat.
+  one). Shown by `FloorNotices` under the mat.
 - DB and DA together ("in the same moment", #9.4.1): a DB and a DA with
   exactly the same time (`RoutineTimeline.partnerOf`; no stored link).
   A drop on the mat pauses the music; marking the other kind (tap or
   drop) before playing on gives it the dropped item's time. Nudges move
   both (`withTimeMoved`); a timeline row's link button splits (moves only
   that item 0.1 s) or pairs (takes the chosen item's time). Play mode shows
-  a pair as one pop-up ("DB 2 + DA 3", `PlayModeFrame.currentPartner`).
+  a pair together ("DB 2 + DA 3", `PlayModeFrame.currentPartner`).
 - Play mode (`PlayModeScreen`, opened from the timeline): full-screen and
   dark, sharing the routine page's player. `playModeFrameAt`
   (`routine_editor/domain/play_mode.dart`) decides what shows: each item
-  pops up for 3 s at its time, an S shows an 8 s countdown (kept as a chip
-  if another item starts during it), plus the next item. It keeps the
+  for 3 s from its time, an S's 8 s countdown, and the next item. One
+  fixed layout so nothing jumps: the current item (or the next, dimmed) at
+  the top, a large floor mat (current cell filled, next cell outlined),
+  the next item, then the player. Colours per kind (`kindColour`): DB
+  blue, DA red, R yellow, S green; a DB and a DA together in one cell are
+  purple. During an S a see-through layer with the countdown covers the
+  page. It keeps the
   screen on while open (`ScreenAwake` in `lib/core/device/`, wrapping
   wakelock_plus; widget tests get `FakeScreenAwake` from
   `pumpDbCalculator`).
