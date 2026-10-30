@@ -58,4 +58,22 @@ void main() {
     expect(playModeFrameAt(entries, s(40)), const PlayModeFrame());
     expect(playModeFrameAt(const [], s(1)), const PlayModeFrame());
   });
+
+  test('a DB and a DA together show as one pair, the DB first', () {
+    final pairedDb = entry(TimelineKind.db, 1, 40);
+    final pairedDa = entry(TimelineKind.da, 1, 40);
+    final paired = [...entries, pairedDb, pairedDa];
+
+    final before = playModeFrameAt(paired, s(35));
+    expect((before.next, before.nextPartner), (pairedDb, pairedDa));
+
+    final during = playModeFrameAt(paired, s(41));
+    expect((during.current, during.currentPartner), (pairedDb, pairedDa));
+  });
+
+  test('items without a partner have none', () {
+    final frame = playModeFrameAt(entries, s(13));
+    expect((frame.current, frame.currentPartner), (da, null));
+    expect((frame.next, frame.nextPartner), (risk, null));
+  });
 }

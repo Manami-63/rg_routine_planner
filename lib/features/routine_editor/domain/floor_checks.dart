@@ -50,18 +50,14 @@ FloorZoneReport? floorZoneReport(Routine routine) {
   return FloorZoneReport(visitedBy: visitedBy, passedBy: passedBy);
 }
 
-/// A DB and a DA marked this close together are taken as performed "in the
-/// same moment", which counts as 1 Difficulty (#9.4.1). The app's guess:
-/// the CoP gives no number.
-const sameMomentWindow = Duration(seconds: 2);
-
 /// Runs of 3 or more Difficulties in a row in the same cell (#9.4.1: the
 /// same placement maintained for 3 or more Difficulties), each as the items
 /// in it, in time order.
 ///
 /// Difficulties are DB and DA. Risks and jumps/leaps involve travelling, so
-/// they are not counted (and do not break a run). A DB and a DA within
-/// [sameMomentWindow] count as one. An item without a cell breaks a run.
+/// they are not counted (and do not break a run). A DB and a DA performed
+/// together (`RoutineTimeline.partnerOf`: the same time) count as one. An
+/// item without a cell breaks a run.
 List<List<TimelineEntry>> samePlacementRuns(Routine routine) {
   bool counts(TimelineEntry entry) => switch (entry.kind) {
     TimelineKind.da => true,
@@ -76,8 +72,8 @@ List<List<TimelineEntry>> samePlacementRuns(Routine routine) {
     final last = difficulties.lastOrNull;
     if (last != null &&
         last.length == 1 &&
-        last.single.kind != entry.kind &&
-        entry.time - last.single.time <= sameMomentWindow) {
+        routine.partnerOf(entry.kind, entry.index) == last.single.index &&
+        last.single.kind == entry.kind.partnerKind) {
       last.add(entry);
     } else {
       difficulties.add([entry]);

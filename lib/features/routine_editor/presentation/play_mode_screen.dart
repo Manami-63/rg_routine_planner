@@ -153,6 +153,7 @@ class _FrameView extends StatelessWidget {
               null => _WaitingView(
                 key: const ValueKey('waiting'),
                 next: next,
+                nextPartner: frame.nextPartner,
                 untilNext: frame.untilNext,
               ),
               TimelineEntry(kind: TimelineKind.danceStep) => _DanceStepView(
@@ -163,7 +164,13 @@ class _FrameView extends StatelessWidget {
               _ => _ItemView(
                 key: ValueKey(current),
                 entry: current,
-                conflictWith: conflicts[(current.kind, current.index)],
+                partner: frame.currentPartner,
+                conflictWith:
+                    conflicts[(current.kind, current.index)] ??
+                    switch (frame.currentPartner) {
+                      null => null,
+                      final p => conflicts[(p.kind, p.index)],
+                    },
               ),
             },
           ),
@@ -173,7 +180,8 @@ class _FrameView extends StatelessWidget {
           child: current != null && next != null
               ? Center(
                   child: Text(
-                    'Next: ${_itemLabel(next)} · ${next.name} in '
+                    'Next: ${_pairLabel(next, frame.nextPartner)} · '
+                    '${_pairName(next, frame.nextPartner, ' + ')} in '
                     '${_seconds(frame.untilNext!)} s',
                     key: const ValueKey('next-line'),
                     maxLines: 2,
@@ -189,11 +197,19 @@ class _FrameView extends StatelessWidget {
   }
 }
 
-/// A DB, R or DA that has just started.
+/// A DB, R or DA that has just started (or a DB and a DA together).
 class _ItemView extends StatelessWidget {
-  const _ItemView({super.key, required this.entry, this.conflictWith});
+  const _ItemView({
+    super.key,
+    required this.entry,
+    this.partner,
+    this.conflictWith,
+  });
 
   final TimelineEntry entry;
+
+  /// The DA performed together with [entry], a DB, or `null`.
+  final TimelineEntry? partner;
 
   /// The S this item may not be performed during, or `null`.
   final int? conflictWith;
@@ -213,19 +229,22 @@ class _ItemView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              _itemLabel(entry),
-              key: const ValueKey('current-item'),
-              style: theme.textTheme.displayLarge?.copyWith(
-                color: foreground,
-                fontWeight: FontWeight.w700,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                _pairLabel(entry, partner),
+                key: const ValueKey('current-item'),
+                style: theme.textTheme.displayLarge?.copyWith(
+                  color: foreground,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              entry.name,
+              _pairName(entry, partner),
               textAlign: TextAlign.center,
-              maxLines: 3,
+              maxLines: partner == null ? 3 : 4,
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.headlineSmall?.copyWith(color: foreground),
             ),
@@ -320,9 +339,15 @@ class _DanceStepView extends StatelessWidget {
 
 /// Nothing on screen: what comes next and when, or the end.
 class _WaitingView extends StatelessWidget {
-  const _WaitingView({super.key, required this.next, required this.untilNext});
+  const _WaitingView({
+    super.key,
+    required this.next,
+    required this.nextPartner,
+    required this.untilNext,
+  });
 
   final TimelineEntry? next;
+  final TimelineEntry? nextPartner;
   final Duration? untilNext;
 
   @override
@@ -346,15 +371,18 @@ class _WaitingView extends StatelessWidget {
             'Next',
             style: theme.textTheme.titleLarge?.copyWith(color: muted),
           ),
-          Text(
-            _itemLabel(next),
-            key: const ValueKey('waiting-next'),
-            style: theme.textTheme.displayMedium?.copyWith(color: muted),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              _pairLabel(next, nextPartner),
+              key: const ValueKey('waiting-next'),
+              style: theme.textTheme.displayMedium?.copyWith(color: muted),
+            ),
           ),
           Text(
-            next.name,
+            _pairName(next, nextPartner),
             textAlign: TextAlign.center,
-            maxLines: 2,
+            maxLines: nextPartner == null ? 2 : 4,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.titleMedium?.copyWith(color: muted),
           ),
@@ -386,6 +414,18 @@ class _MiniMat extends StatelessWidget {
 /// e.g. "DB 3".
 String _itemLabel(TimelineEntry entry) =>
     '${entry.kind.label} ${entry.index + 1}';
+
+/// e.g. "DB 2 + DA 3" for a DB and a DA together.
+String _pairLabel(TimelineEntry entry, TimelineEntry? partner) =>
+    [_itemLabel(entry), if (partner != null) _itemLabel(partner)].join(' + ');
+
+/// The names of [entry] and [partner], one per line unless [separator]
+/// says otherwise.
+String _pairName(
+  TimelineEntry entry,
+  TimelineEntry? partner, [
+  String separator = '\n',
+]) => [entry.name, if (partner != null) partner.name].join(separator);
 
 /// Whole seconds, rounded up, so a countdown shows 1 until it ends.
 int _seconds(Duration time) => (time.inMilliseconds / 1000).ceil();

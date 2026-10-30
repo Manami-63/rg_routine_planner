@@ -12,6 +12,15 @@ enum TimelineKind {
 
   /// Short name, e.g. "R".
   final String label;
+
+  /// The kind that can be performed together with this one, in the same
+  /// moment: a DB with a DA and the other way round (CoP #9.4.1). `null`
+  /// for risks and S.
+  TimelineKind? get partnerKind => switch (this) {
+    db => da,
+    da => db,
+    risk || danceStep => null,
+  };
 }
 
 /// One item of a routine with a music time.
@@ -104,6 +113,20 @@ extension RoutineTimeline on Routine {
     return entries;
   }
 
+  /// The item of the other kind performed together with the DB or DA of
+  /// [kind] at [index] (its position among its kind), or `null`.
+  ///
+  /// A DB and a DA are together when they have exactly the same time, as
+  /// they get when the second is marked while the music is paused after
+  /// the first (or when paired on the timeline).
+  int? partnerOf(TimelineKind kind, int index) {
+    final partnerKind = kind.partnerKind;
+    final time = timesOf(kind)[index];
+    if (partnerKind == null || time == null) return null;
+    final partner = timesOf(partnerKind).indexOf(time);
+    return partner == -1 ? null : partner;
+  }
+
   String _nameOf(TimelineKind kind, int index) => switch (kind) {
     TimelineKind.db => db.elements[index].name,
     TimelineKind.risk => db.risks[index].description,
@@ -123,6 +146,21 @@ extension RoutineTimeline on Routine {
       TimelineKind.da => withDa(da.withElementTimeAt(index, clamped)),
       TimelineKind.danceStep => withDanceStepTimeAt(index, clamped),
     };
+  }
+
+  /// Moves the time of the item of [kind] at [index] by [offset], and its
+  /// partner's (see [partnerOf]) with it, so they stay together. Times
+  /// below zero become zero.
+  Routine withTimeMoved(TimelineKind kind, int index, Duration offset) {
+    final time = timesOf(kind)[index];
+    if (time == null) return this;
+    final partner = partnerOf(kind, index);
+    final moved = withTime(kind, index, time + offset);
+    // Setting a time only reorders items of its own kind, so the
+    // partner's index still holds.
+    return partner == null
+        ? moved
+        : moved.withTime(kind.partnerKind!, partner, time + offset);
   }
 
   /// Sets where on the floor the item of [kind] at [index] starts (`null`

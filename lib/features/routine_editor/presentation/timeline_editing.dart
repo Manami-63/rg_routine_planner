@@ -21,5 +21,19 @@ extension RoutineTimelineEditing on RoutineController {
   void setTime(TimelineKind kind, int index, Duration? time) =>
       updateRoutine((routine) => routine.withTime(kind, index, time));
 
+  /// Moves a time by [offset], with its partner's (DB and DA together).
+  void moveTime(TimelineKind kind, int index, Duration offset) =>
+      updateRoutine((routine) => routine.withTimeMoved(kind, index, offset));
+
+  /// Marks the DB or DA of [kind] at [index] as performed together with
+  /// the item of the other kind at [partner], by giving it that time.
+  void pairWith(TimelineKind kind, int index, int partner) => updateRoutine(
+    (routine) => routine.withTime(
+      kind,
+      index,
+      routine.timesOf(kind.partnerKind!)[partner],
+    ),
+  );
+
   void clearTimes() => updateRoutine((routine) => routine.withTimesCleared());
 }

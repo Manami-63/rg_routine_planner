@@ -209,11 +209,171 @@ void main() {
       tester,
       routine: routineWithContent()
           .withCell(TimelineKind.db, 0, FloorCell.centre)
-          .withTime(TimelineKind.db, 0, const Duration(seconds: 65)),
+          .withTime(TimelineKind.db, 0, const Duration(seconds: 65))
+          .withTime(TimelineKind.da, 0, const Duration(seconds: 65)),
     );
     tester.view.physicalSize = const Size(375, 2400);
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
+  });
+
+  group('DB and DA together', () {
+    /// Drags the "Next" button of [kind] onto cell [cell] without moving
+    /// the music.
+    Future<void> dropOn(
+      WidgetTester tester,
+      TimelineKind kind,
+      int cell,
+    ) async {
+      final gesture = await tester.startGesture(
+        tester.getCenter(find.byKey(ValueKey('mark-${kind.name}'))),
+      );
+      await gesture.moveBy(const Offset(0, 30));
+      await tester.pump();
+      await gesture.moveTo(tester.getCenter(cellOf(cell)));
+      await tester.pump();
+      await gesture.up();
+      await tester.pumpAndSettle();
+    }
+
+    Routine paired() => routineWithContent()
+        .withTime(TimelineKind.db, 0, const Duration(seconds: 5))
+        .withTime(TimelineKind.da, 0, const Duration(seconds: 5));
+
+    testWidgets('a drop pauses the music', (tester) async {
+      final (_, music) = await pumpMusicTab(tester);
+      await music.player.play();
+
+      await dragMark(
+        tester,
+        music,
+        TimelineKind.da,
+        at: const Duration(seconds: 7),
+        to: tester.getCenter(cellOf(5)),
+      );
+
+      expect(music.player.playing, isFalse);
+    });
+
+    testWidgets('a DB dropped while paused after a DA is done with it', (
+      tester,
+    ) async {
+      final (routines, music) = await pumpMusicTab(tester);
+      await music.player.play();
+      await dragMark(
+        tester,
+        music,
+        TimelineKind.da,
+        at: const Duration(seconds: 7),
+        to: tester.getCenter(cellOf(5)),
+      );
+
+      await dropOn(tester, TimelineKind.db, 4);
+
+      expect(saved(routines).db.elementTimes, [const Duration(seconds: 7)]);
+      expect(saved(routines).db.elementCells, [FloorCell.left]);
+      expect(find.text('Together with DA 1'), findsOneWidget);
+      expect(find.text('Together with DB 1'), findsOneWidget);
+    });
+
+    testWidgets('a tap while paused after a drop is also together', (
+      tester,
+    ) async {
+      final (routines, music) = await pumpMusicTab(tester);
+      await dragMark(
+        tester,
+        music,
+        TimelineKind.db,
+        at: const Duration(seconds: 7),
+        to: tester.getCenter(cellOf(5)),
+      );
+
+      await tester.tap(find.byKey(const ValueKey('mark-da')));
+      await tester.pump();
+
+      expect(saved(routines).da.times.first, const Duration(seconds: 7));
+    });
+
+    testWidgets('after playing on, the next item is separate', (tester) async {
+      final (routines, music) = await pumpMusicTab(tester);
+      await dragMark(
+        tester,
+        music,
+        TimelineKind.da,
+        at: const Duration(seconds: 7),
+        to: tester.getCenter(cellOf(5)),
+      );
+      await music.player.play();
+      await music.player.seek(const Duration(seconds: 10));
+
+      await dropOn(tester, TimelineKind.db, 5);
+
+      expect(saved(routines).db.elementTimes, [const Duration(seconds: 10)]);
+      expect(find.textContaining('Together with'), findsNothing);
+    });
+
+    testWidgets('a second DA while paused is not paired', (tester) async {
+      final (routines, music) = await pumpMusicTab(tester);
+      await dragMark(
+        tester,
+        music,
+        TimelineKind.da,
+        at: const Duration(seconds: 7),
+        to: tester.getCenter(cellOf(5)),
+      );
+
+      await dropOn(tester, TimelineKind.da, 5);
+
+      expect(saved(routines).da.times.take(2), [
+        const Duration(seconds: 7),
+        const Duration(seconds: 8),
+      ]);
+    });
+
+    testWidgets('nudging one moves both', (tester) async {
+      final (routines, _) = await pumpMusicTab(tester, routine: paired());
+
+      await tester.tap(find.byTooltip('Move DA 1 later'));
+      await tester.pump();
+
+      const later = Duration(milliseconds: 5100);
+      expect(saved(routines).db.elementTimes, [later]);
+      expect(saved(routines).da.times.first, later);
+    });
+
+    testWidgets('split and pair again from the timeline', (tester) async {
+      final (routines, _) = await pumpMusicTab(tester, routine: paired());
+
+      await tester.tap(find.byTooltip('Split DB 1 from DA 1'));
+      await tester.pump();
+      expect(saved(routines).db.elementTimes, [
+        const Duration(milliseconds: 5100),
+      ]);
+      expect(find.textContaining('Together with'), findsNothing);
+
+      await tester.tap(find.byTooltip('Pair DB 1 with a DA'));
+      await tester.pumpAndSettle();
+      expect(find.text('DB 1 is done together with…'), findsOneWidget);
+      await tester.tap(find.text('DA 1').last);
+      await tester.pumpAndSettle();
+
+      expect(saved(routines).db.elementTimes, [const Duration(seconds: 5)]);
+      expect(find.text('Together with DA 1'), findsOneWidget);
+    });
+
+    testWidgets('Play mode shows the pair as one', (tester) async {
+      final (_, music) = await pumpMusicTab(tester, routine: paired());
+      await tester.tap(find.text('Play mode'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('DB 1 + DA 1'), findsOneWidget);
+      await music.player.seek(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<Text>(find.byKey(const ValueKey('current-item'))).data,
+        'DB 1 + DA 1',
+      );
+    });
   });
 }

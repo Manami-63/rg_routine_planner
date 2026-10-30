@@ -96,9 +96,17 @@ void main() {
     test('a DB and a DA in the same moment count as 1', () {
       final routine = routineWith(
         db: [(testBalance, 1, 5)],
-        da: [(2, 5), (10, 5)],
+        da: [(1, 5), (10, 5)],
       );
       expect(samePlacementRuns(routine), isEmpty);
+    });
+
+    test('a DB and a DA at different times are 2 Difficulties', () {
+      final routine = routineWith(
+        db: [(testBalance, 1, 5)],
+        da: [(2, 5), (10, 5)],
+      );
+      expect(samePlacementRuns(routine).single.length, 3);
     });
 
     test('risks and leaps are not counted and do not break a run', () {

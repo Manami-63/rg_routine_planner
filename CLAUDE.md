@@ -113,9 +113,15 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   cell; a timeline row's grid button changes it. `floor_checks.dart`:
   zones visited, zones only crossed by a straight move between items
   (`FloorCell.crossedTo`, a guess), and 3+ Difficulties in a row in one
-  cell (#9.4.1; R and jumps excluded, a DB and a DA within 2 s count as
-  one, the app's guess). Shown by `FloorNotices` under the mat; Play mode
-  shows a mini mat.
+  cell (#9.4.1; R and jumps excluded, a DB and a DA together count as
+  one). Shown by `FloorNotices` under the mat; Play mode shows a mini mat.
+- DB and DA together ("in the same moment", #9.4.1): a DB and a DA with
+  exactly the same time (`RoutineTimeline.partnerOf`; no stored link).
+  A drop on the mat pauses the music; marking the other kind (tap or
+  drop) before playing on gives it the dropped item's time. Nudges move
+  both (`withTimeMoved`); a timeline row's link button splits (moves only
+  that item 0.1 s) or pairs (takes the chosen item's time). Play mode shows
+  a pair as one pop-up ("DB 2 + DA 3", `PlayModeFrame.currentPartner`).
 - Play mode (`PlayModeScreen`, opened from the timeline): full-screen and
   dark, sharing the routine page's player. `playModeFrameAt`
   (`routine_editor/domain/play_mode.dart`) decides what shows: each item

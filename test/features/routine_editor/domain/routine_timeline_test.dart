@@ -130,4 +130,46 @@ void main() {
     expect(marked.danceStepCells, [FloorCell.front, null]);
     expect(marked.withDanceStepCount(1).danceStepCells, [FloorCell.front]);
   });
+
+  group('DB and DA together', () {
+    test('the same time pairs a DB with a DA', () {
+      final marked = routine
+          .withTime(TimelineKind.db, 1, s(12))
+          .withTime(TimelineKind.da, 0, s(12))
+          .withTime(TimelineKind.risk, 0, s(12));
+
+      expect(marked.partnerOf(TimelineKind.db, 1), 0);
+      expect(marked.partnerOf(TimelineKind.da, 0), 1);
+      expect(marked.partnerOf(TimelineKind.risk, 0), isNull);
+    });
+
+    test('a different time, or no time, is not together', () {
+      final marked = routine
+          .withTime(TimelineKind.db, 0, s(12))
+          .withTime(TimelineKind.da, 0, s(13));
+
+      expect(marked.partnerOf(TimelineKind.db, 0), isNull);
+      expect(marked.partnerOf(TimelineKind.db, 1), isNull);
+    });
+
+    test('moving one time moves its partner too', () {
+      final marked = routine
+          .withTime(TimelineKind.db, 0, s(12))
+          .withTime(TimelineKind.da, 0, s(12))
+          .withTimeMoved(TimelineKind.da, 0, -s(13));
+
+      expect(marked.db.elementTimes.first, Duration.zero);
+      expect(marked.da.times, [Duration.zero]);
+    });
+
+    test('moving an unpaired time moves only it', () {
+      final marked = routine
+          .withTime(TimelineKind.db, 0, s(12))
+          .withTime(TimelineKind.da, 0, s(14))
+          .withTimeMoved(TimelineKind.db, 0, s(1));
+
+      expect(marked.db.elementTimes.first, s(13));
+      expect(marked.da.times, [s(14)]);
+    });
+  });
 }
