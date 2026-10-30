@@ -4,8 +4,8 @@ import 'package:rg_routine_planner/core/floor/floor_cell.dart';
 import 'package:rg_routine_planner/features/da_calculator/domain/da_element.dart';
 import 'package:rg_routine_planner/features/music/domain/routine_music.dart';
 import 'package:rg_routine_planner/features/routine_editor/domain/routine_timeline.dart';
-import 'package:rg_routine_planner/features/routine_editor/presentation/play_mode_screen.dart';
 import 'package:rg_routine_planner/features/routine_editor/presentation/routine_screen.dart';
+import 'package:rg_routine_planner/features/routine_editor/presentation/timeline_colours.dart';
 import 'package:rg_routine_planner/features/routines/domain/routine.dart';
 
 import '../../da_calculator/test_data.dart';
@@ -201,12 +201,14 @@ void main() {
     await music.player.seek(const Duration(seconds: 5));
     await tester.pumpAndSettle();
 
-    final cell = tester.widget<Container>(
-      find.byKey(const ValueKey('play-cell-5')),
-    );
+    final cellFinder = find.byKey(const ValueKey('play-cell-5'));
+    final cell = tester.widget<Container>(cellFinder);
     expect(
       (cell.decoration! as BoxDecoration).color,
-      kindColour(TimelineKind.da),
+      ItemColours.of(
+        TimelineKind.da,
+        Theme.of(tester.element(cellFinder)).colorScheme,
+      ).colour,
     );
     expect(tester.takeException(), isNull);
   });

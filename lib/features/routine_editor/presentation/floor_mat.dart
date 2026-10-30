@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/floor/floor_cell.dart';
 import '../domain/routine_timeline.dart';
+import 'timeline_colours.dart';
 
 /// The floor area as a 3 x 3 grid, front (judges) at the bottom, with the
 /// 5 zones shaded as in the CoP picture (#9.2.1.A).
@@ -106,9 +107,9 @@ class FloorMat<T extends Object> extends StatelessWidget {
     List<TimelineEntry> located,
   ) {
     final colors = Theme.of(context).colorScheme;
-    final labels = [
+    final here = [
       for (final entry in located)
-        if (entry.cell == cell) '${entry.kind.label}${entry.index + 1}',
+        if (entry.cell == cell) entry,
     ];
 
     Widget content(bool hovering) => Container(
@@ -129,16 +130,21 @@ class FloorMat<T extends Object> extends StatelessWidget {
             style: Theme.of(context).textTheme.labelSmall
                 ?.copyWith(color: colors.onSurfaceVariant),
           ),
-          if (labels.isNotEmpty)
+          if (here.isNotEmpty)
             Center(
-              child: Text(
-                labels.length > 4
-                    ? '${labels.take(3).join(' ')} +${labels.length - 3}'
-                    : labels.join(' '),
-                textAlign: TextAlign.center,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.labelSmall,
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 2,
+                runSpacing: 2,
+                children: [
+                  for (final entry in here.take(here.length > 4 ? 3 : 4))
+                    _ItemLabel(entry: entry),
+                  if (here.length > 4)
+                    Text(
+                      '+${here.length - 3}',
+                      style: Theme.of(context).textTheme.labelSmall,
+                    ),
+                ],
               ),
             ),
         ],
@@ -161,6 +167,33 @@ class FloorMat<T extends Object> extends StatelessWidget {
       );
     }
     return child;
+  }
+}
+
+/// e.g. "DA1", in the item's colours.
+class _ItemLabel extends StatelessWidget {
+  const _ItemLabel({required this.entry});
+
+  final TimelineEntry entry;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colours = ItemColours.of(entry.kind, theme.colorScheme);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+      decoration: BoxDecoration(
+        color: colours.container,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        '${entry.kind.label}${entry.index + 1}',
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: colours.onContainer,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
   }
 }
 
