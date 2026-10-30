@@ -36,6 +36,15 @@ class HomeScreen extends StatelessWidget {
                   'subtotals based on the FIG Code of Points 2025-2028.',
               onTap: () => context.go(AppRoutes.routines),
             ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => context.push(AppRoutes.welcome),
+                icon: const Icon(Icons.play_circle_outline),
+                label: const Text('How it works'),
+              ),
+            ),
           ],
         ),
       ),

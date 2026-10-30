@@ -4,10 +4,13 @@ import 'package:go_router/go_router.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/routine_editor/presentation/routine_screen.dart';
 import '../features/routines/presentation/routines_screen.dart';
+import '../features/welcome/presentation/welcome_providers.dart';
+import '../features/welcome/presentation/welcome_screen.dart';
 
 abstract final class AppRoutes {
   static const home = '/';
   static const routines = '/routines';
+  static const welcome = '/welcome';
 
   /// The routine page, opened on [tab].
   static String routine(String routineId, [RoutineTab tab = RoutineTab.db]) =>
@@ -20,7 +23,9 @@ abstract final class AppRoutes {
 /// instead of sharing navigation state through a global.
 final routerProvider = Provider<GoRouter>((ref) {
   final router = GoRouter(
-    initialLocation: AppRoutes.home,
+    initialLocation: ref.read(startWithWelcomeProvider)
+        ? AppRoutes.welcome
+        : AppRoutes.home,
     routes: [
       GoRoute(
         path: AppRoutes.home,
@@ -44,6 +49,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
+      ),
+      // Top level: no back button on the first launch; "Get started" goes
+      // home, or back when opened from Home.
+      GoRoute(
+        path: AppRoutes.welcome,
+        builder: (context, state) => const WelcomeScreen(),
       ),
     ],
   );

@@ -47,6 +47,8 @@ dependencies:
   wakelock_plus: ^1.8.2
   # Version pinned by Flutter; harmonises the item colours with the theme.
   material_color_utilities: any
+  video_player: ^2.14.1
+  shared_preferences: ^2.5.6
 
 dev_dependencies:
   flutter_test:
@@ -71,6 +73,10 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  # The intro video on the welcome screen (assets/videos/intro.mp4).
+  assets:
+    - assets/videos/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
