@@ -104,8 +104,34 @@ void main() {
     expect((await repository.fetchRoutine('r1'))!.music, isNull);
   });
 
-  test('round-trips the dance step count', () async {
-    final original = routine().withDanceStepCount(3);
+  test('round-trips S with their times', () async {
+    final original = routine()
+        .withDanceStepCount(3)
+        .withDanceStepTimeAt(1, const Duration(milliseconds: 41300));
+
+    await repository.saveRoutine(original);
+    expect(await repository.fetchRoutine('r1'), original);
+
+    await repository.saveRoutine(original.withDanceStepCount(0));
+    expect((await repository.fetchRoutine('r1'))!.danceStepTimes, isEmpty);
+  });
+
+  test('round-trips DB, risk and DA music times', () async {
+    final base = routine();
+    final original = base
+        .withDb(
+          base.db
+              .withElementAdded(testJump)
+              .withElementAdded(testBalance)
+              .withElementTimeAt(1, const Duration(milliseconds: 12345))
+              .withRiskAdded(RiskElement(rotation: testTwoRotations))
+              .withRiskTimeAt(0, const Duration(seconds: 30)),
+        )
+        .withDa(
+          base.da
+              .withElementAdded(DaElement(base: testRoll))
+              .withElementTimeAt(0, const Duration(milliseconds: 500)),
+        );
 
     await repository.saveRoutine(original);
 

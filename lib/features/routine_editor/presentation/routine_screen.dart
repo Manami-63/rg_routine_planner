@@ -14,6 +14,7 @@ import '../../routines/presentation/save_status_indicator.dart';
 import '../../music/presentation/music_tab.dart';
 import 'notes_tab.dart';
 import 'routine_total_bar.dart';
+import 'timeline_section.dart';
 
 /// The tabs of the routine page.
 enum RoutineTab {
@@ -149,7 +150,10 @@ class _RoutinePage extends ConsumerWidget {
           DbRisksTab(routineId: routineId),
           DaTab(routineId: routineId),
           NotesTab(routineId: routineId),
-          MusicTab(routineId: routineId),
+          MusicTab(
+            routineId: routineId,
+            footer: TimelineSection(routineId: routineId),
+          ),
         ],
       ),
       // The add button and the total's breakdown follow the selected tab.

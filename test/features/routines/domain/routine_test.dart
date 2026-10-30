@@ -55,6 +55,33 @@ void main() {
     expect(withS, isNot(routine));
   });
 
+  test('removing S removes unmarked ones first', () {
+    final withS = routine
+        .withDanceStepCount(3)
+        .withDanceStepTimeAt(0, const Duration(seconds: 7));
+
+    expect(withS.withDanceStepCount(2).danceStepTimes, [
+      const Duration(seconds: 7),
+      null,
+    ]);
+    expect(withS.withDanceStepCount(1).danceStepTimes, [
+      const Duration(seconds: 7),
+    ]);
+    expect(withS.withDanceStepCount(0).danceStepTimes, isEmpty);
+  });
+
+  test('marked S stay in time order', () {
+    final withS = routine
+        .withDanceStepCount(2)
+        .withDanceStepTimeAt(0, const Duration(seconds: 30))
+        .withDanceStepTimeAt(1, const Duration(seconds: 10));
+
+    expect(withS.danceStepTimes, [
+      const Duration(seconds: 10),
+      const Duration(seconds: 30),
+    ]);
+  });
+
   test('withLevel(null) removes the level', () {
     expect(routine.withLevel(figJunior).withLevel(null).level, isNull);
   });

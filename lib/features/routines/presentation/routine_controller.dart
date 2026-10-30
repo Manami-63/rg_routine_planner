@@ -132,6 +132,11 @@ class RoutineController extends AsyncNotifier<Routine> {
   void updateDa(DaRoutine Function(DaRoutine da) change) =>
       _update((routine) => routine.withDa(change(routine.da)));
 
+  /// Applies a change spanning DB, DA and S, e.g. music times (see
+  /// `RoutineTimelineEditing`).
+  void updateRoutine(Routine Function(Routine routine) change) =>
+      _update(change);
+
   /// Saves now, e.g. to retry after a failure.
   void saveNow() => _save();
 

@@ -10,6 +10,72 @@ void main() {
   group('DbRoutine', () {
     final empty = DbRoutine(rulesetId: 'test-v1');
 
+    test('times move with their element and risk', () {
+      const flat = DbElementOptions(flatFoot: true);
+      final risk = RiskElement(rotation: testTwoRotations);
+      final routine = empty
+          .withElementAdded(testJump)
+          .withElementAdded(testBalance, flat)
+          .withElementTimeAt(0, const Duration(seconds: 5))
+          .withRiskAdded(risk)
+          .withRiskTimeAt(0, const Duration(seconds: 9));
+
+      final moved = routine.withElementMoved(0, 1);
+      expect(moved.elements, [testBalance, testJump]);
+      expect(moved.elementTimes, [null, const Duration(seconds: 5)]);
+      expect(routine.withElementRemovedAt(0).elementTimes, [null]);
+      expect(routine.withRiskRemovedAt(0).riskTimes, isEmpty);
+      expect(routine.withElementAdded(testRotation).elementTimes.last, isNull);
+      expect(routine, isNot(routine.withTimesCleared()));
+      expect(routine.withTimesCleared().riskTimes, [null]);
+    });
+
+    test('setting a time puts the timed elements in time order', () {
+      const flat = DbElementOptions(flatFoot: true);
+      final routine = empty
+          .withElementAdded(testJump)
+          .withElementAdded(testBalance, flat)
+          .withElementAdded(testRotation)
+          .withElementTimeAt(0, const Duration(seconds: 20))
+          .withElementTimeAt(2, const Duration(seconds: 10));
+
+      // The balance has no time, so it stays in the middle.
+      expect(routine.elements, [testRotation, testBalance, testJump]);
+      expect(routine.elementOptions[1], flat);
+      expect(routine.elementTimes, [
+        const Duration(seconds: 10),
+        null,
+        const Duration(seconds: 20),
+      ]);
+    });
+
+    test('setting a time puts the timed risks in time order', () {
+      final two = RiskElement(rotation: testTwoRotations);
+      final three = RiskElement(rotation: testThreeRotations);
+      final routine = empty
+          .withRiskAdded(two)
+          .withRiskAdded(three)
+          .withRiskTimeAt(0, const Duration(seconds: 8))
+          .withRiskTimeAt(1, const Duration(seconds: 3));
+
+      expect(routine.risks, [three, two]);
+      expect(routine.riskTimes, [
+        const Duration(seconds: 3),
+        const Duration(seconds: 8),
+      ]);
+    });
+
+    test('times must match their lists', () {
+      expect(
+        () => DbRoutine(
+          rulesetId: 'test-v1',
+          elements: const [testJump],
+          elementTimes: const [],
+        ),
+        throwsArgumentError,
+      );
+    });
+
     test('adding returns a new routine and leaves the original unchanged', () {
       final updated = empty.withElementAdded(testJump);
 

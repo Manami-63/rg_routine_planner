@@ -179,18 +179,6 @@ class $RoutinesTable extends Routines
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _danceStepCountMeta = const VerificationMeta(
-    'danceStepCount',
-  );
-  @override
-  late final GeneratedColumn<int> danceStepCount = GeneratedColumn<int>(
-    'dance_step_count',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(0),
-  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -231,7 +219,6 @@ class $RoutinesTable extends Routines
     notes,
     musicFileName,
     musicTitle,
-    danceStepCount,
     createdAt,
     updatedAt,
   ];
@@ -373,15 +360,6 @@ class $RoutinesTable extends Routines
         musicTitle.isAcceptableOrUnknown(data['music_title']!, _musicTitleMeta),
       );
     }
-    if (data.containsKey('dance_step_count')) {
-      context.handle(
-        _danceStepCountMeta,
-        danceStepCount.isAcceptableOrUnknown(
-          data['dance_step_count']!,
-          _danceStepCountMeta,
-        ),
-      );
-    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -471,10 +449,6 @@ class $RoutinesTable extends Routines
         DriftSqlType.string,
         data['${effectivePrefix}music_title'],
       ),
-      danceStepCount: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}dance_step_count'],
-      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -521,9 +495,6 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
   final String notes;
   final String? musicFileName;
   final String? musicTitle;
-
-  /// Number of dance steps combinations (S). Added in v9.
-  final int danceStepCount;
   final DateTime createdAt;
   final DateTime updatedAt;
   const RoutineRow({
@@ -543,7 +514,6 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
     required this.notes,
     this.musicFileName,
     this.musicTitle,
-    required this.danceStepCount,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -592,7 +562,6 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
     if (!nullToAbsent || musicTitle != null) {
       map['music_title'] = Variable<String>(musicTitle);
     }
-    map['dance_step_count'] = Variable<int>(danceStepCount);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -640,7 +609,6 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
       musicTitle: musicTitle == null && nullToAbsent
           ? const Value.absent()
           : Value(musicTitle),
-      danceStepCount: Value(danceStepCount),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -672,7 +640,6 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
       notes: serializer.fromJson<String>(json['notes']),
       musicFileName: serializer.fromJson<String?>(json['musicFileName']),
       musicTitle: serializer.fromJson<String?>(json['musicTitle']),
-      danceStepCount: serializer.fromJson<int>(json['danceStepCount']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -699,7 +666,6 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
       'notes': serializer.toJson<String>(notes),
       'musicFileName': serializer.toJson<String?>(musicFileName),
       'musicTitle': serializer.toJson<String?>(musicTitle),
-      'danceStepCount': serializer.toJson<int>(danceStepCount),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -722,7 +688,6 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
     String? notes,
     Value<String?> musicFileName = const Value.absent(),
     Value<String?> musicTitle = const Value.absent(),
-    int? danceStepCount,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => RoutineRow(
@@ -752,7 +717,6 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
         ? musicFileName.value
         : this.musicFileName,
     musicTitle: musicTitle.present ? musicTitle.value : this.musicTitle,
-    danceStepCount: danceStepCount ?? this.danceStepCount,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -794,9 +758,6 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
       musicTitle: data.musicTitle.present
           ? data.musicTitle.value
           : this.musicTitle,
-      danceStepCount: data.danceStepCount.present
-          ? data.danceStepCount.value
-          : this.danceStepCount,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -821,7 +782,6 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
           ..write('notes: $notes, ')
           ..write('musicFileName: $musicFileName, ')
           ..write('musicTitle: $musicTitle, ')
-          ..write('danceStepCount: $danceStepCount, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -846,7 +806,6 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
     notes,
     musicFileName,
     musicTitle,
-    danceStepCount,
     createdAt,
     updatedAt,
   );
@@ -870,7 +829,6 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
           other.notes == this.notes &&
           other.musicFileName == this.musicFileName &&
           other.musicTitle == this.musicTitle &&
-          other.danceStepCount == this.danceStepCount &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -892,7 +850,6 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
   final Value<String> notes;
   final Value<String?> musicFileName;
   final Value<String?> musicTitle;
-  final Value<int> danceStepCount;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -913,7 +870,6 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
     this.notes = const Value.absent(),
     this.musicFileName = const Value.absent(),
     this.musicTitle = const Value.absent(),
-    this.danceStepCount = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -935,7 +891,6 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
     this.notes = const Value.absent(),
     this.musicFileName = const Value.absent(),
     this.musicTitle = const Value.absent(),
-    this.danceStepCount = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -961,7 +916,6 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
     Expression<String>? notes,
     Expression<String>? musicFileName,
     Expression<String>? musicTitle,
-    Expression<int>? danceStepCount,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -985,7 +939,6 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
       if (notes != null) 'notes': notes,
       if (musicFileName != null) 'music_file_name': musicFileName,
       if (musicTitle != null) 'music_title': musicTitle,
-      if (danceStepCount != null) 'dance_step_count': danceStepCount,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -1009,7 +962,6 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
     Value<String>? notes,
     Value<String?>? musicFileName,
     Value<String?>? musicTitle,
-    Value<int>? danceStepCount,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -1032,7 +984,6 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
       notes: notes ?? this.notes,
       musicFileName: musicFileName ?? this.musicFileName,
       musicTitle: musicTitle ?? this.musicTitle,
-      danceStepCount: danceStepCount ?? this.danceStepCount,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -1092,9 +1043,6 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
     if (musicTitle.present) {
       map['music_title'] = Variable<String>(musicTitle.value);
     }
-    if (danceStepCount.present) {
-      map['dance_step_count'] = Variable<int>(danceStepCount.value);
-    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -1126,7 +1074,6 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
           ..write('notes: $notes, ')
           ..write('musicFileName: $musicFileName, ')
           ..write('musicTitle: $musicTitle, ')
-          ..write('danceStepCount: $danceStepCount, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -1277,6 +1224,15 @@ class $RoutineBodyElementsTable extends RoutineBodyElements
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _timeMsMeta = const VerificationMeta('timeMs');
+  @override
+  late final GeneratedColumn<int> timeMs = GeneratedColumn<int>(
+    'time_ms',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1290,6 +1246,7 @@ class $RoutineBodyElementsTable extends RoutineBodyElements
     manualValue,
     customName,
     customGroup,
+    timeMs,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1384,6 +1341,12 @@ class $RoutineBodyElementsTable extends RoutineBodyElements
         ),
       );
     }
+    if (data.containsKey('time_ms')) {
+      context.handle(
+        _timeMsMeta,
+        timeMs.isAcceptableOrUnknown(data['time_ms']!, _timeMsMeta),
+      );
+    }
     return context;
   }
 
@@ -1437,6 +1400,10 @@ class $RoutineBodyElementsTable extends RoutineBodyElements
         DriftSqlType.string,
         data['${effectivePrefix}custom_group'],
       ),
+      timeMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}time_ms'],
+      ),
     );
   }
 
@@ -1465,6 +1432,10 @@ class RoutineBodyElementRow extends DataClass
   final int? manualValue;
   final String? customName;
   final String? customGroup;
+
+  /// When the element starts in the music, in milliseconds. Null when not
+  /// marked. Added in v10.
+  final int? timeMs;
   const RoutineBodyElementRow({
     required this.id,
     required this.routineId,
@@ -1477,6 +1448,7 @@ class RoutineBodyElementRow extends DataClass
     this.manualValue,
     this.customName,
     this.customGroup,
+    this.timeMs,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1497,6 +1469,9 @@ class RoutineBodyElementRow extends DataClass
     }
     if (!nullToAbsent || customGroup != null) {
       map['custom_group'] = Variable<String>(customGroup);
+    }
+    if (!nullToAbsent || timeMs != null) {
+      map['time_ms'] = Variable<int>(timeMs);
     }
     return map;
   }
@@ -1520,6 +1495,9 @@ class RoutineBodyElementRow extends DataClass
       customGroup: customGroup == null && nullToAbsent
           ? const Value.absent()
           : Value(customGroup),
+      timeMs: timeMs == null && nullToAbsent
+          ? const Value.absent()
+          : Value(timeMs),
     );
   }
 
@@ -1540,6 +1518,7 @@ class RoutineBodyElementRow extends DataClass
       manualValue: serializer.fromJson<int?>(json['manualValue']),
       customName: serializer.fromJson<String?>(json['customName']),
       customGroup: serializer.fromJson<String?>(json['customGroup']),
+      timeMs: serializer.fromJson<int?>(json['timeMs']),
     );
   }
   @override
@@ -1557,6 +1536,7 @@ class RoutineBodyElementRow extends DataClass
       'manualValue': serializer.toJson<int?>(manualValue),
       'customName': serializer.toJson<String?>(customName),
       'customGroup': serializer.toJson<String?>(customGroup),
+      'timeMs': serializer.toJson<int?>(timeMs),
     };
   }
 
@@ -1572,6 +1552,7 @@ class RoutineBodyElementRow extends DataClass
     Value<int?> manualValue = const Value.absent(),
     Value<String?> customName = const Value.absent(),
     Value<String?> customGroup = const Value.absent(),
+    Value<int?> timeMs = const Value.absent(),
   }) => RoutineBodyElementRow(
     id: id ?? this.id,
     routineId: routineId ?? this.routineId,
@@ -1584,6 +1565,7 @@ class RoutineBodyElementRow extends DataClass
     manualValue: manualValue.present ? manualValue.value : this.manualValue,
     customName: customName.present ? customName.value : this.customName,
     customGroup: customGroup.present ? customGroup.value : this.customGroup,
+    timeMs: timeMs.present ? timeMs.value : this.timeMs,
   );
   RoutineBodyElementRow copyWithCompanion(RoutineBodyElementsCompanion data) {
     return RoutineBodyElementRow(
@@ -1608,6 +1590,7 @@ class RoutineBodyElementRow extends DataClass
       customGroup: data.customGroup.present
           ? data.customGroup.value
           : this.customGroup,
+      timeMs: data.timeMs.present ? data.timeMs.value : this.timeMs,
     );
   }
 
@@ -1624,7 +1607,8 @@ class RoutineBodyElementRow extends DataClass
           ..write('seriesCount: $seriesCount, ')
           ..write('manualValue: $manualValue, ')
           ..write('customName: $customName, ')
-          ..write('customGroup: $customGroup')
+          ..write('customGroup: $customGroup, ')
+          ..write('timeMs: $timeMs')
           ..write(')'))
         .toString();
   }
@@ -1642,6 +1626,7 @@ class RoutineBodyElementRow extends DataClass
     manualValue,
     customName,
     customGroup,
+    timeMs,
   );
   @override
   bool operator ==(Object other) =>
@@ -1657,7 +1642,8 @@ class RoutineBodyElementRow extends DataClass
           other.seriesCount == this.seriesCount &&
           other.manualValue == this.manualValue &&
           other.customName == this.customName &&
-          other.customGroup == this.customGroup);
+          other.customGroup == this.customGroup &&
+          other.timeMs == this.timeMs);
 }
 
 class RoutineBodyElementsCompanion
@@ -1673,6 +1659,7 @@ class RoutineBodyElementsCompanion
   final Value<int?> manualValue;
   final Value<String?> customName;
   final Value<String?> customGroup;
+  final Value<int?> timeMs;
   const RoutineBodyElementsCompanion({
     this.id = const Value.absent(),
     this.routineId = const Value.absent(),
@@ -1685,6 +1672,7 @@ class RoutineBodyElementsCompanion
     this.manualValue = const Value.absent(),
     this.customName = const Value.absent(),
     this.customGroup = const Value.absent(),
+    this.timeMs = const Value.absent(),
   });
   RoutineBodyElementsCompanion.insert({
     this.id = const Value.absent(),
@@ -1698,6 +1686,7 @@ class RoutineBodyElementsCompanion
     this.manualValue = const Value.absent(),
     this.customName = const Value.absent(),
     this.customGroup = const Value.absent(),
+    this.timeMs = const Value.absent(),
   }) : routineId = Value(routineId),
        elementId = Value(elementId),
        position = Value(position);
@@ -1713,6 +1702,7 @@ class RoutineBodyElementsCompanion
     Expression<int>? manualValue,
     Expression<String>? customName,
     Expression<String>? customGroup,
+    Expression<int>? timeMs,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1726,6 +1716,7 @@ class RoutineBodyElementsCompanion
       if (manualValue != null) 'manual_value': manualValue,
       if (customName != null) 'custom_name': customName,
       if (customGroup != null) 'custom_group': customGroup,
+      if (timeMs != null) 'time_ms': timeMs,
     });
   }
 
@@ -1741,6 +1732,7 @@ class RoutineBodyElementsCompanion
     Value<int?>? manualValue,
     Value<String?>? customName,
     Value<String?>? customGroup,
+    Value<int?>? timeMs,
   }) {
     return RoutineBodyElementsCompanion(
       id: id ?? this.id,
@@ -1754,6 +1746,7 @@ class RoutineBodyElementsCompanion
       manualValue: manualValue ?? this.manualValue,
       customName: customName ?? this.customName,
       customGroup: customGroup ?? this.customGroup,
+      timeMs: timeMs ?? this.timeMs,
     );
   }
 
@@ -1793,6 +1786,9 @@ class RoutineBodyElementsCompanion
     if (customGroup.present) {
       map['custom_group'] = Variable<String>(customGroup.value);
     }
+    if (timeMs.present) {
+      map['time_ms'] = Variable<int>(timeMs.value);
+    }
     return map;
   }
 
@@ -1809,7 +1805,8 @@ class RoutineBodyElementsCompanion
           ..write('seriesCount: $seriesCount, ')
           ..write('manualValue: $manualValue, ')
           ..write('customName: $customName, ')
-          ..write('customGroup: $customGroup')
+          ..write('customGroup: $customGroup, ')
+          ..write('timeMs: $timeMs')
           ..write(')'))
         .toString();
   }
@@ -1870,12 +1867,22 @@ class $RoutineRisksTable extends RoutineRisks
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _timeMsMeta = const VerificationMeta('timeMs');
+  @override
+  late final GeneratedColumn<int> timeMs = GeneratedColumn<int>(
+    'time_ms',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
     routineId,
     rotationOptionId,
     position,
+    timeMs,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1919,6 +1926,12 @@ class $RoutineRisksTable extends RoutineRisks
     } else if (isInserting) {
       context.missing(_positionMeta);
     }
+    if (data.containsKey('time_ms')) {
+      context.handle(
+        _timeMsMeta,
+        timeMs.isAcceptableOrUnknown(data['time_ms']!, _timeMsMeta),
+      );
+    }
     return context;
   }
 
@@ -1944,6 +1957,10 @@ class $RoutineRisksTable extends RoutineRisks
         DriftSqlType.int,
         data['${effectivePrefix}position'],
       )!,
+      timeMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}time_ms'],
+      ),
     );
   }
 
@@ -1958,11 +1975,15 @@ class RoutineRiskRow extends DataClass implements Insertable<RoutineRiskRow> {
   final String routineId;
   final String rotationOptionId;
   final int position;
+
+  /// Music time in milliseconds, or null. Added in v10.
+  final int? timeMs;
   const RoutineRiskRow({
     required this.id,
     required this.routineId,
     required this.rotationOptionId,
     required this.position,
+    this.timeMs,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1971,6 +1992,9 @@ class RoutineRiskRow extends DataClass implements Insertable<RoutineRiskRow> {
     map['routine_id'] = Variable<String>(routineId);
     map['rotation_option_id'] = Variable<String>(rotationOptionId);
     map['position'] = Variable<int>(position);
+    if (!nullToAbsent || timeMs != null) {
+      map['time_ms'] = Variable<int>(timeMs);
+    }
     return map;
   }
 
@@ -1980,6 +2004,9 @@ class RoutineRiskRow extends DataClass implements Insertable<RoutineRiskRow> {
       routineId: Value(routineId),
       rotationOptionId: Value(rotationOptionId),
       position: Value(position),
+      timeMs: timeMs == null && nullToAbsent
+          ? const Value.absent()
+          : Value(timeMs),
     );
   }
 
@@ -1993,6 +2020,7 @@ class RoutineRiskRow extends DataClass implements Insertable<RoutineRiskRow> {
       routineId: serializer.fromJson<String>(json['routineId']),
       rotationOptionId: serializer.fromJson<String>(json['rotationOptionId']),
       position: serializer.fromJson<int>(json['position']),
+      timeMs: serializer.fromJson<int?>(json['timeMs']),
     );
   }
   @override
@@ -2003,6 +2031,7 @@ class RoutineRiskRow extends DataClass implements Insertable<RoutineRiskRow> {
       'routineId': serializer.toJson<String>(routineId),
       'rotationOptionId': serializer.toJson<String>(rotationOptionId),
       'position': serializer.toJson<int>(position),
+      'timeMs': serializer.toJson<int?>(timeMs),
     };
   }
 
@@ -2011,11 +2040,13 @@ class RoutineRiskRow extends DataClass implements Insertable<RoutineRiskRow> {
     String? routineId,
     String? rotationOptionId,
     int? position,
+    Value<int?> timeMs = const Value.absent(),
   }) => RoutineRiskRow(
     id: id ?? this.id,
     routineId: routineId ?? this.routineId,
     rotationOptionId: rotationOptionId ?? this.rotationOptionId,
     position: position ?? this.position,
+    timeMs: timeMs.present ? timeMs.value : this.timeMs,
   );
   RoutineRiskRow copyWithCompanion(RoutineRisksCompanion data) {
     return RoutineRiskRow(
@@ -2025,6 +2056,7 @@ class RoutineRiskRow extends DataClass implements Insertable<RoutineRiskRow> {
           ? data.rotationOptionId.value
           : this.rotationOptionId,
       position: data.position.present ? data.position.value : this.position,
+      timeMs: data.timeMs.present ? data.timeMs.value : this.timeMs,
     );
   }
 
@@ -2034,13 +2066,15 @@ class RoutineRiskRow extends DataClass implements Insertable<RoutineRiskRow> {
           ..write('id: $id, ')
           ..write('routineId: $routineId, ')
           ..write('rotationOptionId: $rotationOptionId, ')
-          ..write('position: $position')
+          ..write('position: $position, ')
+          ..write('timeMs: $timeMs')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, routineId, rotationOptionId, position);
+  int get hashCode =>
+      Object.hash(id, routineId, rotationOptionId, position, timeMs);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2048,7 +2082,8 @@ class RoutineRiskRow extends DataClass implements Insertable<RoutineRiskRow> {
           other.id == this.id &&
           other.routineId == this.routineId &&
           other.rotationOptionId == this.rotationOptionId &&
-          other.position == this.position);
+          other.position == this.position &&
+          other.timeMs == this.timeMs);
 }
 
 class RoutineRisksCompanion extends UpdateCompanion<RoutineRiskRow> {
@@ -2056,17 +2091,20 @@ class RoutineRisksCompanion extends UpdateCompanion<RoutineRiskRow> {
   final Value<String> routineId;
   final Value<String> rotationOptionId;
   final Value<int> position;
+  final Value<int?> timeMs;
   const RoutineRisksCompanion({
     this.id = const Value.absent(),
     this.routineId = const Value.absent(),
     this.rotationOptionId = const Value.absent(),
     this.position = const Value.absent(),
+    this.timeMs = const Value.absent(),
   });
   RoutineRisksCompanion.insert({
     this.id = const Value.absent(),
     required String routineId,
     required String rotationOptionId,
     required int position,
+    this.timeMs = const Value.absent(),
   }) : routineId = Value(routineId),
        rotationOptionId = Value(rotationOptionId),
        position = Value(position);
@@ -2075,12 +2113,14 @@ class RoutineRisksCompanion extends UpdateCompanion<RoutineRiskRow> {
     Expression<String>? routineId,
     Expression<String>? rotationOptionId,
     Expression<int>? position,
+    Expression<int>? timeMs,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (routineId != null) 'routine_id': routineId,
       if (rotationOptionId != null) 'rotation_option_id': rotationOptionId,
       if (position != null) 'position': position,
+      if (timeMs != null) 'time_ms': timeMs,
     });
   }
 
@@ -2089,12 +2129,14 @@ class RoutineRisksCompanion extends UpdateCompanion<RoutineRiskRow> {
     Value<String>? routineId,
     Value<String>? rotationOptionId,
     Value<int>? position,
+    Value<int?>? timeMs,
   }) {
     return RoutineRisksCompanion(
       id: id ?? this.id,
       routineId: routineId ?? this.routineId,
       rotationOptionId: rotationOptionId ?? this.rotationOptionId,
       position: position ?? this.position,
+      timeMs: timeMs ?? this.timeMs,
     );
   }
 
@@ -2113,6 +2155,9 @@ class RoutineRisksCompanion extends UpdateCompanion<RoutineRiskRow> {
     if (position.present) {
       map['position'] = Variable<int>(position.value);
     }
+    if (timeMs.present) {
+      map['time_ms'] = Variable<int>(timeMs.value);
+    }
     return map;
   }
 
@@ -2122,7 +2167,8 @@ class RoutineRisksCompanion extends UpdateCompanion<RoutineRiskRow> {
           ..write('id: $id, ')
           ..write('routineId: $routineId, ')
           ..write('rotationOptionId: $rotationOptionId, ')
-          ..write('position: $position')
+          ..write('position: $position, ')
+          ..write('timeMs: $timeMs')
           ..write(')'))
         .toString();
   }
@@ -2568,6 +2614,15 @@ class $RoutineApparatusDifficultiesTable extends RoutineApparatusDifficulties
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _timeMsMeta = const VerificationMeta('timeMs');
+  @override
+  late final GeneratedColumn<int> timeMs = GeneratedColumn<int>(
+    'time_ms',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2579,6 +2634,7 @@ class $RoutineApparatusDifficultiesTable extends RoutineApparatusDifficulties
     preAcrobatic,
     manualValue,
     customName,
+    timeMs,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2658,6 +2714,12 @@ class $RoutineApparatusDifficultiesTable extends RoutineApparatusDifficulties
         customName.isAcceptableOrUnknown(data['custom_name']!, _customNameMeta),
       );
     }
+    if (data.containsKey('time_ms')) {
+      context.handle(
+        _timeMsMeta,
+        timeMs.isAcceptableOrUnknown(data['time_ms']!, _timeMsMeta),
+      );
+    }
     return context;
   }
 
@@ -2706,6 +2768,10 @@ class $RoutineApparatusDifficultiesTable extends RoutineApparatusDifficulties
         DriftSqlType.string,
         data['${effectivePrefix}custom_name'],
       ),
+      timeMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}time_ms'],
+      ),
     );
   }
 
@@ -2739,6 +2805,9 @@ class RoutineApparatusDifficultyRow extends DataClass
 
   /// Name of a custom DA. Null otherwise.
   final String? customName;
+
+  /// Music time in milliseconds, or null. Added in v10.
+  final int? timeMs;
   const RoutineApparatusDifficultyRow({
     required this.id,
     required this.routineId,
@@ -2749,6 +2818,7 @@ class RoutineApparatusDifficultyRow extends DataClass
     required this.preAcrobatic,
     this.manualValue,
     this.customName,
+    this.timeMs,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2767,6 +2837,9 @@ class RoutineApparatusDifficultyRow extends DataClass
     }
     if (!nullToAbsent || customName != null) {
       map['custom_name'] = Variable<String>(customName);
+    }
+    if (!nullToAbsent || timeMs != null) {
+      map['time_ms'] = Variable<int>(timeMs);
     }
     return map;
   }
@@ -2788,6 +2861,9 @@ class RoutineApparatusDifficultyRow extends DataClass
       customName: customName == null && nullToAbsent
           ? const Value.absent()
           : Value(customName),
+      timeMs: timeMs == null && nullToAbsent
+          ? const Value.absent()
+          : Value(timeMs),
     );
   }
 
@@ -2806,6 +2882,7 @@ class RoutineApparatusDifficultyRow extends DataClass
       preAcrobatic: serializer.fromJson<bool>(json['preAcrobatic']),
       manualValue: serializer.fromJson<int?>(json['manualValue']),
       customName: serializer.fromJson<String?>(json['customName']),
+      timeMs: serializer.fromJson<int?>(json['timeMs']),
     );
   }
   @override
@@ -2821,6 +2898,7 @@ class RoutineApparatusDifficultyRow extends DataClass
       'preAcrobatic': serializer.toJson<bool>(preAcrobatic),
       'manualValue': serializer.toJson<int?>(manualValue),
       'customName': serializer.toJson<String?>(customName),
+      'timeMs': serializer.toJson<int?>(timeMs),
     };
   }
 
@@ -2834,6 +2912,7 @@ class RoutineApparatusDifficultyRow extends DataClass
     bool? preAcrobatic,
     Value<int?> manualValue = const Value.absent(),
     Value<String?> customName = const Value.absent(),
+    Value<int?> timeMs = const Value.absent(),
   }) => RoutineApparatusDifficultyRow(
     id: id ?? this.id,
     routineId: routineId ?? this.routineId,
@@ -2844,6 +2923,7 @@ class RoutineApparatusDifficultyRow extends DataClass
     preAcrobatic: preAcrobatic ?? this.preAcrobatic,
     manualValue: manualValue.present ? manualValue.value : this.manualValue,
     customName: customName.present ? customName.value : this.customName,
+    timeMs: timeMs.present ? timeMs.value : this.timeMs,
   );
   RoutineApparatusDifficultyRow copyWithCompanion(
     RoutineApparatusDifficultiesCompanion data,
@@ -2866,6 +2946,7 @@ class RoutineApparatusDifficultyRow extends DataClass
       customName: data.customName.present
           ? data.customName.value
           : this.customName,
+      timeMs: data.timeMs.present ? data.timeMs.value : this.timeMs,
     );
   }
 
@@ -2880,7 +2961,8 @@ class RoutineApparatusDifficultyRow extends DataClass
           ..write('criteria: $criteria, ')
           ..write('preAcrobatic: $preAcrobatic, ')
           ..write('manualValue: $manualValue, ')
-          ..write('customName: $customName')
+          ..write('customName: $customName, ')
+          ..write('timeMs: $timeMs')
           ..write(')'))
         .toString();
   }
@@ -2896,6 +2978,7 @@ class RoutineApparatusDifficultyRow extends DataClass
     preAcrobatic,
     manualValue,
     customName,
+    timeMs,
   );
   @override
   bool operator ==(Object other) =>
@@ -2909,7 +2992,8 @@ class RoutineApparatusDifficultyRow extends DataClass
           other.criteria == this.criteria &&
           other.preAcrobatic == this.preAcrobatic &&
           other.manualValue == this.manualValue &&
-          other.customName == this.customName);
+          other.customName == this.customName &&
+          other.timeMs == this.timeMs);
 }
 
 class RoutineApparatusDifficultiesCompanion
@@ -2923,6 +3007,7 @@ class RoutineApparatusDifficultiesCompanion
   final Value<bool> preAcrobatic;
   final Value<int?> manualValue;
   final Value<String?> customName;
+  final Value<int?> timeMs;
   const RoutineApparatusDifficultiesCompanion({
     this.id = const Value.absent(),
     this.routineId = const Value.absent(),
@@ -2933,6 +3018,7 @@ class RoutineApparatusDifficultiesCompanion
     this.preAcrobatic = const Value.absent(),
     this.manualValue = const Value.absent(),
     this.customName = const Value.absent(),
+    this.timeMs = const Value.absent(),
   });
   RoutineApparatusDifficultiesCompanion.insert({
     this.id = const Value.absent(),
@@ -2944,6 +3030,7 @@ class RoutineApparatusDifficultiesCompanion
     this.preAcrobatic = const Value.absent(),
     this.manualValue = const Value.absent(),
     this.customName = const Value.absent(),
+    this.timeMs = const Value.absent(),
   }) : routineId = Value(routineId),
        position = Value(position),
        baseId = Value(baseId);
@@ -2957,6 +3044,7 @@ class RoutineApparatusDifficultiesCompanion
     Expression<bool>? preAcrobatic,
     Expression<int>? manualValue,
     Expression<String>? customName,
+    Expression<int>? timeMs,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2968,6 +3056,7 @@ class RoutineApparatusDifficultiesCompanion
       if (preAcrobatic != null) 'pre_acrobatic': preAcrobatic,
       if (manualValue != null) 'manual_value': manualValue,
       if (customName != null) 'custom_name': customName,
+      if (timeMs != null) 'time_ms': timeMs,
     });
   }
 
@@ -2981,6 +3070,7 @@ class RoutineApparatusDifficultiesCompanion
     Value<bool>? preAcrobatic,
     Value<int?>? manualValue,
     Value<String?>? customName,
+    Value<int?>? timeMs,
   }) {
     return RoutineApparatusDifficultiesCompanion(
       id: id ?? this.id,
@@ -2992,6 +3082,7 @@ class RoutineApparatusDifficultiesCompanion
       preAcrobatic: preAcrobatic ?? this.preAcrobatic,
       manualValue: manualValue ?? this.manualValue,
       customName: customName ?? this.customName,
+      timeMs: timeMs ?? this.timeMs,
     );
   }
 
@@ -3025,6 +3116,9 @@ class RoutineApparatusDifficultiesCompanion
     if (customName.present) {
       map['custom_name'] = Variable<String>(customName.value);
     }
+    if (timeMs.present) {
+      map['time_ms'] = Variable<int>(timeMs.value);
+    }
     return map;
   }
 
@@ -3039,7 +3133,313 @@ class RoutineApparatusDifficultiesCompanion
           ..write('criteria: $criteria, ')
           ..write('preAcrobatic: $preAcrobatic, ')
           ..write('manualValue: $manualValue, ')
-          ..write('customName: $customName')
+          ..write('customName: $customName, ')
+          ..write('timeMs: $timeMs')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $RoutineDanceStepsTable extends RoutineDanceSteps
+    with TableInfo<$RoutineDanceStepsTable, RoutineDanceStepRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RoutineDanceStepsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _routineIdMeta = const VerificationMeta(
+    'routineId',
+  );
+  @override
+  late final GeneratedColumn<String> routineId = GeneratedColumn<String>(
+    'routine_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES routines (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _positionMeta = const VerificationMeta(
+    'position',
+  );
+  @override
+  late final GeneratedColumn<int> position = GeneratedColumn<int>(
+    'position',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _timeMsMeta = const VerificationMeta('timeMs');
+  @override
+  late final GeneratedColumn<int> timeMs = GeneratedColumn<int>(
+    'time_ms',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, routineId, position, timeMs];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'routine_dance_steps';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RoutineDanceStepRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('routine_id')) {
+      context.handle(
+        _routineIdMeta,
+        routineId.isAcceptableOrUnknown(data['routine_id']!, _routineIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_routineIdMeta);
+    }
+    if (data.containsKey('position')) {
+      context.handle(
+        _positionMeta,
+        position.isAcceptableOrUnknown(data['position']!, _positionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_positionMeta);
+    }
+    if (data.containsKey('time_ms')) {
+      context.handle(
+        _timeMsMeta,
+        timeMs.isAcceptableOrUnknown(data['time_ms']!, _timeMsMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  RoutineDanceStepRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RoutineDanceStepRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      routineId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}routine_id'],
+      )!,
+      position: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}position'],
+      )!,
+      timeMs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}time_ms'],
+      ),
+    );
+  }
+
+  @override
+  $RoutineDanceStepsTable createAlias(String alias) {
+    return $RoutineDanceStepsTable(attachedDatabase, alias);
+  }
+}
+
+class RoutineDanceStepRow extends DataClass
+    implements Insertable<RoutineDanceStepRow> {
+  final int id;
+  final String routineId;
+  final int position;
+
+  /// Music time in milliseconds, or null.
+  final int? timeMs;
+  const RoutineDanceStepRow({
+    required this.id,
+    required this.routineId,
+    required this.position,
+    this.timeMs,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['routine_id'] = Variable<String>(routineId);
+    map['position'] = Variable<int>(position);
+    if (!nullToAbsent || timeMs != null) {
+      map['time_ms'] = Variable<int>(timeMs);
+    }
+    return map;
+  }
+
+  RoutineDanceStepsCompanion toCompanion(bool nullToAbsent) {
+    return RoutineDanceStepsCompanion(
+      id: Value(id),
+      routineId: Value(routineId),
+      position: Value(position),
+      timeMs: timeMs == null && nullToAbsent
+          ? const Value.absent()
+          : Value(timeMs),
+    );
+  }
+
+  factory RoutineDanceStepRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RoutineDanceStepRow(
+      id: serializer.fromJson<int>(json['id']),
+      routineId: serializer.fromJson<String>(json['routineId']),
+      position: serializer.fromJson<int>(json['position']),
+      timeMs: serializer.fromJson<int?>(json['timeMs']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'routineId': serializer.toJson<String>(routineId),
+      'position': serializer.toJson<int>(position),
+      'timeMs': serializer.toJson<int?>(timeMs),
+    };
+  }
+
+  RoutineDanceStepRow copyWith({
+    int? id,
+    String? routineId,
+    int? position,
+    Value<int?> timeMs = const Value.absent(),
+  }) => RoutineDanceStepRow(
+    id: id ?? this.id,
+    routineId: routineId ?? this.routineId,
+    position: position ?? this.position,
+    timeMs: timeMs.present ? timeMs.value : this.timeMs,
+  );
+  RoutineDanceStepRow copyWithCompanion(RoutineDanceStepsCompanion data) {
+    return RoutineDanceStepRow(
+      id: data.id.present ? data.id.value : this.id,
+      routineId: data.routineId.present ? data.routineId.value : this.routineId,
+      position: data.position.present ? data.position.value : this.position,
+      timeMs: data.timeMs.present ? data.timeMs.value : this.timeMs,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RoutineDanceStepRow(')
+          ..write('id: $id, ')
+          ..write('routineId: $routineId, ')
+          ..write('position: $position, ')
+          ..write('timeMs: $timeMs')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, routineId, position, timeMs);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RoutineDanceStepRow &&
+          other.id == this.id &&
+          other.routineId == this.routineId &&
+          other.position == this.position &&
+          other.timeMs == this.timeMs);
+}
+
+class RoutineDanceStepsCompanion extends UpdateCompanion<RoutineDanceStepRow> {
+  final Value<int> id;
+  final Value<String> routineId;
+  final Value<int> position;
+  final Value<int?> timeMs;
+  const RoutineDanceStepsCompanion({
+    this.id = const Value.absent(),
+    this.routineId = const Value.absent(),
+    this.position = const Value.absent(),
+    this.timeMs = const Value.absent(),
+  });
+  RoutineDanceStepsCompanion.insert({
+    this.id = const Value.absent(),
+    required String routineId,
+    required int position,
+    this.timeMs = const Value.absent(),
+  }) : routineId = Value(routineId),
+       position = Value(position);
+  static Insertable<RoutineDanceStepRow> custom({
+    Expression<int>? id,
+    Expression<String>? routineId,
+    Expression<int>? position,
+    Expression<int>? timeMs,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (routineId != null) 'routine_id': routineId,
+      if (position != null) 'position': position,
+      if (timeMs != null) 'time_ms': timeMs,
+    });
+  }
+
+  RoutineDanceStepsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? routineId,
+    Value<int>? position,
+    Value<int?>? timeMs,
+  }) {
+    return RoutineDanceStepsCompanion(
+      id: id ?? this.id,
+      routineId: routineId ?? this.routineId,
+      position: position ?? this.position,
+      timeMs: timeMs ?? this.timeMs,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (routineId.present) {
+      map['routine_id'] = Variable<String>(routineId.value);
+    }
+    if (position.present) {
+      map['position'] = Variable<int>(position.value);
+    }
+    if (timeMs.present) {
+      map['time_ms'] = Variable<int>(timeMs.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RoutineDanceStepsCompanion(')
+          ..write('id: $id, ')
+          ..write('routineId: $routineId, ')
+          ..write('position: $position, ')
+          ..write('timeMs: $timeMs')
           ..write(')'))
         .toString();
   }
@@ -3056,6 +3456,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $RoutineRiskCriteriaTable(this);
   late final $RoutineApparatusDifficultiesTable routineApparatusDifficulties =
       $RoutineApparatusDifficultiesTable(this);
+  late final $RoutineDanceStepsTable routineDanceSteps =
+      $RoutineDanceStepsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3066,6 +3468,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     routineRisks,
     routineRiskCriteria,
     routineApparatusDifficulties,
+    routineDanceSteps,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -3099,6 +3502,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         TableUpdate('routine_apparatus_difficulties', kind: UpdateKind.delete),
       ],
     ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'routines',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('routine_dance_steps', kind: UpdateKind.delete)],
+    ),
   ]);
   @override
   DriftDatabaseOptions get options =>
@@ -3122,7 +3532,6 @@ typedef $$RoutinesTableCreateCompanionBuilder = RoutinesCompanion Function({
   Value<String> notes,
   Value<String?> musicFileName,
   Value<String?> musicTitle,
-  Value<int> danceStepCount,
   required DateTime createdAt,
   required DateTime updatedAt,
   Value<int> rowid,
@@ -3144,7 +3553,6 @@ typedef $$RoutinesTableUpdateCompanionBuilder = RoutinesCompanion Function({
   Value<String> notes,
   Value<String?> musicFileName,
   Value<String?> musicTitle,
-  Value<int> danceStepCount,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<int> rowid,
@@ -3215,6 +3623,27 @@ final class $$RoutinesTableReferences
 
     final cache = $_typedResult.readTableOrNull(
       _routineApparatusDifficultiesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$RoutineDanceStepsTable, List<RoutineDanceStepRow>>
+  _routineDanceStepsRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.routineDanceSteps,
+        aliasName: 'routines__id__routine_dance_steps__routine_id',
+      );
+
+  $$RoutineDanceStepsTableProcessedTableManager get routineDanceStepsRefs {
+    final manager = $$RoutineDanceStepsTableTableManager(
+      $_db,
+      $_db.routineDanceSteps,
+    ).filter((f) => f.routineId.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _routineDanceStepsRefsTable($_db),
     );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
@@ -3311,11 +3740,6 @@ class $$RoutinesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get danceStepCount => $composableBuilder(
-    column: $table.danceStepCount,
-    builder: (column) => ColumnFilters(column),
-  );
-
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnFilters(column),
@@ -3402,6 +3826,31 @@ class $$RoutinesTableFilterComposer
                     $removeJoinBuilderFromRootComposer,
               ),
         );
+    return f(composer);
+  }
+
+  Expression<bool> routineDanceStepsRefs(
+    Expression<bool> Function($$RoutineDanceStepsTableFilterComposer f) f,
+  ) {
+    final $$RoutineDanceStepsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.routineDanceSteps,
+      getReferencedColumn: (t) => t.routineId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RoutineDanceStepsTableFilterComposer(
+            $db: $db,
+            $table: $db.routineDanceSteps,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
     return f(composer);
   }
 }
@@ -3495,11 +3944,6 @@ class $$RoutinesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get danceStepCount => $composableBuilder(
-    column: $table.danceStepCount,
-    builder: (column) => ColumnOrderings(column),
-  );
-
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -3588,11 +4032,6 @@ class $$RoutinesTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<int> get danceStepCount => $composableBuilder(
-    column: $table.danceStepCount,
-    builder: (column) => column,
-  );
-
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -3678,6 +4117,32 @@ class $$RoutinesTableAnnotationComposer
         );
     return f(composer);
   }
+
+  Expression<T> routineDanceStepsRefs<T extends Object>(
+    Expression<T> Function($$RoutineDanceStepsTableAnnotationComposer a) f,
+  ) {
+    final $$RoutineDanceStepsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.routineDanceSteps,
+          getReferencedColumn: (t) => t.routineId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$RoutineDanceStepsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.routineDanceSteps,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
 }
 
 class $$RoutinesTableTableManager
@@ -3697,6 +4162,7 @@ class $$RoutinesTableTableManager
             bool routineBodyElementsRefs,
             bool routineRisksRefs,
             bool routineApparatusDifficultiesRefs,
+            bool routineDanceStepsRefs,
           })
         > {
   $$RoutinesTableTableManager(_$AppDatabase db, $RoutinesTable table)
@@ -3728,7 +4194,6 @@ class $$RoutinesTableTableManager
                 Value<String> notes = const Value.absent(),
                 Value<String?> musicFileName = const Value.absent(),
                 Value<String?> musicTitle = const Value.absent(),
-                Value<int> danceStepCount = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -3749,7 +4214,6 @@ class $$RoutinesTableTableManager
                 notes: notes,
                 musicFileName: musicFileName,
                 musicTitle: musicTitle,
-                danceStepCount: danceStepCount,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -3772,7 +4236,6 @@ class $$RoutinesTableTableManager
                 Value<String> notes = const Value.absent(),
                 Value<String?> musicFileName = const Value.absent(),
                 Value<String?> musicTitle = const Value.absent(),
-                Value<int> danceStepCount = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -3793,7 +4256,6 @@ class $$RoutinesTableTableManager
                 notes: notes,
                 musicFileName: musicFileName,
                 musicTitle: musicTitle,
-                danceStepCount: danceStepCount,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -3811,6 +4273,7 @@ class $$RoutinesTableTableManager
                 routineBodyElementsRefs = false,
                 routineRisksRefs = false,
                 routineApparatusDifficultiesRefs = false,
+                routineDanceStepsRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -3819,6 +4282,7 @@ class $$RoutinesTableTableManager
                     if (routineRisksRefs) db.routineRisks,
                     if (routineApparatusDifficultiesRefs)
                       db.routineApparatusDifficulties,
+                    if (routineDanceStepsRefs) db.routineDanceSteps,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -3883,6 +4347,26 @@ class $$RoutinesTableTableManager
                           referencedColumn: 'routine_id',
                           typedResults: items,
                         ),
+                      if (routineDanceStepsRefs)
+                        await $_getPrefetchedDataByColumns<
+                          RoutineRow,
+                          $RoutinesTable,
+                          RoutineDanceStepRow,
+                          $RoutineDanceStepsTable
+                        >(
+                          currentTable: table,
+                          referencedTable: $$RoutinesTableReferences
+                              ._routineDanceStepsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$RoutinesTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).routineDanceStepsRefs,
+                          currentColumn: 'id',
+                          referencedColumn: 'routine_id',
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -3907,6 +4391,7 @@ typedef $$RoutinesTableProcessedTableManager =
         bool routineBodyElementsRefs,
         bool routineRisksRefs,
         bool routineApparatusDifficultiesRefs,
+        bool routineDanceStepsRefs,
       })
     >;
 typedef $$RoutineBodyElementsTableCreateCompanionBuilder =
@@ -3922,6 +4407,7 @@ typedef $$RoutineBodyElementsTableCreateCompanionBuilder =
       Value<int?> manualValue,
       Value<String?> customName,
       Value<String?> customGroup,
+      Value<int?> timeMs,
     });
 typedef $$RoutineBodyElementsTableUpdateCompanionBuilder =
     RoutineBodyElementsCompanion Function({
@@ -3936,6 +4422,7 @@ typedef $$RoutineBodyElementsTableUpdateCompanionBuilder =
       Value<int?> manualValue,
       Value<String?> customName,
       Value<String?> customGroup,
+      Value<int?> timeMs,
     });
 
 final class $$RoutineBodyElementsTableReferences
@@ -4028,6 +4515,11 @@ class $$RoutineBodyElementsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<int> get timeMs => $composableBuilder(
+    column: $table.timeMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$RoutinesTableFilterComposer get routineId {
     final $$RoutinesTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -4111,6 +4603,11 @@ class $$RoutineBodyElementsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get timeMs => $composableBuilder(
+    column: $table.timeMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$RoutinesTableOrderingComposer get routineId {
     final $$RoutinesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -4184,6 +4681,9 @@ class $$RoutineBodyElementsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get timeMs =>
+      $composableBuilder(column: $table.timeMs, builder: (column) => column);
+
   $$RoutinesTableAnnotationComposer get routineId {
     final $$RoutinesTableAnnotationComposer composer = $composerBuilder(
       composer: this,
@@ -4255,6 +4755,7 @@ class $$RoutineBodyElementsTableTableManager
                 Value<int?> manualValue = const Value.absent(),
                 Value<String?> customName = const Value.absent(),
                 Value<String?> customGroup = const Value.absent(),
+                Value<int?> timeMs = const Value.absent(),
               }) => RoutineBodyElementsCompanion(
                 id: id,
                 routineId: routineId,
@@ -4267,6 +4768,7 @@ class $$RoutineBodyElementsTableTableManager
                 manualValue: manualValue,
                 customName: customName,
                 customGroup: customGroup,
+                timeMs: timeMs,
               ),
           createCompanionCallback:
               ({
@@ -4281,6 +4783,7 @@ class $$RoutineBodyElementsTableTableManager
                 Value<int?> manualValue = const Value.absent(),
                 Value<String?> customName = const Value.absent(),
                 Value<String?> customGroup = const Value.absent(),
+                Value<int?> timeMs = const Value.absent(),
               }) => RoutineBodyElementsCompanion.insert(
                 id: id,
                 routineId: routineId,
@@ -4293,6 +4796,7 @@ class $$RoutineBodyElementsTableTableManager
                 manualValue: manualValue,
                 customName: customName,
                 customGroup: customGroup,
+                timeMs: timeMs,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -4367,6 +4871,7 @@ typedef $$RoutineRisksTableCreateCompanionBuilder =
       required String routineId,
       required String rotationOptionId,
       required int position,
+      Value<int?> timeMs,
     });
 typedef $$RoutineRisksTableUpdateCompanionBuilder =
     RoutineRisksCompanion Function({
@@ -4374,6 +4879,7 @@ typedef $$RoutineRisksTableUpdateCompanionBuilder =
       Value<String> routineId,
       Value<String> rotationOptionId,
       Value<int> position,
+      Value<int?> timeMs,
     });
 
 final class $$RoutineRisksTableReferences
@@ -4443,6 +4949,11 @@ class $$RoutineRisksTableFilterComposer
 
   ColumnFilters<int> get position => $composableBuilder(
     column: $table.position,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get timeMs => $composableBuilder(
+    column: $table.timeMs,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4519,6 +5030,11 @@ class $$RoutineRisksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get timeMs => $composableBuilder(
+    column: $table.timeMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$RoutinesTableOrderingComposer get routineId {
     final $$RoutinesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -4562,6 +5078,9 @@ class $$RoutineRisksTableAnnotationComposer
 
   GeneratedColumn<int> get position =>
       $composableBuilder(column: $table.position, builder: (column) => column);
+
+  GeneratedColumn<int> get timeMs =>
+      $composableBuilder(column: $table.timeMs, builder: (column) => column);
 
   $$RoutinesTableAnnotationComposer get routineId {
     final $$RoutinesTableAnnotationComposer composer = $composerBuilder(
@@ -4645,11 +5164,13 @@ class $$RoutineRisksTableTableManager
                 Value<String> routineId = const Value.absent(),
                 Value<String> rotationOptionId = const Value.absent(),
                 Value<int> position = const Value.absent(),
+                Value<int?> timeMs = const Value.absent(),
               }) => RoutineRisksCompanion(
                 id: id,
                 routineId: routineId,
                 rotationOptionId: rotationOptionId,
                 position: position,
+                timeMs: timeMs,
               ),
           createCompanionCallback:
               ({
@@ -4657,11 +5178,13 @@ class $$RoutineRisksTableTableManager
                 required String routineId,
                 required String rotationOptionId,
                 required int position,
+                Value<int?> timeMs = const Value.absent(),
               }) => RoutineRisksCompanion.insert(
                 id: id,
                 routineId: routineId,
                 rotationOptionId: rotationOptionId,
                 position: position,
+                timeMs: timeMs,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -5076,6 +5599,7 @@ typedef $$RoutineApparatusDifficultiesTableCreateCompanionBuilder =
       Value<bool> preAcrobatic,
       Value<int?> manualValue,
       Value<String?> customName,
+      Value<int?> timeMs,
     });
 typedef $$RoutineApparatusDifficultiesTableUpdateCompanionBuilder =
     RoutineApparatusDifficultiesCompanion Function({
@@ -5088,6 +5612,7 @@ typedef $$RoutineApparatusDifficultiesTableUpdateCompanionBuilder =
       Value<bool> preAcrobatic,
       Value<int?> manualValue,
       Value<String?> customName,
+      Value<int?> timeMs,
     });
 
 final class $$RoutineApparatusDifficultiesTableReferences
@@ -5170,6 +5695,11 @@ class $$RoutineApparatusDifficultiesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<int> get timeMs => $composableBuilder(
+    column: $table.timeMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$RoutinesTableFilterComposer get routineId {
     final $$RoutinesTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -5243,6 +5773,11 @@ class $$RoutineApparatusDifficultiesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get timeMs => $composableBuilder(
+    column: $table.timeMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$RoutinesTableOrderingComposer get routineId {
     final $$RoutinesTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -5307,6 +5842,9 @@ class $$RoutineApparatusDifficultiesTableAnnotationComposer
     column: $table.customName,
     builder: (column) => column,
   );
+
+  GeneratedColumn<int> get timeMs =>
+      $composableBuilder(column: $table.timeMs, builder: (column) => column);
 
   $$RoutinesTableAnnotationComposer get routineId {
     final $$RoutinesTableAnnotationComposer composer = $composerBuilder(
@@ -5383,6 +5921,7 @@ class $$RoutineApparatusDifficultiesTableTableManager
                 Value<bool> preAcrobatic = const Value.absent(),
                 Value<int?> manualValue = const Value.absent(),
                 Value<String?> customName = const Value.absent(),
+                Value<int?> timeMs = const Value.absent(),
               }) => RoutineApparatusDifficultiesCompanion(
                 id: id,
                 routineId: routineId,
@@ -5393,6 +5932,7 @@ class $$RoutineApparatusDifficultiesTableTableManager
                 preAcrobatic: preAcrobatic,
                 manualValue: manualValue,
                 customName: customName,
+                timeMs: timeMs,
               ),
           createCompanionCallback:
               ({
@@ -5405,6 +5945,7 @@ class $$RoutineApparatusDifficultiesTableTableManager
                 Value<bool> preAcrobatic = const Value.absent(),
                 Value<int?> manualValue = const Value.absent(),
                 Value<String?> customName = const Value.absent(),
+                Value<int?> timeMs = const Value.absent(),
               }) => RoutineApparatusDifficultiesCompanion.insert(
                 id: id,
                 routineId: routineId,
@@ -5415,6 +5956,7 @@ class $$RoutineApparatusDifficultiesTableTableManager
                 preAcrobatic: preAcrobatic,
                 manualValue: manualValue,
                 customName: customName,
+                timeMs: timeMs,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -5489,6 +6031,312 @@ typedef $$RoutineApparatusDifficultiesTableProcessedTableManager =
       RoutineApparatusDifficultyRow,
       PrefetchHooks Function({bool routineId})
     >;
+typedef $$RoutineDanceStepsTableCreateCompanionBuilder =
+    RoutineDanceStepsCompanion Function({
+      Value<int> id,
+      required String routineId,
+      required int position,
+      Value<int?> timeMs,
+    });
+typedef $$RoutineDanceStepsTableUpdateCompanionBuilder =
+    RoutineDanceStepsCompanion Function({
+      Value<int> id,
+      Value<String> routineId,
+      Value<int> position,
+      Value<int?> timeMs,
+    });
+
+final class $$RoutineDanceStepsTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $RoutineDanceStepsTable,
+          RoutineDanceStepRow
+        > {
+  $$RoutineDanceStepsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $RoutinesTable _routineIdTable(_$AppDatabase db) =>
+      db.routines.createAlias('routine_dance_steps__routine_id__routines__id');
+
+  $$RoutinesTableProcessedTableManager get routineId {
+    final $_column = $_itemColumn<String>('routine_id')!;
+
+    final manager = $$RoutinesTableTableManager(
+      $_db,
+      $_db.routines,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_routineIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$RoutineDanceStepsTableFilterComposer
+    extends Composer<_$AppDatabase, $RoutineDanceStepsTable> {
+  $$RoutineDanceStepsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get timeMs => $composableBuilder(
+    column: $table.timeMs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$RoutinesTableFilterComposer get routineId {
+    final $$RoutinesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.routineId,
+      referencedTable: $db.routines,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RoutinesTableFilterComposer(
+            $db: $db,
+            $table: $db.routines,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RoutineDanceStepsTableOrderingComposer
+    extends Composer<_$AppDatabase, $RoutineDanceStepsTable> {
+  $$RoutineDanceStepsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get timeMs => $composableBuilder(
+    column: $table.timeMs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$RoutinesTableOrderingComposer get routineId {
+    final $$RoutinesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.routineId,
+      referencedTable: $db.routines,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RoutinesTableOrderingComposer(
+            $db: $db,
+            $table: $db.routines,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RoutineDanceStepsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RoutineDanceStepsTable> {
+  $$RoutineDanceStepsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => column);
+
+  GeneratedColumn<int> get timeMs =>
+      $composableBuilder(column: $table.timeMs, builder: (column) => column);
+
+  $$RoutinesTableAnnotationComposer get routineId {
+    final $$RoutinesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.routineId,
+      referencedTable: $db.routines,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RoutinesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.routines,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RoutineDanceStepsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $RoutineDanceStepsTable,
+          RoutineDanceStepRow,
+          $$RoutineDanceStepsTableFilterComposer,
+          $$RoutineDanceStepsTableOrderingComposer,
+          $$RoutineDanceStepsTableAnnotationComposer,
+          $$RoutineDanceStepsTableCreateCompanionBuilder,
+          $$RoutineDanceStepsTableUpdateCompanionBuilder,
+          (RoutineDanceStepRow, $$RoutineDanceStepsTableReferences),
+          RoutineDanceStepRow,
+          PrefetchHooks Function({bool routineId})
+        > {
+  $$RoutineDanceStepsTableTableManager(
+    _$AppDatabase db,
+    $RoutineDanceStepsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RoutineDanceStepsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RoutineDanceStepsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RoutineDanceStepsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> routineId = const Value.absent(),
+                Value<int> position = const Value.absent(),
+                Value<int?> timeMs = const Value.absent(),
+              }) => RoutineDanceStepsCompanion(
+                id: id,
+                routineId: routineId,
+                position: position,
+                timeMs: timeMs,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String routineId,
+                required int position,
+                Value<int?> timeMs = const Value.absent(),
+              }) => RoutineDanceStepsCompanion.insert(
+                id: id,
+                routineId: routineId,
+                position: position,
+                timeMs: timeMs,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$RoutineDanceStepsTable, RoutineDanceStepRow>(
+                    table,
+                  ),
+                  $$RoutineDanceStepsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({routineId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (routineId) {
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.routineId,
+                        referencedTable: $$RoutineDanceStepsTableReferences
+                            ._routineIdTable(db),
+                        referencedColumn: $$RoutineDanceStepsTableReferences
+                            ._routineIdTable(db)
+                            .id,
+                      ) as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$RoutineDanceStepsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $RoutineDanceStepsTable,
+      RoutineDanceStepRow,
+      $$RoutineDanceStepsTableFilterComposer,
+      $$RoutineDanceStepsTableOrderingComposer,
+      $$RoutineDanceStepsTableAnnotationComposer,
+      $$RoutineDanceStepsTableCreateCompanionBuilder,
+      $$RoutineDanceStepsTableUpdateCompanionBuilder,
+      (RoutineDanceStepRow, $$RoutineDanceStepsTableReferences),
+      RoutineDanceStepRow,
+      PrefetchHooks Function({bool routineId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -5507,4 +6355,6 @@ class $AppDatabaseManager {
         _db,
         _db.routineApparatusDifficulties,
       );
+  $$RoutineDanceStepsTableTableManager get routineDanceSteps =>
+      $$RoutineDanceStepsTableTableManager(_db, _db.routineDanceSteps);
 }

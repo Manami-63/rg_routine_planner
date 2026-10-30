@@ -1,11 +1,13 @@
 import '../../../core/scoring/apparatus.dart';
+import '../../../core/utils/list_equality.dart';
+import '../../../core/utils/time_order.dart';
 import '../../da_calculator/domain/da_routine.dart';
 import '../../db_calculator/domain/db_routine.dart';
 import '../../levels/domain/competition_level.dart';
 import '../../music/domain/routine_music.dart';
 
-/// A saved routine: identity, name, apparatus, level, notes, music, the
-/// number of dance steps combinations and its DB and DA content.
+/// A saved routine: identity, name, apparatus, level, notes, music, its
+/// dance steps combinations and its DB and DA content.
 ///
 /// This is the unit that is persisted (and later synced to the server).
 class Routine {
@@ -21,8 +23,9 @@ class Routine {
     this.level,
     this.notes = '',
     this.music,
-    this.danceStepCount = 0,
-  }) : da = da ?? DaRoutine(rulesetId: db.rulesetId);
+    List<Duration?> danceStepTimes = const [],
+  }) : da = da ?? DaRoutine(rulesetId: db.rulesetId),
+       danceStepTimes = List.unmodifiable(danceStepTimes);
 
   /// A new, empty routine.
   Routine.create({
@@ -34,7 +37,7 @@ class Routine {
        level = null,
        notes = '',
        music = null,
-       danceStepCount = 0,
+       danceStepTimes = const [],
        db = DbRoutine(rulesetId: rulesetId),
        da = DaRoutine(rulesetId: rulesetId),
        createdAt = now,
@@ -57,9 +60,11 @@ class Routine {
   /// The routine's music, or `null` if none was added.
   final RoutineMusic? music;
 
-  /// How many dance steps combinations (S) the routine has. Only a count:
-  /// S have no details.
-  final int danceStepCount;
+  /// The routine's dance steps combinations (S): when each starts in the
+  /// music, or `null` when not marked. S have no other details.
+  final List<Duration?> danceStepTimes;
+
+  int get danceStepCount => danceStepTimes.length;
 
   final DbRoutine db;
   final DaRoutine da;
@@ -81,7 +86,7 @@ class Routine {
     level: level,
     notes: notes,
     music: music,
-    danceStepCount: danceStepCount,
+    danceStepTimes: danceStepTimes,
     db: db,
     da: da,
     createdAt: createdAt,
@@ -95,7 +100,7 @@ class Routine {
     level: newLevel,
     notes: notes,
     music: music,
-    danceStepCount: danceStepCount,
+    danceStepTimes: danceStepTimes,
     db: db,
     da: da,
     createdAt: createdAt,
@@ -109,7 +114,7 @@ class Routine {
     level: level,
     notes: notes,
     music: newMusic,
-    danceStepCount: danceStepCount,
+    danceStepTimes: danceStepTimes,
     db: db,
     da: da,
     createdAt: createdAt,
@@ -118,7 +123,25 @@ class Routine {
 
   Routine withNotes(String newNotes) => _copyWith(notes: newNotes);
 
-  Routine withDanceStepCount(int count) => _copyWith(danceStepCount: count);
+  /// Adds or removes S to have [count]. Unmarked S are removed first.
+  Routine withDanceStepCount(int count) {
+    final times = [...danceStepTimes];
+    while (times.length < count) {
+      times.add(null);
+    }
+    while (times.length > count) {
+      final unmarked = times.lastIndexOf(null);
+      times.removeAt(unmarked == -1 ? times.length - 1 : unmarked);
+    }
+    return _copyWith(danceStepTimes: times);
+  }
+
+  /// Sets when the S at [index] starts (`null` to clear it), keeping the
+  /// marked S in time order.
+  Routine withDanceStepTimeAt(int index, Duration? time) {
+    final times = [...danceStepTimes]..[index] = time;
+    return _copyWith(danceStepTimes: reorderBy(times, timeOrder(times)));
+  }
 
   Routine withDb(DbRoutine newDb) => _copyWith(db: newDb);
 
@@ -140,7 +163,7 @@ class Routine {
     level: level,
     notes: notes,
     music: music,
-    danceStepCount: danceStepCount,
+    danceStepTimes: danceStepTimes,
     db: db,
     da: da,
     createdAt: now,
@@ -150,7 +173,7 @@ class Routine {
   Routine _copyWith({
     String? name,
     String? notes,
-    int? danceStepCount,
+    List<Duration?>? danceStepTimes,
     DbRoutine? db,
     DaRoutine? da,
     DateTime? updatedAt,
@@ -161,7 +184,7 @@ class Routine {
     level: level,
     notes: notes ?? this.notes,
     music: music,
-    danceStepCount: danceStepCount ?? this.danceStepCount,
+    danceStepTimes: danceStepTimes ?? this.danceStepTimes,
     db: db ?? this.db,
     da: da ?? this.da,
     createdAt: createdAt,
@@ -177,7 +200,7 @@ class Routine {
       other.level == level &&
       other.notes == notes &&
       other.music == music &&
-      other.danceStepCount == danceStepCount &&
+      listEqual(other.danceStepTimes, danceStepTimes) &&
       other.db == db &&
       other.da == da &&
       other.createdAt == createdAt &&
@@ -191,7 +214,7 @@ class Routine {
     level,
     notes,
     music,
-    danceStepCount,
+    Object.hashAll(danceStepTimes),
     db,
     da,
     createdAt,
