@@ -97,8 +97,13 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   player position, and the marked items by time with ±0.1 s nudges.
   Setting a time puts the timed items of that kind in time order
   (`timeOrder`; untimed items keep their places), so the first N risks and
-  DA follow the music. Planned next: a full-screen Play mode with an 8 s S
-  countdown, then advisory checks during S (#5.2.5).
+  DA follow the music.
+- Play mode (`PlayModeScreen`, opened from the timeline): full-screen and
+  dark, sharing the routine page's player. `playModeFrameAt`
+  (`routine_editor/domain/play_mode.dart`) decides what shows: each item
+  pops up for 3 s at its time, an S shows an 8 s countdown (kept as a chip
+  if another item starts during it), plus the next item. Planned next:
+  advisory checks during S (#5.2.5).
 - `routineControllerProvider(id)` is an auto-disposing async family: loads
   by id, saves every change (name and notes debounced 500 ms), flushes a pending save
   on dispose, and reports `routineSaveStatusProvider(id)`. Automatic retry

@@ -70,7 +70,7 @@ class MusicTab extends ConsumerWidget {
           data: (duration) => Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _PlayerControls(
+              MusicPlayerControls(
                 player: ref.watch(musicPlayerProvider(routineId)),
                 duration: duration ?? Duration.zero,
               ),
@@ -124,8 +124,12 @@ class _MusicHeader extends ConsumerWidget {
 }
 
 /// Seek bar with times, and back / play-pause / forward buttons.
-class _PlayerControls extends StatelessWidget {
-  const _PlayerControls({required this.player, required this.duration});
+class MusicPlayerControls extends StatelessWidget {
+  const MusicPlayerControls({
+    super.key,
+    required this.player,
+    required this.duration,
+  });
 
   final MusicPlayer player;
   final Duration duration;
