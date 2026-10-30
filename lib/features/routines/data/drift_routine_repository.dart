@@ -114,6 +114,11 @@ class DriftRoutineRepository implements RoutineRepository {
               ..where((t) => t.routineId.equals(id))
               ..orderBy([(t) => OrderingTerm.asc(t.position)]))
             .get();
+    final danceStepRows =
+        await (_db.select(_db.routineDanceSteps)
+              ..where((t) => t.routineId.equals(id))
+              ..orderBy([(t) => OrderingTerm.asc(t.position)]))
+            .get();
 
     // Catalogue values only apply to routines planned under its ruleset.
     final sameRuleset = row.rulesetId == catalogue.ruleset.id;
@@ -144,7 +149,7 @@ class DriftRoutineRepository implements RoutineRepository {
       apparatus: Apparatus.fromName(row.apparatus),
       level: _resolveLevel(row),
       notes: row.notes,
-      danceStepCount: row.danceStepCount,
+      danceStepTimes: [for (final s in danceStepRows) _time(s.timeMs)],
       music: row.musicFileName == null
           ? null
           : RoutineMusic(
@@ -180,6 +185,7 @@ class DriftRoutineRepository implements RoutineRepository {
               },
             ),
         ],
+        elementTimes: [for (final e in elementRows) _time(e.timeMs)],
         risks: [
           for (final r in riskRows)
             RiskElement(
@@ -201,6 +207,7 @@ class DriftRoutineRepository implements RoutineRepository {
               ],
             ),
         ],
+        riskTimes: [for (final r in riskRows) _time(r.timeMs)],
       ),
       da: DaRoutine(
         rulesetId: row.rulesetId,
@@ -225,9 +232,13 @@ class DriftRoutineRepository implements RoutineRepository {
               },
             ),
         ],
+        times: [for (final a in daRows) _time(a.timeMs)],
       ),
     );
   }
+
+  static Duration? _time(int? ms) =>
+      ms == null ? null : Duration(milliseconds: ms);
 
   CompetitionLevel? _resolveLevel(RoutineRow row) {
     final levelId = row.levelId;
@@ -291,7 +302,6 @@ class DriftRoutineRepository implements RoutineRepository {
             ),
             customDanceStepsMin: Value(custom?.minDanceSteps),
             notes: Value(routine.notes),
-            danceStepCount: Value(routine.danceStepCount),
             musicFileName: Value(routine.music?.fileName),
             musicTitle: Value(routine.music?.title),
             // Always stored in UTC (shown in local time by the UI), so data
@@ -312,15 +322,32 @@ class DriftRoutineRepository implements RoutineRepository {
     await (_db.delete(
       _db.routineRisks,
     )..where((t) => t.routineId.equals(routine.id))).go();
+    await (_db.delete(
+      _db.routineDanceSteps,
+    )..where((t) => t.routineId.equals(routine.id))).go();
 
     await _db.batch((batch) {
       batch.insertAll(_db.routineBodyElements, [
         for (final (i, element) in routine.db.elements.indexed)
-          _elementRow(routine.id, i, element, routine.db.elementOptions[i]),
+          _elementRow(
+            routine.id,
+            i,
+            element,
+            routine.db.elementOptions[i],
+            routine.db.elementTimes[i],
+          ),
       ]);
       batch.insertAll(_db.routineApparatusDifficulties, [
         for (final (i, element) in routine.da.elements.indexed)
-          _daRow(routine.id, i, element),
+          _daRow(routine.id, i, element, routine.da.times[i]),
+      ]);
+      batch.insertAll(_db.routineDanceSteps, [
+        for (final (i, time) in routine.danceStepTimes.indexed)
+          RoutineDanceStepsCompanion.insert(
+            routineId: routine.id,
+            position: i,
+            timeMs: Value(time?.inMilliseconds),
+          ),
       ]);
     });
 
@@ -332,6 +359,7 @@ class DriftRoutineRepository implements RoutineRepository {
               routineId: routine.id,
               rotationOptionId: risk.rotation.id,
               position: i,
+              timeMs: Value(routine.db.riskTimes[i]?.inMilliseconds),
             ),
           );
       await _db.batch((batch) {
@@ -352,6 +380,7 @@ class DriftRoutineRepository implements RoutineRepository {
     int position,
     DbElement element,
     DbElementOptions options,
+    Duration? time,
   ) => RoutineBodyElementsCompanion.insert(
     routineId: routineId,
     elementId: element.id,
@@ -363,12 +392,14 @@ class DriftRoutineRepository implements RoutineRepository {
     manualValue: Value(options.manualValue?.hundredths),
     customName: Value(element.isCustom ? element.name : null),
     customGroup: Value(element.isCustom ? element.group.name : null),
+    timeMs: Value(time?.inMilliseconds),
   );
 
   static RoutineApparatusDifficultiesCompanion _daRow(
     String routineId,
     int position,
     DaElement element,
+    Duration? time,
   ) => RoutineApparatusDifficultiesCompanion.insert(
     routineId: routineId,
     position: position,
@@ -378,6 +409,7 @@ class DriftRoutineRepository implements RoutineRepository {
     preAcrobatic: Value(element.preAcrobatic),
     manualValue: Value(element.manualValue?.hundredths),
     customName: Value(element.isCustom ? element.base.name : null),
+    timeMs: Value(time?.inMilliseconds),
   );
 
   @override

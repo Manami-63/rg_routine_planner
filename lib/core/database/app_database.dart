@@ -17,6 +17,7 @@ part 'app_database.g.dart';
     RoutineRisks,
     RoutineRiskCriteria,
     RoutineApparatusDifficulties,
+    RoutineDanceSteps,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -25,7 +26,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'rg_routine_planner'));
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -82,7 +83,31 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 9) {
         await m.addColumn(routines, routines.customDanceStepsMin);
-        await m.addColumn(routines, routines.danceStepCount);
+      }
+      if (from < 10) {
+        // Music times, and S as rows (with a time) instead of a count.
+        await m.addColumn(routineBodyElements, routineBodyElements.timeMs);
+        await m.addColumn(routineRisks, routineRisks.timeMs);
+        // Before v6 the DA table was just created with this column.
+        if (from >= 6) {
+          await m.addColumn(
+            routineApparatusDifficulties,
+            routineApparatusDifficulties.timeMs,
+          );
+        }
+        await m.createTable(routineDanceSteps);
+        if (from == 9) {
+          // One row per counted S (the stepper allows up to 20), then the
+          // count column is dropped by rebuilding the table.
+          await customStatement(
+            'INSERT INTO routine_dance_steps (routine_id, position) '
+            'WITH RECURSIVE n(i) AS (SELECT 0 UNION ALL SELECT i + 1 FROM n '
+            'WHERE i < 99) '
+            'SELECT r.id, n.i FROM routines r JOIN n '
+            'ON n.i < r.dance_step_count ORDER BY r.id, n.i',
+          );
+          await m.alterTable(TableMigration(routines));
+        }
       }
     },
     // SQLite does not enforce foreign keys (and cascades) unless asked.

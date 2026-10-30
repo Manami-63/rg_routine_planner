@@ -10,9 +10,13 @@ import 'music_providers.dart';
 
 /// The routine's music: add, replace or remove it, and play it.
 class MusicTab extends ConsumerWidget {
-  const MusicTab({super.key, required this.routineId});
+  const MusicTab({super.key, required this.routineId, this.footer});
 
   final String routineId;
+
+  /// Shown below the player once the music has loaded (e.g. marking
+  /// times, which needs the player).
+  final Widget? footer;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -63,9 +67,15 @@ class MusicTab extends ConsumerWidget {
               label: const Text('Choose music'),
             ),
           ),
-          data: (duration) => _PlayerControls(
-            player: ref.watch(musicPlayerProvider(routineId)),
-            duration: duration ?? Duration.zero,
+          data: (duration) => Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _PlayerControls(
+                player: ref.watch(musicPlayerProvider(routineId)),
+                duration: duration ?? Duration.zero,
+              ),
+              ?footer,
+            ],
           ),
         ),
       ],

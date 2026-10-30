@@ -40,7 +40,7 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   local time. Bump `schemaVersion` and add a migration on any change, with a
   test in `test/core/database/` that upgrades a hand-written old schema.
 - `features/routines/`: `Routine` (id = UUID, name, apparatus, level,
-  free-text `notes`, optional `music`, `danceStepCount`, timestamps, `db`
+  free-text `notes`, optional `music`, `danceStepTimes`, timestamps, `db`
   and `da` content) and `RoutineRepository`
   (`DriftRoutineRepository`). Shared pieces live here too: `RoutineLoader`
   (loading/errors/ruleset), `RoutineDetailsForm` (name, apparatus, level;
@@ -82,13 +82,23 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   (`deleteRoutine`). `MusicPicker` (file_picker) and `MusicPlayer`
   (just_audio) are wrapped so widget tests use the fakes in
   `test/features/music/fake_music.dart` (`pumpDbCalculator` sets them up).
-- Dance steps combinations (S, `features/dance_steps/`): only a count per
-  routine (`Routine.danceStepCount`), set with `DanceStepsCard` at the top
-  of the DB tab. Levels have an optional `minDanceSteps` (FIG 2, CoP
-  #5.3.1; Non-FIG set in the level picker). S are artistry, not
-  difficulty: a missing one is only a notice and never affects the total.
-  Planned next: marking each DB/R/DA/S time by tapping
-  while the music plays, and a Play mode with an 8 s S countdown.
+- Dance steps combinations (S, `features/dance_steps/`): no details, only
+  an optional music time each (`Routine.danceStepTimes`; the count is its
+  length), set with `DanceStepsCard` at the top of the DB tab. Levels have
+  an optional `minDanceSteps` (FIG 2, CoP #5.3.1; Non-FIG set in the level
+  picker). S are artistry, not difficulty: a missing one is only a notice
+  and never affects the total.
+- Music times: each DB, risk, DA and S has an optional time
+  (`DbRoutine.elementTimes`/`riskTimes`, `DaRoutine.times`, parallel to
+  their lists and moved with them; `time_ms` columns and the
+  `routine_dance_steps` table). `RoutineTimeline` (`routine_editor/domain/`)
+  combines them; `TimelineSection` (shown by `MusicTab` below the player)
+  has "Next DB/R/DA/S" buttons that mark the first unmarked item at the
+  player position, and the marked items by time with ±0.1 s nudges.
+  Setting a time puts the timed items of that kind in time order
+  (`timeOrder`; untimed items keep their places), so the first N risks and
+  DA follow the music. Planned next: a full-screen Play mode with an 8 s S
+  countdown, then advisory checks during S (#5.2.5).
 - `routineControllerProvider(id)` is an auto-disposing async family: loads
   by id, saves every change (name and notes debounced 500 ms), flushes a pending save
   on dispose, and reports `routineSaveStatusProvider(id)`. Automatic retry

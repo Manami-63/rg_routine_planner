@@ -42,9 +42,6 @@ class Routines extends Table {
   TextColumn get musicFileName => text().nullable()();
   TextColumn get musicTitle => text().nullable()();
 
-  /// Number of dance steps combinations (S). Added in v9.
-  IntColumn get danceStepCount => integer().withDefault(const Constant(0))();
-
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
@@ -76,6 +73,10 @@ class RoutineBodyElements extends Table {
   // Name and `DbElementGroup.name` of a custom element. Null otherwise.
   TextColumn get customName => text().nullable()();
   TextColumn get customGroup => text().nullable()();
+
+  /// When the element starts in the music, in milliseconds. Null when not
+  /// marked. Added in v10.
+  IntColumn get timeMs => integer().nullable()();
 }
 
 @DataClassName('RoutineRiskRow')
@@ -85,6 +86,9 @@ class RoutineRisks extends Table {
       text().references(Routines, #id, onDelete: KeyAction.cascade)();
   TextColumn get rotationOptionId => text()();
   IntColumn get position => integer()();
+
+  /// Music time in milliseconds, or null. Added in v10.
+  IntColumn get timeMs => integer().nullable()();
 }
 
 @DataClassName('RoutineRiskCriterionRow')
@@ -122,4 +126,20 @@ class RoutineApparatusDifficulties extends Table {
 
   /// Name of a custom DA. Null otherwise.
   TextColumn get customName => text().nullable()();
+
+  /// Music time in milliseconds, or null. Added in v10.
+  IntColumn get timeMs => integer().nullable()();
+}
+
+/// One dance steps combination (S) of a routine. S have no details, only
+/// an optional music time. Added in v10 (v9 stored only a count).
+@DataClassName('RoutineDanceStepRow')
+class RoutineDanceSteps extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get routineId =>
+      text().references(Routines, #id, onDelete: KeyAction.cascade)();
+  IntColumn get position => integer()();
+
+  /// Music time in milliseconds, or null.
+  IntColumn get timeMs => integer().nullable()();
 }
