@@ -14,6 +14,7 @@ void main() {
     expect(routine.level, isNull);
     expect(routine.apparatus, isNull);
     expect(routine.db.isEmpty, isTrue);
+    expect(routine.danceStepCount, 0);
     expect(routine.rulesetId, 'test-v1');
     expect(routine.createdAt, now);
     expect(routine.updatedAt, now);
@@ -42,6 +43,16 @@ void main() {
     expect(withNotes.withLevel(figSenior).notes, 'Slow start');
     expect(withNotes.rename('Ball').notes, 'Slow start');
     expect(withNotes, isNot(routine));
+  });
+
+  test('dance step count is kept by other changes', () {
+    final withS = routine.withDanceStepCount(2);
+
+    expect(withS.danceStepCount, 2);
+    expect(withS.withApparatus(Apparatus.ball).danceStepCount, 2);
+    expect(withS.withLevel(figSenior).danceStepCount, 2);
+    expect(withS.withMusic(null).rename('Ball').danceStepCount, 2);
+    expect(withS, isNot(routine));
   });
 
   test('withLevel(null) removes the level', () {
@@ -73,6 +84,7 @@ void main() {
         .withApparatus(Apparatus.hoop)
         .withLevel(figSenior)
         .withNotes('Music: Bolero')
+        .withDanceStepCount(3)
         .withDb(routine.db.withElementAdded(testJump));
     final later = now.add(const Duration(days: 1));
 
@@ -83,6 +95,7 @@ void main() {
     expect(copy.apparatus, Apparatus.hoop);
     expect(copy.level, figSenior);
     expect(copy.notes, 'Music: Bolero');
+    expect(copy.danceStepCount, 3);
     expect(copy.db, original.db);
     expect(copy.da, original.da);
     expect(copy.createdAt, later);

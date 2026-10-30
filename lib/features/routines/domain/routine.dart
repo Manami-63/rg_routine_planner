@@ -4,8 +4,8 @@ import '../../db_calculator/domain/db_routine.dart';
 import '../../levels/domain/competition_level.dart';
 import '../../music/domain/routine_music.dart';
 
-/// A saved routine: identity, name, apparatus, level, notes, music and its
-/// DB and DA content.
+/// A saved routine: identity, name, apparatus, level, notes, music, the
+/// number of dance steps combinations and its DB and DA content.
 ///
 /// This is the unit that is persisted (and later synced to the server).
 class Routine {
@@ -21,6 +21,7 @@ class Routine {
     this.level,
     this.notes = '',
     this.music,
+    this.danceStepCount = 0,
   }) : da = da ?? DaRoutine(rulesetId: db.rulesetId);
 
   /// A new, empty routine.
@@ -33,6 +34,7 @@ class Routine {
        level = null,
        notes = '',
        music = null,
+       danceStepCount = 0,
        db = DbRoutine(rulesetId: rulesetId),
        da = DaRoutine(rulesetId: rulesetId),
        createdAt = now,
@@ -55,6 +57,10 @@ class Routine {
   /// The routine's music, or `null` if none was added.
   final RoutineMusic? music;
 
+  /// How many dance steps combinations (S) the routine has. Only a count:
+  /// S have no details.
+  final int danceStepCount;
+
   final DbRoutine db;
   final DaRoutine da;
 
@@ -75,6 +81,7 @@ class Routine {
     level: level,
     notes: notes,
     music: music,
+    danceStepCount: danceStepCount,
     db: db,
     da: da,
     createdAt: createdAt,
@@ -88,6 +95,7 @@ class Routine {
     level: newLevel,
     notes: notes,
     music: music,
+    danceStepCount: danceStepCount,
     db: db,
     da: da,
     createdAt: createdAt,
@@ -101,6 +109,7 @@ class Routine {
     level: level,
     notes: notes,
     music: newMusic,
+    danceStepCount: danceStepCount,
     db: db,
     da: da,
     createdAt: createdAt,
@@ -108,6 +117,8 @@ class Routine {
   );
 
   Routine withNotes(String newNotes) => _copyWith(notes: newNotes);
+
+  Routine withDanceStepCount(int count) => _copyWith(danceStepCount: count);
 
   Routine withDb(DbRoutine newDb) => _copyWith(db: newDb);
 
@@ -129,6 +140,7 @@ class Routine {
     level: level,
     notes: notes,
     music: music,
+    danceStepCount: danceStepCount,
     db: db,
     da: da,
     createdAt: now,
@@ -138,6 +150,7 @@ class Routine {
   Routine _copyWith({
     String? name,
     String? notes,
+    int? danceStepCount,
     DbRoutine? db,
     DaRoutine? da,
     DateTime? updatedAt,
@@ -148,6 +161,7 @@ class Routine {
     level: level,
     notes: notes ?? this.notes,
     music: music,
+    danceStepCount: danceStepCount ?? this.danceStepCount,
     db: db ?? this.db,
     da: da ?? this.da,
     createdAt: createdAt,
@@ -163,6 +177,7 @@ class Routine {
       other.level == level &&
       other.notes == notes &&
       other.music == music &&
+      other.danceStepCount == danceStepCount &&
       other.db == db &&
       other.da == da &&
       other.createdAt == createdAt &&
@@ -176,6 +191,7 @@ class Routine {
     level,
     notes,
     music,
+    danceStepCount,
     db,
     da,
     createdAt,

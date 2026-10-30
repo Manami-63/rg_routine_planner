@@ -137,6 +137,16 @@ class $RoutinesTable extends Routines
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _customDanceStepsMinMeta =
+      const VerificationMeta('customDanceStepsMin');
+  @override
+  late final GeneratedColumn<int> customDanceStepsMin = GeneratedColumn<int>(
+    'custom_dance_steps_min',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _notesMeta = const VerificationMeta('notes');
   @override
   late final GeneratedColumn<String> notes = GeneratedColumn<String>(
@@ -168,6 +178,18 @@ class $RoutinesTable extends Routines
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+  );
+  static const VerificationMeta _danceStepCountMeta = const VerificationMeta(
+    'danceStepCount',
+  );
+  @override
+  late final GeneratedColumn<int> danceStepCount = GeneratedColumn<int>(
+    'dance_step_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
   );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
@@ -205,9 +227,11 @@ class $RoutinesTable extends Routines
     customDaMin,
     customDaMax,
     customRequiredBodyGroups,
+    customDanceStepsMin,
     notes,
     musicFileName,
     musicTitle,
+    danceStepCount,
     createdAt,
     updatedAt,
   ];
@@ -319,6 +343,15 @@ class $RoutinesTable extends Routines
         ),
       );
     }
+    if (data.containsKey('custom_dance_steps_min')) {
+      context.handle(
+        _customDanceStepsMinMeta,
+        customDanceStepsMin.isAcceptableOrUnknown(
+          data['custom_dance_steps_min']!,
+          _customDanceStepsMinMeta,
+        ),
+      );
+    }
     if (data.containsKey('notes')) {
       context.handle(
         _notesMeta,
@@ -338,6 +371,15 @@ class $RoutinesTable extends Routines
       context.handle(
         _musicTitleMeta,
         musicTitle.isAcceptableOrUnknown(data['music_title']!, _musicTitleMeta),
+      );
+    }
+    if (data.containsKey('dance_step_count')) {
+      context.handle(
+        _danceStepCountMeta,
+        danceStepCount.isAcceptableOrUnknown(
+          data['dance_step_count']!,
+          _danceStepCountMeta,
+        ),
       );
     }
     if (data.containsKey('created_at')) {
@@ -413,6 +455,10 @@ class $RoutinesTable extends Routines
         DriftSqlType.string,
         data['${effectivePrefix}custom_required_body_groups'],
       ),
+      customDanceStepsMin: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}custom_dance_steps_min'],
+      ),
       notes: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}notes'],
@@ -425,6 +471,10 @@ class $RoutinesTable extends Routines
         DriftSqlType.string,
         data['${effectivePrefix}music_title'],
       ),
+      danceStepCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}dance_step_count'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -464,10 +514,16 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
   /// `jump,balance`). Null or empty for none. Added in v2.
   final String? customRequiredBodyGroups;
 
+  /// Minimum dance steps combinations (S) of a custom level. Added in v9.
+  final int? customDanceStepsMin;
+
   /// Free text from the user. Empty for none. Added in v7.
   final String notes;
   final String? musicFileName;
   final String? musicTitle;
+
+  /// Number of dance steps combinations (S). Added in v9.
+  final int danceStepCount;
   final DateTime createdAt;
   final DateTime updatedAt;
   const RoutineRow({
@@ -483,9 +539,11 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
     this.customDaMin,
     this.customDaMax,
     this.customRequiredBodyGroups,
+    this.customDanceStepsMin,
     required this.notes,
     this.musicFileName,
     this.musicTitle,
+    required this.danceStepCount,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -524,6 +582,9 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
         customRequiredBodyGroups,
       );
     }
+    if (!nullToAbsent || customDanceStepsMin != null) {
+      map['custom_dance_steps_min'] = Variable<int>(customDanceStepsMin);
+    }
     map['notes'] = Variable<String>(notes);
     if (!nullToAbsent || musicFileName != null) {
       map['music_file_name'] = Variable<String>(musicFileName);
@@ -531,6 +592,7 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
     if (!nullToAbsent || musicTitle != null) {
       map['music_title'] = Variable<String>(musicTitle);
     }
+    map['dance_step_count'] = Variable<int>(danceStepCount);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -568,6 +630,9 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
       customRequiredBodyGroups: customRequiredBodyGroups == null && nullToAbsent
           ? const Value.absent()
           : Value(customRequiredBodyGroups),
+      customDanceStepsMin: customDanceStepsMin == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customDanceStepsMin),
       notes: Value(notes),
       musicFileName: musicFileName == null && nullToAbsent
           ? const Value.absent()
@@ -575,6 +640,7 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
       musicTitle: musicTitle == null && nullToAbsent
           ? const Value.absent()
           : Value(musicTitle),
+      danceStepCount: Value(danceStepCount),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -600,9 +666,13 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
       customRequiredBodyGroups: serializer.fromJson<String?>(
         json['customRequiredBodyGroups'],
       ),
+      customDanceStepsMin: serializer.fromJson<int?>(
+        json['customDanceStepsMin'],
+      ),
       notes: serializer.fromJson<String>(json['notes']),
       musicFileName: serializer.fromJson<String?>(json['musicFileName']),
       musicTitle: serializer.fromJson<String?>(json['musicTitle']),
+      danceStepCount: serializer.fromJson<int>(json['danceStepCount']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -625,9 +695,11 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
       'customRequiredBodyGroups': serializer.toJson<String?>(
         customRequiredBodyGroups,
       ),
+      'customDanceStepsMin': serializer.toJson<int?>(customDanceStepsMin),
       'notes': serializer.toJson<String>(notes),
       'musicFileName': serializer.toJson<String?>(musicFileName),
       'musicTitle': serializer.toJson<String?>(musicTitle),
+      'danceStepCount': serializer.toJson<int>(danceStepCount),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -646,9 +718,11 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
     Value<int?> customDaMin = const Value.absent(),
     Value<int?> customDaMax = const Value.absent(),
     Value<String?> customRequiredBodyGroups = const Value.absent(),
+    Value<int?> customDanceStepsMin = const Value.absent(),
     String? notes,
     Value<String?> musicFileName = const Value.absent(),
     Value<String?> musicTitle = const Value.absent(),
+    int? danceStepCount,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => RoutineRow(
@@ -670,11 +744,15 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
     customRequiredBodyGroups: customRequiredBodyGroups.present
         ? customRequiredBodyGroups.value
         : this.customRequiredBodyGroups,
+    customDanceStepsMin: customDanceStepsMin.present
+        ? customDanceStepsMin.value
+        : this.customDanceStepsMin,
     notes: notes ?? this.notes,
     musicFileName: musicFileName.present
         ? musicFileName.value
         : this.musicFileName,
     musicTitle: musicTitle.present ? musicTitle.value : this.musicTitle,
+    danceStepCount: danceStepCount ?? this.danceStepCount,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -706,6 +784,9 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
       customRequiredBodyGroups: data.customRequiredBodyGroups.present
           ? data.customRequiredBodyGroups.value
           : this.customRequiredBodyGroups,
+      customDanceStepsMin: data.customDanceStepsMin.present
+          ? data.customDanceStepsMin.value
+          : this.customDanceStepsMin,
       notes: data.notes.present ? data.notes.value : this.notes,
       musicFileName: data.musicFileName.present
           ? data.musicFileName.value
@@ -713,6 +794,9 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
       musicTitle: data.musicTitle.present
           ? data.musicTitle.value
           : this.musicTitle,
+      danceStepCount: data.danceStepCount.present
+          ? data.danceStepCount.value
+          : this.danceStepCount,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -733,9 +817,11 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
           ..write('customDaMin: $customDaMin, ')
           ..write('customDaMax: $customDaMax, ')
           ..write('customRequiredBodyGroups: $customRequiredBodyGroups, ')
+          ..write('customDanceStepsMin: $customDanceStepsMin, ')
           ..write('notes: $notes, ')
           ..write('musicFileName: $musicFileName, ')
           ..write('musicTitle: $musicTitle, ')
+          ..write('danceStepCount: $danceStepCount, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -756,9 +842,11 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
     customDaMin,
     customDaMax,
     customRequiredBodyGroups,
+    customDanceStepsMin,
     notes,
     musicFileName,
     musicTitle,
+    danceStepCount,
     createdAt,
     updatedAt,
   );
@@ -778,9 +866,11 @@ class RoutineRow extends DataClass implements Insertable<RoutineRow> {
           other.customDaMin == this.customDaMin &&
           other.customDaMax == this.customDaMax &&
           other.customRequiredBodyGroups == this.customRequiredBodyGroups &&
+          other.customDanceStepsMin == this.customDanceStepsMin &&
           other.notes == this.notes &&
           other.musicFileName == this.musicFileName &&
           other.musicTitle == this.musicTitle &&
+          other.danceStepCount == this.danceStepCount &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -798,9 +888,11 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
   final Value<int?> customDaMin;
   final Value<int?> customDaMax;
   final Value<String?> customRequiredBodyGroups;
+  final Value<int?> customDanceStepsMin;
   final Value<String> notes;
   final Value<String?> musicFileName;
   final Value<String?> musicTitle;
+  final Value<int> danceStepCount;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -817,9 +909,11 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
     this.customDaMin = const Value.absent(),
     this.customDaMax = const Value.absent(),
     this.customRequiredBodyGroups = const Value.absent(),
+    this.customDanceStepsMin = const Value.absent(),
     this.notes = const Value.absent(),
     this.musicFileName = const Value.absent(),
     this.musicTitle = const Value.absent(),
+    this.danceStepCount = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -837,9 +931,11 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
     this.customDaMin = const Value.absent(),
     this.customDaMax = const Value.absent(),
     this.customRequiredBodyGroups = const Value.absent(),
+    this.customDanceStepsMin = const Value.absent(),
     this.notes = const Value.absent(),
     this.musicFileName = const Value.absent(),
     this.musicTitle = const Value.absent(),
+    this.danceStepCount = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -861,9 +957,11 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
     Expression<int>? customDaMin,
     Expression<int>? customDaMax,
     Expression<String>? customRequiredBodyGroups,
+    Expression<int>? customDanceStepsMin,
     Expression<String>? notes,
     Expression<String>? musicFileName,
     Expression<String>? musicTitle,
+    Expression<int>? danceStepCount,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -882,9 +980,12 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
       if (customDaMax != null) 'custom_da_max': customDaMax,
       if (customRequiredBodyGroups != null)
         'custom_required_body_groups': customRequiredBodyGroups,
+      if (customDanceStepsMin != null)
+        'custom_dance_steps_min': customDanceStepsMin,
       if (notes != null) 'notes': notes,
       if (musicFileName != null) 'music_file_name': musicFileName,
       if (musicTitle != null) 'music_title': musicTitle,
+      if (danceStepCount != null) 'dance_step_count': danceStepCount,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -904,9 +1005,11 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
     Value<int?>? customDaMin,
     Value<int?>? customDaMax,
     Value<String?>? customRequiredBodyGroups,
+    Value<int?>? customDanceStepsMin,
     Value<String>? notes,
     Value<String?>? musicFileName,
     Value<String?>? musicTitle,
+    Value<int>? danceStepCount,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -925,9 +1028,11 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
       customDaMax: customDaMax ?? this.customDaMax,
       customRequiredBodyGroups:
           customRequiredBodyGroups ?? this.customRequiredBodyGroups,
+      customDanceStepsMin: customDanceStepsMin ?? this.customDanceStepsMin,
       notes: notes ?? this.notes,
       musicFileName: musicFileName ?? this.musicFileName,
       musicTitle: musicTitle ?? this.musicTitle,
+      danceStepCount: danceStepCount ?? this.danceStepCount,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -975,6 +1080,9 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
         customRequiredBodyGroups.value,
       );
     }
+    if (customDanceStepsMin.present) {
+      map['custom_dance_steps_min'] = Variable<int>(customDanceStepsMin.value);
+    }
     if (notes.present) {
       map['notes'] = Variable<String>(notes.value);
     }
@@ -983,6 +1091,9 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
     }
     if (musicTitle.present) {
       map['music_title'] = Variable<String>(musicTitle.value);
+    }
+    if (danceStepCount.present) {
+      map['dance_step_count'] = Variable<int>(danceStepCount.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -1011,9 +1122,11 @@ class RoutinesCompanion extends UpdateCompanion<RoutineRow> {
           ..write('customDaMin: $customDaMin, ')
           ..write('customDaMax: $customDaMax, ')
           ..write('customRequiredBodyGroups: $customRequiredBodyGroups, ')
+          ..write('customDanceStepsMin: $customDanceStepsMin, ')
           ..write('notes: $notes, ')
           ..write('musicFileName: $musicFileName, ')
           ..write('musicTitle: $musicTitle, ')
+          ..write('danceStepCount: $danceStepCount, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -3005,9 +3118,11 @@ typedef $$RoutinesTableCreateCompanionBuilder = RoutinesCompanion Function({
   Value<int?> customDaMin,
   Value<int?> customDaMax,
   Value<String?> customRequiredBodyGroups,
+  Value<int?> customDanceStepsMin,
   Value<String> notes,
   Value<String?> musicFileName,
   Value<String?> musicTitle,
+  Value<int> danceStepCount,
   required DateTime createdAt,
   required DateTime updatedAt,
   Value<int> rowid,
@@ -3025,9 +3140,11 @@ typedef $$RoutinesTableUpdateCompanionBuilder = RoutinesCompanion Function({
   Value<int?> customDaMin,
   Value<int?> customDaMax,
   Value<String?> customRequiredBodyGroups,
+  Value<int?> customDanceStepsMin,
   Value<String> notes,
   Value<String?> musicFileName,
   Value<String?> musicTitle,
+  Value<int> danceStepCount,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<int> rowid,
@@ -3174,6 +3291,11 @@ class $$RoutinesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<int> get customDanceStepsMin => $composableBuilder(
+    column: $table.customDanceStepsMin,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get notes => $composableBuilder(
     column: $table.notes,
     builder: (column) => ColumnFilters(column),
@@ -3186,6 +3308,11 @@ class $$RoutinesTableFilterComposer
 
   ColumnFilters<String> get musicTitle => $composableBuilder(
     column: $table.musicTitle,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get danceStepCount => $composableBuilder(
+    column: $table.danceStepCount,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3348,6 +3475,11 @@ class $$RoutinesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get customDanceStepsMin => $composableBuilder(
+    column: $table.customDanceStepsMin,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get notes => $composableBuilder(
     column: $table.notes,
     builder: (column) => ColumnOrderings(column),
@@ -3360,6 +3492,11 @@ class $$RoutinesTableOrderingComposer
 
   ColumnOrderings<String> get musicTitle => $composableBuilder(
     column: $table.musicTitle,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get danceStepCount => $composableBuilder(
+    column: $table.danceStepCount,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -3433,6 +3570,11 @@ class $$RoutinesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get customDanceStepsMin => $composableBuilder(
+    column: $table.customDanceStepsMin,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
 
@@ -3443,6 +3585,11 @@ class $$RoutinesTableAnnotationComposer
 
   GeneratedColumn<String> get musicTitle => $composableBuilder(
     column: $table.musicTitle,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get danceStepCount => $composableBuilder(
+    column: $table.danceStepCount,
     builder: (column) => column,
   );
 
@@ -3577,9 +3724,11 @@ class $$RoutinesTableTableManager
                 Value<int?> customDaMin = const Value.absent(),
                 Value<int?> customDaMax = const Value.absent(),
                 Value<String?> customRequiredBodyGroups = const Value.absent(),
+                Value<int?> customDanceStepsMin = const Value.absent(),
                 Value<String> notes = const Value.absent(),
                 Value<String?> musicFileName = const Value.absent(),
                 Value<String?> musicTitle = const Value.absent(),
+                Value<int> danceStepCount = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -3596,9 +3745,11 @@ class $$RoutinesTableTableManager
                 customDaMin: customDaMin,
                 customDaMax: customDaMax,
                 customRequiredBodyGroups: customRequiredBodyGroups,
+                customDanceStepsMin: customDanceStepsMin,
                 notes: notes,
                 musicFileName: musicFileName,
                 musicTitle: musicTitle,
+                danceStepCount: danceStepCount,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -3617,9 +3768,11 @@ class $$RoutinesTableTableManager
                 Value<int?> customDaMin = const Value.absent(),
                 Value<int?> customDaMax = const Value.absent(),
                 Value<String?> customRequiredBodyGroups = const Value.absent(),
+                Value<int?> customDanceStepsMin = const Value.absent(),
                 Value<String> notes = const Value.absent(),
                 Value<String?> musicFileName = const Value.absent(),
                 Value<String?> musicTitle = const Value.absent(),
+                Value<int> danceStepCount = const Value.absent(),
                 required DateTime createdAt,
                 required DateTime updatedAt,
                 Value<int> rowid = const Value.absent(),
@@ -3636,9 +3789,11 @@ class $$RoutinesTableTableManager
                 customDaMin: customDaMin,
                 customDaMax: customDaMax,
                 customRequiredBodyGroups: customRequiredBodyGroups,
+                customDanceStepsMin: customDanceStepsMin,
                 notes: notes,
                 musicFileName: musicFileName,
                 musicTitle: musicTitle,
+                danceStepCount: danceStepCount,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,

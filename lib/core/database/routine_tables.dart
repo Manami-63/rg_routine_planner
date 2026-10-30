@@ -31,6 +31,9 @@ class Routines extends Table {
   /// `jump,balance`). Null or empty for none. Added in v2.
   TextColumn get customRequiredBodyGroups => text().nullable()();
 
+  /// Minimum dance steps combinations (S) of a custom level. Added in v9.
+  IntColumn get customDanceStepsMin => integer().nullable()();
+
   /// Free text from the user. Empty for none. Added in v7.
   TextColumn get notes => text().withDefault(const Constant(''))();
 
@@ -38,6 +41,9 @@ class Routines extends Table {
   // for none. Added in v8.
   TextColumn get musicFileName => text().nullable()();
   TextColumn get musicTitle => text().nullable()();
+
+  /// Number of dance steps combinations (S). Added in v9.
+  IntColumn get danceStepCount => integer().withDefault(const Constant(0))();
 
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();

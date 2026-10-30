@@ -144,6 +144,7 @@ class DriftRoutineRepository implements RoutineRepository {
       apparatus: Apparatus.fromName(row.apparatus),
       level: _resolveLevel(row),
       notes: row.notes,
+      danceStepCount: row.danceStepCount,
       music: row.musicFileName == null
           ? null
           : RoutineMusic(
@@ -238,6 +239,7 @@ class DriftRoutineRepository implements RoutineRepository {
           risk: CountLimit(min: row.customRiskMin, max: row.customRiskMax),
           da: CountLimit(min: row.customDaMin, max: row.customDaMax),
           requiredBodyGroups: _parseGroups(row.customRequiredBodyGroups),
+          minDanceSteps: row.customDanceStepsMin,
         ),
       );
     }
@@ -287,7 +289,9 @@ class DriftRoutineRepository implements RoutineRepository {
             customRequiredBodyGroups: Value(
               custom == null ? null : _formatGroups(custom.requiredBodyGroups),
             ),
+            customDanceStepsMin: Value(custom?.minDanceSteps),
             notes: Value(routine.notes),
+            danceStepCount: Value(routine.danceStepCount),
             musicFileName: Value(routine.music?.fileName),
             musicTitle: Value(routine.music?.title),
             // Always stored in UTC (shown in local time by the UI), so data

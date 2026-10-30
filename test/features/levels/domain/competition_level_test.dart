@@ -13,7 +13,7 @@ void main() {
     DbElementGroup.rotation,
   };
 
-  test('FIG levels set only maximums and require every body group', () {
+  test('FIG levels set only maximums and require every body group and 2 S', () {
     expect(
       figJunior.requirements,
       const LevelRequirements(
@@ -22,6 +22,7 @@ void main() {
         da: CountLimit(max: 12),
         requiredBodyGroups: allGroups,
         missingBodyGroupPenalty: Score.hundredths(30),
+        minDanceSteps: 2,
       ),
     );
     expect(
@@ -32,6 +33,7 @@ void main() {
         da: CountLimit(max: 15),
         requiredBodyGroups: allGroups,
         missingBodyGroupPenalty: Score.hundredths(30),
+        minDanceSteps: 2,
       ),
     );
   });
@@ -59,6 +61,14 @@ void main() {
         requiredBodyGroups: {DbElementGroup.balance, DbElementGroup.jump},
       ),
     );
+  });
+
+  test('withMinDanceSteps sets and clears the S minimum', () {
+    const requirements = LevelRequirements(db: CountLimit(max: 5));
+    final withS = requirements.withMinDanceSteps(2);
+    expect(withS.minDanceSteps, 2);
+    expect(withS.db, requirements.db);
+    expect(withS.withMinDanceSteps(null), requirements);
   });
 
   test('validity covers the risk limit', () {

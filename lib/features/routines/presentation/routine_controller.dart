@@ -107,6 +107,9 @@ class RoutineController extends AsyncNotifier<Routine> {
   void updateNotes(String notes) =>
       _update((routine) => routine.withNotes(notes), debounce: true);
 
+  void setDanceStepCount(int count) =>
+      _update((routine) => routine.withDanceStepCount(count));
+
   void setMusic(RoutineMusic? music) =>
       _update((routine) => routine.withMusic(music));
 

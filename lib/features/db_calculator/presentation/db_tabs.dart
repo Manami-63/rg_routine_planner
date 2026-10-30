@@ -5,6 +5,7 @@ import '../../../core/scoring/apparatus.dart';
 import '../../../core/widgets/message_view.dart';
 import '../../../core/widgets/sample_data_banner.dart';
 import '../../../core/widgets/section_header.dart';
+import '../../dance_steps/presentation/dance_steps_card.dart';
 import '../../levels/domain/difficulty_category.dart';
 import '../../levels/presentation/count_limit_notice.dart';
 import '../../routines/presentation/routine_controller.dart';
@@ -18,7 +19,8 @@ import 'widgets/selected_elements_section.dart';
 
 // The DB and risk (R) tabs of the routine page, with their add buttons.
 
-/// Body difficulties of a routine, with count and body group notices.
+/// Body difficulties of a routine, with count and body group notices, and
+/// the number of dance steps combinations (S) above them.
 class DbBodyTab extends ConsumerWidget {
   const DbBodyTab({super.key, required this.routineId});
 
@@ -42,6 +44,12 @@ class DbBodyTab extends ConsumerWidget {
     return _DbTabScrollView(
       routineId: routineId,
       slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          sliver: SliverToBoxAdapter(
+            child: DanceStepsCard(routineId: routineId),
+          ),
+        ),
         SectionHeader(title: 'Body difficulties', trailing: '$count selected'),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),

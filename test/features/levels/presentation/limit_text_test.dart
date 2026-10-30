@@ -3,6 +3,7 @@ import 'package:rg_routine_planner/core/scoring/apparatus.dart';
 import 'package:rg_routine_planner/core/scoring/db_element_group.dart';
 import 'package:rg_routine_planner/features/levels/domain/competition_level.dart';
 import 'package:rg_routine_planner/features/levels/domain/count_limit.dart';
+import 'package:rg_routine_planner/features/levels/domain/difficulty_category.dart';
 import 'package:rg_routine_planner/features/levels/presentation/limit_text.dart';
 
 void main() {
@@ -34,11 +35,28 @@ void main() {
         risk: CountLimit(min: 1, max: 2),
         da: CountLimit(min: 1),
         requiredBodyGroups: {DbElementGroup.balance, DbElementGroup.jump},
+        minDanceSteps: 2,
       ),
     );
     expect(
       describeLevel(custom, Apparatus.hoop),
-      'DB up to 8 · R 1–2 · DA at least 1 · needs leap, balance',
+      'DB up to 8 · R 1–2 · DA at least 1 · needs leap, balance · '
+      'at least 2 S',
+    );
+  });
+
+  test('describeLevel shows dance steps with DB, also for freehand', () {
+    const custom = CompetitionLevel.custom(
+      LevelRequirements(da: CountLimit(max: 3), minDanceSteps: 1),
+    );
+    expect(describeLevel(custom, Apparatus.freehand), 'at least 1 S');
+    expect(
+      describeLevel(
+        custom,
+        Apparatus.hoop,
+        categories: [DifficultyCategory.da],
+      ),
+      'DA up to 3',
     );
   });
 

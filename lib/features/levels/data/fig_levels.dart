@@ -14,6 +14,10 @@ import '../domain/count_limit.dart';
 // exercise (not necessarily counted); 0.30 penalty for each missing group
 // (CoP #1.5, #2.3.2-2.3.3; Junior annex #3.3).
 //
+// Dance steps combinations (S): at least 2 (CoP #5.3.1 of the Artistry
+// section: Senior p.107-108, Junior p.201-202). Not difficulty: only an
+// advisory alert when missing.
+//
 // FIG levels have no freehand routines, so `freehandRequirements` is null.
 
 const _allBodyGroups = {
@@ -23,6 +27,8 @@ const _allBodyGroups = {
 };
 
 const _missingBodyGroupPenalty = Score.hundredths(30);
+
+const _minDanceSteps = 2;
 
 const figSenior = CompetitionLevel(
   id: 'fig-senior',
@@ -34,6 +40,7 @@ const figSenior = CompetitionLevel(
     da: CountLimit(max: 15),
     requiredBodyGroups: _allBodyGroups,
     missingBodyGroupPenalty: _missingBodyGroupPenalty,
+    minDanceSteps: _minDanceSteps,
   ),
 );
 
@@ -47,6 +54,7 @@ const figJunior = CompetitionLevel(
     da: CountLimit(max: 12),
     requiredBodyGroups: _allBodyGroups,
     missingBodyGroupPenalty: _missingBodyGroupPenalty,
+    minDanceSteps: _minDanceSteps,
   ),
 );
 
