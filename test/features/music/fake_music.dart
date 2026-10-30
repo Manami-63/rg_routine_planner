@@ -53,12 +53,16 @@ class FakeMusicPlayer implements MusicPlayer {
 
   final _position = StreamController<Duration>.broadcast();
   final _playing = StreamController<bool>.broadcast();
+  final _speed = StreamController<double>.broadcast();
 
   @override
   Duration position = Duration.zero;
 
   @override
   bool playing = false;
+
+  @override
+  double speed = 1;
 
   @override
   Future<Duration?> load(String path) async {
@@ -76,7 +80,13 @@ class FakeMusicPlayer implements MusicPlayer {
   Future<void> seek(Duration to) async => _position.add(position = to);
 
   @override
+  Future<void> setSpeed(double to) async => _speed.add(speed = to);
+
+  @override
   Stream<Duration> get positionStream => _position.stream;
+
+  @override
+  Stream<double> get speedStream => _speed.stream;
 
   @override
   Stream<bool> get playingStream => _playing.stream;

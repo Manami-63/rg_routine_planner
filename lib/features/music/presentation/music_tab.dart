@@ -123,7 +123,8 @@ class _MusicHeader extends ConsumerWidget {
   );
 }
 
-/// Seek bar with times, and back / play-pause / forward buttons.
+/// Seek bar with times and the playback speed, and back / play-pause /
+/// forward buttons.
 class MusicPlayerControls extends StatelessWidget {
   const MusicPlayerControls({
     super.key,
@@ -135,6 +136,9 @@ class MusicPlayerControls extends StatelessWidget {
   final Duration duration;
 
   static const _skip = Duration(seconds: 5);
+
+  /// The speeds to choose from: slower ones for learning a routine.
+  static const speeds = [0.5, 0.75, 0.9, 1.0];
 
   void _seekBy(Duration offset) {
     final target = player.position + offset;
@@ -179,6 +183,7 @@ class MusicPlayerControls extends StatelessWidget {
                         key: const ValueKey('music-position'),
                         style: timeStyle,
                       ),
+                      _SpeedButton(player: player),
                       Text(
                         formatMusicTime(duration),
                         key: const ValueKey('music-duration'),
@@ -227,6 +232,75 @@ class MusicPlayerControls extends StatelessWidget {
       ],
     );
   }
+}
+
+/// The playback speed, e.g. "0.75×", which opens the choice of speeds.
+/// Stands out when not normal, so slow music is not mistaken for normal.
+class _SpeedButton extends StatelessWidget {
+  const _SpeedButton({required this.player});
+
+  final MusicPlayer player;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return StreamBuilder<double>(
+      stream: player.speedStream,
+      initialData: player.speed,
+      builder: (context, snapshot) {
+        final speed = snapshot.data!;
+        final slow = speed != 1;
+        return PopupMenuButton<double>(
+          tooltip: 'Playback speed',
+          initialValue: speed,
+          onSelected: player.setSpeed,
+          itemBuilder: (context) => [
+            for (final option in MusicPlayerControls.speeds)
+              PopupMenuItem(
+                value: option,
+                child: Text(option == 1 ? 'Normal (1×)' : formatSpeed(option)),
+              ),
+          ],
+          child: Container(
+            key: const ValueKey('music-speed'),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: slow ? colors.tertiaryContainer : null,
+              border: Border.all(
+                color: slow ? colors.tertiaryContainer : colors.outlineVariant,
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.speed,
+                  size: 16,
+                  color: slow
+                      ? colors.onTertiaryContainer
+                      : colors.onSurfaceVariant,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  formatSpeed(speed),
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: slow ? colors.onTertiaryContainer : null,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// e.g. "0.75×" or "1×".
+String formatSpeed(double speed) {
+  final text = speed.toStringAsFixed(2).replaceFirst(RegExp(r'\.?0+$'), '');
+  return '$text×';
 }
 
 /// e.g. "1:05" or "0:07".

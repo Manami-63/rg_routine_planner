@@ -10,11 +10,17 @@ abstract interface class MusicPlayer {
   Future<void> pause();
   Future<void> seek(Duration position);
 
+  /// Plays at [speed] times the normal speed (1 = normal). just_audio
+  /// keeps the pitch.
+  Future<void> setSpeed(double speed);
+
   Stream<Duration> get positionStream;
   Stream<bool> get playingStream;
+  Stream<double> get speedStream;
 
   Duration get position;
   bool get playing;
+  double get speed;
 
   Future<void> dispose();
 }
@@ -42,6 +48,9 @@ class JustAudioMusicPlayer implements MusicPlayer {
   Future<void> seek(Duration position) => _player.seek(position);
 
   @override
+  Future<void> setSpeed(double speed) => _player.setSpeed(speed);
+
+  @override
   Stream<Duration> get positionStream => _player.positionStream;
 
   @override
@@ -50,7 +59,13 @@ class JustAudioMusicPlayer implements MusicPlayer {
   );
 
   @override
+  Stream<double> get speedStream => _player.speedStream;
+
+  @override
   Duration get position => _player.position;
+
+  @override
+  double get speed => _player.speed;
 
   @override
   bool get playing => _player.playing;

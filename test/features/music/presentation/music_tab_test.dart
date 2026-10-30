@@ -133,10 +133,44 @@ void main() {
     expect(find.text('Choose music'), findsOneWidget);
   });
 
+  testWidgets('plays slower for learning', (tester) async {
+    final music = FakeMusic();
+    music.library.files[bolero.fileName] = '/picked/Bolero.mp3';
+    await pumpDbCalculator(
+      tester,
+      routine: emptyTestRoutine().withMusic(bolero),
+      music: music,
+    );
+    await openMusicTab(tester);
+    expect(find.text('1×'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Playback speed'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('0.75×'));
+    await tester.pumpAndSettle();
+    expect(music.player.speed, 0.75);
+    expect(find.text('0.75×'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Playback speed'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Normal (1×)'));
+    await tester.pumpAndSettle();
+    expect(music.player.speed, 1);
+  });
+
   testWidgets('the music tab opens from the route', (tester) async {
     await pumpDbCalculator(tester, initialTab: RoutineTab.music);
 
     expect(find.byType(MusicTab), findsOneWidget);
+  });
+
+  test('speeds show without trailing zeros', () {
+    expect(MusicPlayerControls.speeds.map(formatSpeed), [
+      '0.5×',
+      '0.75×',
+      '0.9×',
+      '1×',
+    ]);
   });
 
   test('times show minutes and seconds', () {

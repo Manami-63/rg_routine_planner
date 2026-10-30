@@ -82,6 +82,9 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   (`deleteRoutine`). `MusicPicker` (file_picker) and `MusicPlayer`
   (just_audio) are wrapped so widget tests use the fakes in
   `test/features/music/fake_music.dart` (`pumpDbCalculator` sets them up).
+  `MusicPlayerControls` (Music tab and Play mode) has a playback speed
+  (0.5×-1×, for learning; not saved, back to 1× when the routine is opened
+  again). Music times are always in music time, whatever the speed.
 - Dance steps combinations (S, `features/dance_steps/`): no details, only
   an optional music time each (`Routine.danceStepTimes`; the count is its
   length), set with `DanceStepsCard` at the top of the DB tab. Levels have
