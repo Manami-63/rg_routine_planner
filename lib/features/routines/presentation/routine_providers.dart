@@ -5,6 +5,7 @@ import '../../da_calculator/presentation/da_calculator_providers.dart';
 import '../../db_calculator/presentation/db_calculator_providers.dart';
 import '../../levels/presentation/level_providers.dart';
 import '../data/drift_routine_repository.dart';
+import '../data/routine_file_transfer.dart';
 import '../data/routine_repository.dart';
 
 // Wiring for the routines feature. Widget tests override
@@ -17,6 +18,10 @@ final routineRepositoryProvider = Provider<RoutineRepository>(
     daCatalogue: ref.watch(daCatalogueRepositoryProvider),
     presetLevels: ref.watch(presetLevelsProvider),
   ),
+);
+
+final routineFileTransferProvider = Provider<RoutineFileTransfer>(
+  (ref) => const SystemRoutineFileTransfer(),
 );
 
 /// Live list for the "My routines" screen; updates on every save/delete.

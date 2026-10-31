@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:rg_routine_planner/features/music/data/music_library.dart';
 import 'package:rg_routine_planner/features/music/data/music_picker.dart';
@@ -18,6 +19,21 @@ class FakeMusicLibrary implements MusicLibrary {
     files[fileName] = sourcePath;
     return RoutineMusic(fileName: fileName, title: title);
   }
+
+  @override
+  Future<RoutineMusic> addBytes(
+    List<int> bytes, {
+    required String extension,
+    required String title,
+  }) async {
+    final fileName = 'music-${_next++}.$extension';
+    files[fileName] = utf8.decode(bytes);
+    return RoutineMusic(fileName: fileName, title: title);
+  }
+
+  @override
+  Future<List<int>> readBytes(RoutineMusic music) async =>
+      utf8.encode(files[music.fileName]!);
 
   @override
   Future<RoutineMusic> copy(RoutineMusic music) async =>

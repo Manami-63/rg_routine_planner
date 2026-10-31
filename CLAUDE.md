@@ -142,6 +142,14 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   screen on while open (`ScreenAwake` in `lib/core/device/`, wrapping
   wakelock_plus; widget tests get `FakeScreenAwake` from
   `pumpDbCalculator`).
+- Sharing: `RoutineFile` (`routines/domain/`) is the `.rgroutine` file
+  (JSON with a `format` number, bumped on a breaking change; ids, never
+  values). Share (My routines and routine page menus) sends it through the
+  system share sheet; Import routine (My routines app bar, also when empty)
+  saves it as a new routine, which resolves its ids on load. If the routine
+  has music, Share asks whether to include it (base64 in the file; the
+  importer gets its own copy); its times always go. `RoutineFileTransfer` wraps share_plus
+  and file_picker; widget tests use `FakeRoutineFileTransfer`.
 - Welcome (`features/welcome/`): `WelcomeScreen` (`/welcome`) shows the
   intro video (`IntroVideo`, video_player, `assets/videos/intro.mp4`,
   muted and looping; an icon while the file is missing) and three short

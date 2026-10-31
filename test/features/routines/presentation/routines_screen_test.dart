@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -11,12 +13,14 @@ import 'package:rg_routine_planner/features/levels/data/fig_levels.dart';
 import 'package:rg_routine_planner/features/music/domain/routine_music.dart';
 import 'package:rg_routine_planner/features/music/presentation/music_providers.dart';
 import 'package:rg_routine_planner/features/routines/domain/routine.dart';
+import 'package:rg_routine_planner/features/routines/domain/routine_file.dart';
 import 'package:rg_routine_planner/features/routines/presentation/routine_providers.dart';
 import 'package:rg_routine_planner/features/routines/presentation/routines_screen.dart';
 
 import '../../da_calculator/test_data.dart';
 import '../../db_calculator/test_data.dart';
 import '../../music/fake_music.dart';
+import '../fake_routine_file_transfer.dart';
 import '../fake_routine_repository.dart';
 
 void main() {
@@ -40,6 +44,7 @@ void main() {
     WidgetTester tester,
     List<Routine> routines, {
     FakeMusicLibrary? musicLibrary,
+    FakeRoutineFileTransfer? transfer,
   }) async {
     final repository = FakeRoutineRepository(routines);
     await tester.pumpWidget(
@@ -48,6 +53,9 @@ void main() {
           routineRepositoryProvider.overrideWithValue(repository),
           musicLibraryProvider.overrideWithValue(
             musicLibrary ?? FakeMusicLibrary(),
+          ),
+          routineFileTransferProvider.overrideWithValue(
+            transfer ?? FakeRoutineFileTransfer(),
           ),
         ],
         child: const MaterialApp(home: RoutinesScreen()),
@@ -288,6 +296,218 @@ void main() {
 
     expect(repository.routines, hasLength(1));
     expect(find.text('Could not duplicate the routine.'), findsOneWidget);
+  });
+
+  group('routine files', () {
+    testWidgets('share sends the routine as a file', (tester) async {
+      final transfer = FakeRoutineFileTransfer();
+      final original = routine('r1', 'Hoop');
+      await pumpScreen(tester, [original], transfer: transfer);
+
+      await chooseAction(tester, 'Hoop', 'Share');
+
+      expect(transfer.sharedFileName, 'Hoop.rgroutine');
+      expect(transfer.sharedContents, RoutineFile.encode(original));
+      expect(find.text('Include the music?'), findsNothing);
+    });
+
+    group('with music', () {
+      final withMusic = routine(
+        'r1',
+        'Hoop',
+      ).withMusic(const RoutineMusic(fileName: 'a.mp3', title: 'Bolero'));
+
+      Future<FakeRoutineFileTransfer> shareAnd(
+        WidgetTester tester,
+        String button, {
+        Map<String, String> files = const {'a.mp3': 'tune'},
+      }) async {
+        final transfer = FakeRoutineFileTransfer();
+        await pumpScreen(
+          tester,
+          [withMusic],
+          transfer: transfer,
+          musicLibrary: FakeMusicLibrary({...files}),
+        );
+        await chooseAction(tester, 'Hoop', 'Share');
+        if (files.isNotEmpty) {
+          await tester.tap(find.text(button));
+          await tester.pumpAndSettle();
+        }
+        return transfer;
+      }
+
+      SharedMusic? sharedMusic(FakeRoutineFileTransfer transfer) =>
+          RoutineFile.decode(
+            transfer.sharedContents!,
+            id: 'new',
+            now: base,
+          ).music;
+
+      testWidgets('share can include it', (tester) async {
+        final transfer = await shareAnd(tester, 'Include music');
+
+        final music = sharedMusic(transfer)!;
+        expect(music.title, 'Bolero');
+        expect(music.extension, 'mp3');
+        expect(utf8.decode(music.bytes), 'tune');
+      });
+
+      testWidgets('share can leave it out', (tester) async {
+        final transfer = await shareAnd(tester, 'Without music');
+
+        expect(sharedMusic(transfer), isNull);
+      });
+
+      testWidgets('dismissing the question shares nothing', (tester) async {
+        final transfer = FakeRoutineFileTransfer();
+        await pumpScreen(
+          tester,
+          [withMusic],
+          transfer: transfer,
+          musicLibrary: FakeMusicLibrary({'a.mp3': 'tune'}),
+        );
+        await chooseAction(tester, 'Hoop', 'Share');
+
+        await tester.tapAt(const Offset(5, 5));
+        await tester.pumpAndSettle();
+
+        expect(transfer.sharedContents, isNull);
+      });
+
+      testWidgets('a missing music file is left out', (tester) async {
+        final transfer = await shareAnd(tester, '', files: const {});
+
+        expect(sharedMusic(transfer), isNull);
+        expect(find.textContaining('music file is missing'), findsOneWidget);
+      });
+
+      testWidgets('import stores the music for the new routine', (
+        tester,
+      ) async {
+        final library = FakeMusicLibrary();
+        final transfer = FakeRoutineFileTransfer()
+          ..next = RoutineFile.encode(
+            withMusic,
+            music: SharedMusic(
+              title: 'Bolero',
+              extension: 'mp3',
+              bytes: utf8.encode('tune'),
+            ),
+          );
+        final repository = await pumpScreen(
+          tester,
+          [],
+          transfer: transfer,
+          musicLibrary: library,
+        );
+
+        await tester.tap(find.byTooltip('Import routine'));
+        await tester.pumpAndSettle();
+
+        final music = repository.routines.values.single.music!;
+        expect(music.title, 'Bolero');
+        expect(library.files[music.fileName], 'tune');
+      });
+
+      testWidgets('a failed import leaves no music behind', (tester) async {
+        final library = FakeMusicLibrary();
+        final transfer = FakeRoutineFileTransfer()
+          ..next = RoutineFile.encode(
+            withMusic,
+            music: SharedMusic(
+              title: 'Bolero',
+              extension: 'mp3',
+              bytes: utf8.encode('tune'),
+            ),
+          );
+        final repository = await pumpScreen(
+          tester,
+          [],
+          transfer: transfer,
+          musicLibrary: library,
+        );
+        repository.saveError = Exception('disk full');
+
+        await tester.tap(find.byTooltip('Import routine'));
+        await tester.pumpAndSettle();
+
+        expect(library.files, isEmpty);
+        expect(find.text('Could not import this file.'), findsOneWidget);
+      });
+    });
+
+    testWidgets('share reports a failure', (tester) async {
+      final transfer = FakeRoutineFileTransfer()
+        ..shareError = Exception('no space');
+      await pumpScreen(tester, [routine('r1', 'Hoop')], transfer: transfer);
+
+      await chooseAction(tester, 'Hoop', 'Share');
+
+      expect(find.text('Could not share the routine.'), findsOneWidget);
+    });
+
+    Future<void> tapImport(WidgetTester tester) async {
+      await tester.tap(find.byTooltip('Import routine'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('import works with no routines yet', (tester) async {
+      final transfer = FakeRoutineFileTransfer()
+        ..next = RoutineFile.encode(routine('r1', 'From my coach'));
+      final repository = await pumpScreen(tester, [], transfer: transfer);
+
+      await tapImport(tester);
+
+      final imported = repository.routines.values.single;
+      expect(imported.id, isNot('r1'));
+      expect(imported.name, 'From my coach');
+      expect(find.text('Imported "From my coach".'), findsOneWidget);
+    });
+
+    testWidgets('import adds a new routine beside the original', (
+      tester,
+    ) async {
+      final original = routine('r1', 'Hoop');
+      final transfer = FakeRoutineFileTransfer()
+        ..next = RoutineFile.encode(original);
+      final repository = await pumpScreen(tester, [
+        original,
+      ], transfer: transfer);
+
+      await tapImport(tester);
+
+      expect(repository.routines, hasLength(2));
+    });
+
+    testWidgets('cancelling import does nothing', (tester) async {
+      final repository = await pumpScreen(tester, []);
+
+      await tapImport(tester);
+
+      expect(repository.routines, isEmpty);
+      expect(find.byType(SnackBar), findsNothing);
+    });
+
+    testWidgets('import reports a file it cannot read', (tester) async {
+      final transfer = FakeRoutineFileTransfer()..next = 'not a routine';
+      final repository = await pumpScreen(tester, [], transfer: transfer);
+
+      await tapImport(tester);
+
+      expect(repository.routines, isEmpty);
+      expect(find.text('Could not import this file.'), findsOneWidget);
+    });
+
+    testWidgets('import asks to update for a newer file', (tester) async {
+      final transfer = FakeRoutineFileTransfer()
+        ..next = '{"app": "rg_routine_planner", "format": 99}';
+      await pumpScreen(tester, [], transfer: transfer);
+
+      await tapImport(tester);
+
+      expect(find.textContaining('newer version'), findsOneWidget);
+    });
   });
 
   testWidgets('shows each routine\'s provisional total', (tester) async {

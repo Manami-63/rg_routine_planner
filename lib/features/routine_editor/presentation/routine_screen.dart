@@ -60,7 +60,7 @@ class RoutineScreen extends ConsumerWidget {
   );
 }
 
-enum _MenuAction { duplicate, clearDb, clearDa }
+enum _MenuAction { duplicate, share, clearDb, clearDa }
 
 class _RoutinePage extends ConsumerWidget {
   const _RoutinePage({required this.routineId});
@@ -96,6 +96,11 @@ class _RoutinePage extends ConsumerWidget {
                 ref,
                 () async => ref.read(routineProvider(routineId)),
               ),
+              _MenuAction.share => shareRoutine(
+                context,
+                ref,
+                () async => ref.read(routineProvider(routineId)),
+              ),
               _MenuAction.clearDb => _confirmClear(
                 context,
                 title: 'Clear DB and risks?',
@@ -119,6 +124,13 @@ class _RoutinePage extends ConsumerWidget {
                 child: ListTile(
                   leading: Icon(Icons.copy_outlined),
                   title: Text('Duplicate'),
+                ),
+              ),
+              const PopupMenuItem(
+                value: _MenuAction.share,
+                child: ListTile(
+                  leading: Icon(Icons.share_outlined),
+                  title: Text('Share'),
                 ),
               ),
               PopupMenuItem(

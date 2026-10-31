@@ -26,6 +26,18 @@ void main() {
     expect(await File(path!).readAsString(), 'tune');
   });
 
+  test('stores and reads back bytes', () async {
+    final music = await library.addBytes(
+      [1, 2, 3],
+      extension: 'm4a',
+      title: 'Bolero',
+    );
+
+    expect(music.title, 'Bolero');
+    expect(music.fileName, endsWith('.m4a'));
+    expect(await library.readBytes(music), [1, 2, 3]);
+  });
+
   test('copies are separate files', () async {
     final music = await library.add(source.path, title: 'Bolero');
     final copy = await library.copy(music);

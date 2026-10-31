@@ -11,6 +11,16 @@ abstract interface class MusicLibrary {
   /// Copies the file at [sourcePath] into the library.
   Future<RoutineMusic> add(String sourcePath, {required String title});
 
+  /// Saves [bytes], audio of type [extension] (e.g. `mp3`), in the library.
+  Future<RoutineMusic> addBytes(
+    List<int> bytes, {
+    required String extension,
+    required String title,
+  });
+
+  /// The contents of the file of [music].
+  Future<List<int>> readBytes(RoutineMusic music);
+
   /// A separate copy of [music], e.g. for a duplicated routine.
   Future<RoutineMusic> copy(RoutineMusic music);
 
@@ -34,6 +44,23 @@ class FileMusicLibrary implements MusicLibrary {
   @override
   Future<RoutineMusic> add(String sourcePath, {required String title}) =>
       _copyFrom(sourcePath, title);
+
+  @override
+  Future<RoutineMusic> addBytes(
+    List<int> bytes, {
+    required String extension,
+    required String title,
+  }) async {
+    final dir = await folder();
+    await dir.create(recursive: true);
+    final fileName = '${const Uuid().v4()}.$extension';
+    await File(p.join(dir.path, fileName)).writeAsBytes(bytes);
+    return RoutineMusic(fileName: fileName, title: title);
+  }
+
+  @override
+  Future<List<int>> readBytes(RoutineMusic music) async =>
+      (await _file(music.fileName)).readAsBytes();
 
   @override
   Future<RoutineMusic> copy(RoutineMusic music) async =>
