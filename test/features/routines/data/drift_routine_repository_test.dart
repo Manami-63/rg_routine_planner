@@ -19,6 +19,7 @@ import 'package:rg_routine_planner/features/levels/domain/count_limit.dart';
 import 'package:rg_routine_planner/features/music/domain/routine_music.dart';
 import 'package:rg_routine_planner/features/routines/data/drift_routine_repository.dart';
 import 'package:rg_routine_planner/features/routines/domain/routine.dart';
+import 'package:rg_routine_planner/features/routines/domain/routine_file.dart';
 
 import '../../da_calculator/test_data.dart';
 import '../../db_calculator/test_data.dart';
@@ -81,6 +82,35 @@ void main() {
     );
 
     await repository.saveRoutine(original);
+
+    expect(await repository.fetchRoutine('r1'), original);
+  });
+
+  test('an imported routine file resolves from the catalogue', () async {
+    final base = routine(
+      apparatus: Apparatus.ribbon,
+      level: figSenior,
+      elements: const [testJump, testBalance],
+      risks: [
+        RiskElement(
+          rotation: testThreeRotations,
+          criteria: const [testCriterionA, testCriterionB],
+        ),
+      ],
+      das: [
+        DaElement(base: testRoll, criteria: {DaCriterion.values.first}),
+      ],
+    );
+    final original = base.withDb(
+      base.db.withElementTimeAt(1, const Duration(seconds: 9)),
+    );
+
+    final imported = RoutineFile.decode(
+      RoutineFile.encode(original),
+      id: 'r1',
+      now: created,
+    );
+    await repository.saveRoutine(imported.routine);
 
     expect(await repository.fetchRoutine('r1'), original);
   });

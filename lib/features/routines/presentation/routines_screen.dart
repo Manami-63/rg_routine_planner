@@ -24,7 +24,16 @@ class RoutinesScreen extends ConsumerWidget {
     final summaries = ref.watch(routineSummariesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('My routines')),
+      appBar: AppBar(
+        title: const Text('My routines'),
+        actions: [
+          IconButton(
+            tooltip: 'Import routine',
+            icon: const Icon(Icons.file_download_outlined),
+            onPressed: () => importRoutine(context, ref),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _createRoutine(context, ref),
         icon: const Icon(Icons.add),
@@ -118,7 +127,7 @@ class _FilteredRoutines extends ConsumerWidget {
   }
 }
 
-enum _RoutineAction { edit, duplicate, delete }
+enum _RoutineAction { edit, duplicate, share, delete }
 
 class _RoutineTile extends ConsumerWidget {
   const _RoutineTile({required this.summary});
@@ -153,6 +162,11 @@ class _RoutineTile extends ConsumerWidget {
             ref,
             () => ref.read(routineRepositoryProvider).fetchRoutine(summary.id),
           ),
+          _RoutineAction.share => shareRoutine(
+            context,
+            ref,
+            () => ref.read(routineRepositoryProvider).fetchRoutine(summary.id),
+          ),
           _RoutineAction.delete => _confirmDelete(context, ref),
         },
         itemBuilder: (context) => const [
@@ -168,6 +182,13 @@ class _RoutineTile extends ConsumerWidget {
             child: ListTile(
               leading: Icon(Icons.copy_outlined),
               title: Text('Duplicate'),
+            ),
+          ),
+          PopupMenuItem(
+            value: _RoutineAction.share,
+            child: ListTile(
+              leading: Icon(Icons.share_outlined),
+              title: Text('Share'),
             ),
           ),
           PopupMenuItem(

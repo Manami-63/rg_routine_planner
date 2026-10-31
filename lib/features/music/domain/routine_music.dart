@@ -1,5 +1,8 @@
 /// The music of a routine: a file the app keeps its own copy of.
 class RoutineMusic {
+  /// The audio file types the app accepts.
+  static const extensions = ['mp3', 'm4a', 'aac', 'wav'];
+
   const RoutineMusic({required this.fileName, required this.title});
 
   /// Name of the app's copy in its music folder (not a full path: the
