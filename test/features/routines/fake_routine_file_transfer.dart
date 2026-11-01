@@ -26,4 +26,15 @@ class FakeRoutineFileTransfer implements RoutineFileTransfer {
     next = null;
     return picked;
   }
+
+  void Function(String path)? fileOpened;
+
+  /// Contents of opened files, by path.
+  final opened = <String, String>{};
+
+  @override
+  void onFileOpened(void Function(String path) handler) => fileOpened = handler;
+
+  @override
+  Future<String> readOpened(String path) async => opened.remove(path)!;
 }

@@ -148,7 +148,10 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   system share sheet; Import routine (My routines app bar, also when empty)
   saves it as a new routine, which resolves its ids on load. If the routine
   has music, Share asks whether to include it (base64 in the file; the
-  importer gets its own copy); its times always go. `RoutineFileTransfer` wraps share_plus
+  importer gets its own copy); its times always go. Opening a file from
+  another app imports it the same way (`RgRoutinePlannerApp` listens; the
+  channel `rg_routine_planner/opened_files` is in `AppDelegate.swift`,
+  `SceneDelegate.swift` and `MainActivity.kt`). `RoutineFileTransfer` wraps share_plus
   and file_picker; widget tests use `FakeRoutineFileTransfer`.
 - Welcome (`features/welcome/`): `WelcomeScreen` (`/welcome`) shows the
   intro video (`IntroVideo`, video_player, `assets/videos/intro.mp4`,
