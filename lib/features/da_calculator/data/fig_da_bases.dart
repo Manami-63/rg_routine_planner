@@ -10,8 +10,9 @@
 // Rope adds its specific criteria after those: double rotation, rope
 // turning backward, crossed arms (blank in the table = not available).
 //
-// "Catch from a high throw" bases can start a DA with 2 bases (#5.1.3.2).
-// Only 1 base related to the catch from a high throw is valid in one DA
+// "Catch from a high throw" bases can start a DA with 2 bases (#5.1.3.2):
+// the bases marked with the plain arrow, and also the thin arrow (Ball, Clubs)
+// and double arrow (Clubs). Only 1 base related to the catch from a high throw is valid in one DA
 // (#5.9, #5.10 notes), so those are never offered as the 2nd base.
 
 import '../../../core/scoring/apparatus.dart';
@@ -157,6 +158,7 @@ final _ball = [
     'Catch with 1 hand from a high throw',
     30,
     'v-vvvvv',
+    startsCombination: true,
     isCatchFromHighThrow: true,
     note: 'Valid only when caught in 1 hand.',
   ),
@@ -320,6 +322,7 @@ final _clubs = [
         'held in the same hand',
     30,
     'v-vvvvv',
+    startsCombination: true,
     isCatchFromHighThrow: true,
   ),
   _base(
@@ -328,6 +331,7 @@ final _clubs = [
     'Simultaneous catch of 2 unlocked Clubs from a high throw',
     30,
     _all,
+    startsCombination: true,
     isCatchFromHighThrow: true,
   ),
 ];
