@@ -8,7 +8,7 @@
 PRODUCT_NAME = rg_routine_planner
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = com.example.rgRoutinePlanner
+PRODUCT_BUNDLE_IDENTIFIER = app.saitoworks.rgroutineplanner
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 com.example. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 saitoworks.app. All rights reserved.

@@ -1,4 +1,4 @@
-package com.example.rg_routine_planner
+package app.saitoworks.rgroutineplanner
 
 import android.content.Intent
 import android.os.Bundle
