@@ -141,18 +141,29 @@ Future<bool?> _askIncludeMusic(BuildContext context, String title) =>
       ),
     );
 
-/// Lets the user choose a routine file, saves it as a new routine (with
-/// its own copy of any music in the file), then offers to open it.
-Future<void> importRoutine(BuildContext context, WidgetRef ref) async {
+/// Lets the user choose a routine file and imports it.
+Future<void> importRoutine(BuildContext context, WidgetRef ref) =>
+    importRoutineFile(
+      ref,
+      ref.read(routineFileTransferProvider).pick,
+      messenger: ScaffoldMessenger.of(context),
+      router: GoRouter.maybeOf(context),
+    );
+
+/// Saves the routine file from [read] (`null`: cancelled) as a new routine,
+/// with its own copy of any music in the file, then offers to open it.
+Future<void> importRoutineFile(
+  WidgetRef ref,
+  Future<String?> Function() read, {
+  required ScaffoldMessengerState messenger,
+  required GoRouter? router,
+}) async {
   final repository = ref.read(routineRepositoryProvider);
-  final transfer = ref.read(routineFileTransferProvider);
   final library = ref.read(musicLibraryProvider);
-  final messenger = ScaffoldMessenger.of(context);
-  final router = GoRouter.maybeOf(context);
   final Routine routine;
   RoutineMusic? stored;
   try {
-    final contents = await transfer.pick();
+    final contents = await read();
     if (contents == null) return;
     final decoded = RoutineFile.decode(
       contents,
