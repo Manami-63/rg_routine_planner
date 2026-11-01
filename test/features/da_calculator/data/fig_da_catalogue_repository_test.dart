@@ -58,24 +58,28 @@ void main() {
     ]);
   });
 
-  test('each apparatus has 1 catch that starts a 2-base DA', () {
-    for (final apparatus in Apparatus.values.where((a) => a.hasApparatus)) {
-      final starters = of(apparatus).where((b) => b.startsCombination);
-      expect(starters, hasLength(1), reason: apparatus.label);
-      expect(starters.single.isCatchFromHighThrow, isTrue);
-    }
+  test('the catches that start a 2-base DA are those of #5.1.3.2', () {
+    final starters = bases.where((b) => b.startsCombination);
+    expect(starters.map((b) => b.id), [
+      'fig-da-rope-catch-high-throw',
+      'fig-da-hoop-catch-high-throw',
+      'fig-da-ball-catch-one-hand',
+      'fig-da-ball-catch-high-throw',
+      'fig-da-clubs-catch-high-throw',
+      'fig-da-clubs-catch-one-hand',
+      'fig-da-clubs-catch-simultaneous',
+      'fig-da-ribbon-catch-high-throw',
+    ]);
+    expect(starters.every((b) => b.isCatchFromHighThrow), isTrue);
   });
 
-  test('other catches from a high throw cannot be a 2nd base', () {
+  test('other catches from a high throw cannot start a 2-base DA', () {
     final catches = bases.where(
       (b) => b.isCatchFromHighThrow && !b.startsCombination,
     );
     expect(catches.map((b) => b.id), [
       'fig-da-rope-catch-open-rope',
-      'fig-da-ball-catch-one-hand',
       'fig-da-ball-rebound-floor-high-throw',
-      'fig-da-clubs-catch-one-hand',
-      'fig-da-clubs-catch-simultaneous',
     ]);
   });
 
