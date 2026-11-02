@@ -3,6 +3,13 @@ class RoutineMusic {
   /// The audio file types the app accepts.
   static const extensions = ['mp3', 'm4a', 'aac', 'wav'];
 
+  /// Whether a file called [name] is one of the accepted [extensions].
+  static bool accepts(String name) {
+    final dot = name.lastIndexOf('.');
+    return dot >= 0 &&
+        extensions.contains(name.substring(dot + 1).toLowerCase());
+  }
+
   const RoutineMusic({required this.fileName, required this.title});
 
   /// Name of the app's copy in its music folder (not a full path: the

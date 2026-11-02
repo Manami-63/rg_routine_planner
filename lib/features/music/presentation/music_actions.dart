@@ -21,6 +21,12 @@ Future<void> chooseMusic(
 
   final picked = await ref.read(musicPickerProvider).pick();
   if (picked == null || !context.mounted) return;
+  if (!RoutineMusic.accepts(picked.name)) {
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Choose an MP3, M4A, AAC or WAV file.')),
+    );
+    return;
+  }
   try {
     final music = await library.add(
       picked.path,
