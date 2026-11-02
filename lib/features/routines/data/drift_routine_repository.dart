@@ -185,6 +185,7 @@ class DriftRoutineRepository implements RoutineRepository {
               slowTurn: e.slowTurn,
               extraRotations: e.extraRotations,
               seriesCount: e.seriesCount,
+              rotationCycles: e.rotationCycles,
               manualValue: switch (e.manualValue) {
                 final hundredths? => Score.hundredths(hundredths),
                 null => null,
@@ -415,6 +416,7 @@ class DriftRoutineRepository implements RoutineRepository {
     slowTurn: Value(options.slowTurn),
     extraRotations: Value(options.extraRotations),
     seriesCount: Value(options.seriesCount),
+    rotationCycles: Value(options.rotationCycles),
     manualValue: Value(options.manualValue?.hundredths),
     customName: Value(element.isCustom ? element.name : null),
     customGroup: Value(element.isCustom ? element.group.name : null),

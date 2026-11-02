@@ -18,6 +18,7 @@ class DbElement {
     this.family,
     this.baseRotationDegrees = 360,
     this.symbolPath,
+    this.canHaveCycles = false,
   }) : isCustom = false;
 
   /// An element the user entered themselves, e.g. a DB newly approved by
@@ -37,6 +38,7 @@ class DbElement {
        family = null,
        baseRotationDegrees = 360,
        symbolPath = null,
+       canHaveCycles = false,
        isCustom = true;
 
   /// A moment marked on the music whose DB is chosen later. Worth nothing
@@ -53,6 +55,7 @@ class DbElement {
       family = null,
       baseRotationDegrees = 360,
       symbolPath = null,
+      canHaveCycles = false,
       isCustom = false;
 
   /// The id stored for every element chosen later.
@@ -74,10 +77,14 @@ class DbElement {
       family = null,
       baseRotationDegrees = 360,
       symbolPath = null,
+      canHaveCycles = false,
       isCustom = false;
 
   /// Its FIG symbol as a `SymbolPath`, or `null` when not drawn yet.
   final String? symbolPath;
+
+  /// A Fouetté, whose rotations can be recorded cycle by cycle (#12.11).
+  final bool canHaveCycles;
 
   final String id;
   final String name;
@@ -131,6 +138,7 @@ class DbElement {
       other.canBeInSeries == canBeInSeries &&
       other.family == family &&
       other.baseRotationDegrees == baseRotationDegrees &&
+      other.canHaveCycles == canHaveCycles &&
       other.isCustom == isCustom;
 
   @override
@@ -146,6 +154,7 @@ class DbElement {
     canBeInSeries,
     family,
     baseRotationDegrees,
+    canHaveCycles,
     isCustom,
   );
 

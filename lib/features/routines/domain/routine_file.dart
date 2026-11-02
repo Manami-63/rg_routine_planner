@@ -110,6 +110,7 @@ abstract final class RoutineFile {
             'slowTurn': db.elementOptions[i].slowTurn,
             'extraRotations': db.elementOptions[i].extraRotations,
             'seriesCount': db.elementOptions[i].seriesCount,
+            'rotationCycles': ?db.elementOptions[i].rotationCycles,
             'manualValue': db.elementOptions[i].manualValue?.hundredths,
             ..._timing(db.elementTimes[i], db.elementCells[i]),
           },
@@ -212,6 +213,7 @@ abstract final class RoutineFile {
               slowTurn: e['slowTurn'] as bool,
               extraRotations: _count(e['extraRotations']),
               seriesCount: _count(e['seriesCount'], min: 1),
+              rotationCycles: _cycles(e['rotationCycles']),
               manualValue: _score(e['manualValue']),
             ),
         ],
@@ -257,6 +259,12 @@ abstract final class RoutineFile {
         cells: [for (final a in das) _cell(a)],
       ),
     );
+  }
+
+  static String? _cycles(Object? value) {
+    if (value == null) return null;
+    if (value is String && DbElementOptions.areValidCycles(value)) return value;
+    throw const InvalidRoutineFileException();
   }
 
   static SharedMusic? _music(Map<String, dynamic> json) {

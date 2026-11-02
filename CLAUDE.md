@@ -217,6 +217,11 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   manual value, which is how users handle levels with other rules. Users can add custom
   elements (`DbElement.custom`, id `custom`) with a manual value, e.g. a DB
   newly approved by FIG.
+- A Fouetté (`DbElement.canHaveCycles`) can record its rotations per cycle
+  (`DbElementOptions.rotationCycles`, digits like "2121"; `rotation_cycles`
+  column). It only records how it is performed: the sheet sets
+  `extraRotations` from the first 10 cycles (#12.11), which gives the value
+  (#12.2.5). `DbSymbol` shows the digits beside the symbol.
 - Risks (R) are part of DB but modelled separately (`domain/risk.dart`): a
   rotation option (2 rotations 0.20, + 0.10 each) plus criteria, valued
   additively by `DbScoringEngine.riskValue` (CoP #4.2, #4.8-4.10). Each

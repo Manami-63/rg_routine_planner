@@ -5,6 +5,7 @@ import 'package:rg_routine_planner/features/db_calculator/domain/db_element.dart
 import 'package:rg_routine_planner/features/db_calculator/domain/db_element_options.dart';
 import 'package:rg_routine_planner/features/db_calculator/presentation/widgets/adjust_element_sheet.dart';
 
+import '../../routines/fake_routine_repository.dart';
 import '../pump_db_calculator.dart';
 import '../test_data.dart';
 
@@ -217,5 +218,72 @@ void main() {
       describeOptions(halfTurn, const DbElementOptions(extraRotations: 2)),
       '900°',
     );
+  });
+
+  group('Fouetté cycles', () {
+    const fouette = DbElement(
+      id: 'fouette',
+      name: 'Test Fouetté',
+      group: DbElementGroup.rotation,
+      value: Score.hundredths(10),
+      rulesetId: 'test-v1',
+      extraRotationValue: Score.hundredths(10),
+      canHaveCycles: true,
+      symbolPath: 'M10 10L90 90',
+    );
+
+    Future<FakeRoutineRepository> openFouette(WidgetTester tester) async {
+      final empty = emptyTestRoutine();
+      final routines = await pumpDbCalculator(
+        tester,
+        routine: empty.withDb(empty.db.withElementAdded(fouette)),
+      );
+      await tester.tap(find.byKey(const ValueKey('selected-0')));
+      await tester.pumpAndSettle();
+      return routines;
+    }
+
+    testWidgets('cycles set the rotations and are saved', (tester) async {
+      final routines = await openFouette(tester);
+
+      await tester.enterText(
+        find.byKey(const ValueKey('rotation-cycles')),
+        '2121',
+      );
+      await tester.pump();
+      expect(find.byKey(const ValueKey('rotation-cycles')), findsOneWidget);
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+
+      final options =
+          routines.routines[testRoutineId]!.db.elementOptions.single;
+      expect(options.rotationCycles, '2121');
+      expect(options.extraRotations, 5);
+      expect(find.text('2121'), findsOneWidget);
+    });
+
+    testWidgets('warns beyond 10 cycles', (tester) async {
+      await openFouette(tester);
+
+      await tester.enterText(
+        find.byKey(const ValueKey('rotation-cycles')),
+        '11111111111',
+      );
+      await tester.pump();
+
+      expect(find.text('Only the first 10 cycles count'), findsOneWidget);
+    });
+
+    testWidgets('other rotations have no cycles', (tester) async {
+      final empty = emptyTestRoutine();
+      await pumpDbCalculator(
+        tester,
+        routine: empty.withDb(empty.db.withElementAdded(testRotation)),
+      );
+      await tester.tap(find.byKey(const ValueKey('selected-0')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('rotation-cycles')), findsNothing);
+    });
   });
 }

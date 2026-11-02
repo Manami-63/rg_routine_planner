@@ -36,6 +36,7 @@ class TimelineEntry {
     required this.time,
     this.cell,
     this.db,
+    this.dbCycles,
     this.da,
     this.risk,
   });
@@ -54,6 +55,9 @@ class TimelineEntry {
 
   /// The DB, when this entry is one (for showing its symbol).
   final DbElement? db;
+
+  /// The rotations in each cycle of a Fouetté DB, e.g. "2121", or `null`.
+  final String? dbCycles;
 
   /// The DA, when this entry is one (for showing its symbols).
   final DaElement? da;
@@ -76,11 +80,13 @@ class TimelineEntry {
       other.time == time &&
       other.cell == cell &&
       other.db == db &&
+      other.dbCycles == dbCycles &&
       other.da == da &&
       other.risk == risk;
 
   @override
-  int get hashCode => Object.hash(kind, index, name, time, cell, db, da, risk);
+  int get hashCode =>
+      Object.hash(kind, index, name, time, cell, db, dbCycles, da, risk);
 
   @override
   String toString() => 'TimelineEntry(${kind.label} $index, $time)';
@@ -127,6 +133,9 @@ extension RoutineTimeline on Routine {
               time: time,
               cell: cellsOf(kind)[i],
               db: kind == TimelineKind.db ? db.elements[i] : null,
+              dbCycles: kind == TimelineKind.db
+                  ? db.elementOptions[i].rotationCycles
+                  : null,
               da: kind == TimelineKind.da ? da.elements[i] : null,
               risk: kind == TimelineKind.risk ? db.risks[i] : null,
             ),

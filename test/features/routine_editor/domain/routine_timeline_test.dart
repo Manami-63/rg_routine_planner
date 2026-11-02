@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rg_routine_planner/features/db_calculator/domain/db_element_options.dart';
 import 'package:rg_routine_planner/core/floor/floor_cell.dart';
 import 'package:rg_routine_planner/features/da_calculator/domain/da_element.dart';
 import 'package:rg_routine_planner/features/db_calculator/domain/risk.dart';
@@ -34,6 +35,19 @@ void main() {
       expect(routine.nextUnmarked(kind), 0, reason: kind.name);
     }
     expect(empty.nextUnmarked(TimelineKind.db), isNull);
+  });
+
+  test('a DB entry carries its Fouetté cycles', () {
+    final marked = routine
+        .withDb(
+          routine.db.withElementOptionsAt(
+            0,
+            const DbElementOptions(rotationCycles: '2121'),
+          ),
+        )
+        .withTime(TimelineKind.db, 0, s(12));
+
+    expect(marked.timelineEntries.single.dbCycles, '2121');
   });
 
   test('entries list every marked item by time', () {

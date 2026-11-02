@@ -49,6 +49,7 @@ DbElement _element(
   family: _familyOf(code),
   baseRotationDegrees: _halfTurnBase.contains(code) ? 180 : 360,
   symbolPath: figDbSymbolPaths[code],
+  canHaveCycles: code.startsWith('3.160'),
 );
 
 /// Rotations with a minimum basic rotation of 180° (#12.1.2).
