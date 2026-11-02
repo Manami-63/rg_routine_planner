@@ -63,6 +63,23 @@ void main() {
     updatedAt: updatedAt ?? created,
   );
 
+  test('items chosen later survive a save and load', () async {
+    final original = routine(
+      elements: const [DbElement.pending(rulesetId: 'test-v1')],
+      risks: [
+        RiskElement(
+          rotation: const RiskRotationOption.pending(rulesetId: 'test-v1'),
+        ),
+      ],
+      das: [DaElement(base: const DaBase.pending(rulesetId: 'test-v1'))],
+    );
+    await repository.saveRoutine(original);
+
+    final loaded = await repository.fetchRoutine('r1');
+    expect(loaded, original);
+    expect(loaded!.db.elements.single.isUnknown, isFalse);
+  });
+
   test('returns null for a missing routine', () async {
     expect(await repository.fetchRoutine('missing'), isNull);
   });

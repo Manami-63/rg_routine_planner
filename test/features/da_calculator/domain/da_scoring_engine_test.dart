@@ -35,6 +35,14 @@ void main() {
     maxCounted: maxCounted,
   );
 
+  test('a DA chosen later adds nothing but holds its place', () {
+    final pending = DaElement(base: const DaBase.pending(rulesetId: 'test-v1'));
+    final result = calculate([pending, da(testRoll)], maxCounted: 1);
+    expect(result.statuses, [DaStatus.notChosen, DaStatus.valid]);
+    expect(result.counted, {0});
+    expect(result.subtotal, Score.zero);
+  });
+
   group('value', () {
     test('1 base is worth the base value', () {
       expect(engine.daValue(da(testRoll)), const Score.hundredths(30));

@@ -7,6 +7,7 @@ import '../db_calculator_providers.dart';
 import '../db_routine_providers.dart';
 import '../../../../core/widgets/async_sliver.dart';
 import '../../../../core/widgets/value_badge.dart';
+import 'risk_builder_sheet.dart';
 import 'risk_symbols.dart';
 
 /// Sliver listing the risks in the routine in performance order, or an
@@ -26,6 +27,7 @@ class SelectedRisksSection extends ConsumerWidget {
       dbScoreResultProvider(routineId).select((result) => result.counting),
     );
     final controller = ref.read(routineControllerProvider(routineId).notifier);
+    final catalogue = ref.watch(riskCatalogueProvider).value;
 
     if (risks.isEmpty) {
       return const SliverToBoxAdapter(
@@ -59,7 +61,19 @@ class SelectedRisksSection extends ConsumerWidget {
                 Text(risk.description),
               ],
             ),
-            subtitle: counted ? null : const Text('Not counted'),
+            subtitle: risk.isPending
+                ? const Text('Tap to choose')
+                : counted
+                ? null
+                : const Text('Not counted'),
+            onTap: !risk.isPending || catalogue == null
+                ? null
+                : () => RiskBuilderSheet.show(
+                    context,
+                    routineId: routineId,
+                    catalogue: catalogue,
+                    index: index,
+                  ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [

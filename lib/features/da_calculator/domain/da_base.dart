@@ -49,6 +49,24 @@ class DaBase {
       isCustom = false,
       isUnknown = true;
 
+  /// A DA marked on the music, chosen later. Worth nothing, but it holds
+  /// its place because the first DA count.
+  const DaBase.pending({required this.rulesetId})
+    : id = pendingId,
+      name = 'Not chosen yet',
+      apparatus = null,
+      value = Score.zero,
+      criteria = const {},
+      startsCombination = false,
+      isCatchFromHighThrow = false,
+      note = null,
+      symbol = null,
+      isCustom = false,
+      isUnknown = false;
+
+  /// The id stored for every DA chosen later.
+  static const pendingId = 'pending';
+
   /// The id stored for every custom DA.
   static const customId = 'custom';
 
@@ -79,6 +97,8 @@ class DaBase {
 
   final bool isCustom;
   final bool isUnknown;
+
+  bool get isPending => id == pendingId;
 
   @override
   bool operator ==(Object other) =>

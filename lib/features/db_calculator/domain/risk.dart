@@ -24,12 +24,26 @@ class RiskRotationOption {
       value = Score.zero,
       isUnknown = true;
 
+  /// A risk marked on the music, chosen later. Worth nothing, but it holds
+  /// its place because the first risks count.
+  const RiskRotationOption.pending({required this.rulesetId})
+    : id = pendingId,
+      label = 'Not chosen yet',
+      rotations = 0,
+      value = Score.zero,
+      isUnknown = false;
+
+  /// The id stored for every risk chosen later.
+  static const pendingId = 'pending';
+
   final String id;
   final String label;
   final int rotations;
   final Score value;
   final String rulesetId;
   final bool isUnknown;
+
+  bool get isPending => id == pendingId;
 
   @override
   bool operator ==(Object other) =>
@@ -141,6 +155,8 @@ class RiskElement {
 
   final RiskRotationOption rotation;
   final List<RiskCriterion> criteria;
+
+  bool get isPending => rotation.isPending;
 
   /// Short human-readable summary, e.g. "3 rotations + Catch: Without
   /// hands".

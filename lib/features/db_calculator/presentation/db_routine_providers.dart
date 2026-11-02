@@ -42,6 +42,13 @@ extension DbRoutineEditing on RoutineController {
   void addElement(DbElement element) =>
       updateDb((db) => db.withElementAdded(element));
 
+  /// Replaces the element at [index], keeping its place, time and cell.
+  void replaceElementAt(
+    int index,
+    DbElement element, [
+    DbElementOptions options = DbElementOptions.none,
+  ]) => updateDb((db) => db.withElementReplacedAt(index, element, options));
+
   void removeElementAt(int index) =>
       updateDb((db) => db.withElementRemovedAt(index));
 
@@ -58,6 +65,10 @@ extension DbRoutineEditing on RoutineController {
   );
 
   void addRisk(RiskElement risk) => updateDb((db) => db.withRiskAdded(risk));
+
+  /// Replaces the risk at [index], keeping its place, time and cell.
+  void replaceRiskAt(int index, RiskElement risk) =>
+      updateDb((db) => db.withRiskReplacedAt(index, risk));
 
   void removeRiskAt(int index) => updateDb((db) => db.withRiskRemovedAt(index));
 

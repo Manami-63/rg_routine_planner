@@ -171,7 +171,7 @@ class ProvisionalDbScoringEngine implements DbScoringEngine {
     final repeated = repetitionsIn(routine);
     final dbPerElement = [
       for (final (i, element) in routine.elements.indexed)
-        repeated.contains(i)
+        repeated.contains(i) || element.isPending
             ? 0
             : seriesLengthOf(element, routine.elementOptions[i]),
     ];
@@ -218,6 +218,7 @@ class ProvisionalDbScoringEngine implements DbScoringEngine {
     return {
       for (final (i, element) in routine.elements.indexed)
         if (!element.isCustom &&
+            !element.isPending &&
             !seen.add(element.id) &&
             routine.elementOptions[i].manualValue == null)
           i,

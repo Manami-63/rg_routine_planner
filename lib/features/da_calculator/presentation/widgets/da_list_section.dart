@@ -18,6 +18,7 @@ String? describeDaStatus(
   DaStatus status,
 ) => switch (status) {
   DaStatus.valid => null,
+  DaStatus.notChosen => 'Tap to choose',
   DaStatus.tooFewCriteria =>
     element.secondBase == null
         ? 'Not a DA: needs 2 criteria'

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/widgets/message_view.dart';
 import '../../../routines/presentation/routine_controller.dart';
 import '../db_routine_providers.dart';
+import '../element_picker_screen.dart';
 import 'adjust_element_sheet.dart';
 import '../../../../core/widgets/value_badge.dart';
 
@@ -47,11 +48,11 @@ class SelectedElementsSection extends ConsumerWidget {
         final dbs = result.dbPerElement[index];
         final counted = result.counting.countedPerElement[index];
         final details = [
-          element.group.label,
+          if (element.isPending) 'Tap to choose' else element.group.label,
           ?describeOptions(element, options[index]),
           if (result.repeatedElements.contains(index))
             'Not valid: repetition'
-          else if (counted == 0)
+          else if (counted == 0 && !element.isPending)
             'Not counted'
           else if (counted < dbs)
             '$counted of $dbs counted',
@@ -76,13 +77,19 @@ class SelectedElementsSection extends ConsumerWidget {
               ],
             ),
             subtitle: Text(details),
-            onTap: () => AdjustElementSheet.show(
-              context,
-              routineId: routineId,
-              index: index,
-              element: element,
-              options: options[index],
-            ),
+            onTap: () => element.isPending
+                ? ElementPickerScreen.show(
+                    context,
+                    routineId: routineId,
+                    replaceIndex: index,
+                  )
+                : AdjustElementSheet.show(
+                    context,
+                    routineId: routineId,
+                    index: index,
+                    element: element,
+                    options: options[index],
+                  ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
