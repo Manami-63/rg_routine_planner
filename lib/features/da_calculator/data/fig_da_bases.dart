@@ -5,8 +5,8 @@
 //
 // Each base lists its criteria as a pattern in the column order of the
 // tables (#5.4.3), "v" for available and "-" for "N/A":
-//   outside the visual field, without hands, under the leg, position on the
-//   floor, full body wave, DB, rotation
+//   outside the visual field, without hands, under the leg, rotation,
+//   position on the floor, full body wave, DB
 // Rope adds its specific criteria after those: double rotation, rope
 // turning backward, crossed arms (blank in the table = not available).
 //
@@ -20,6 +20,21 @@ import '../../../core/scoring/fig_ruleset.dart';
 import '../../../core/scoring/score.dart';
 import '../domain/da_base.dart';
 import '../domain/da_criterion.dart';
+
+/// The criteria columns of the tables, which are not in the order of
+/// [DaCriterion] (#5.4.3).
+const _columns = [
+  DaCriterion.outsideVisualField,
+  DaCriterion.withoutHands,
+  DaCriterion.underLeg,
+  DaCriterion.rotation,
+  DaCriterion.positionOnFloor,
+  DaCriterion.fullBodyWave,
+  DaCriterion.db,
+  DaCriterion.ropeDoubleRotation,
+  DaCriterion.ropeBackward,
+  DaCriterion.ropeCrossedArms,
+];
 
 DaBase _base(
   Apparatus apparatus,
@@ -40,7 +55,7 @@ DaBase _base(
     rulesetId: figRulesetId,
     criteria: {
       for (final (i, mark) in criteria.split('').indexed)
-        if (mark == 'v') DaCriterion.values[i],
+        if (mark == 'v') _columns[i],
     },
     startsCombination: startsCombination,
     isCatchFromHighThrow: isCatchFromHighThrow,

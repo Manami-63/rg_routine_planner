@@ -42,6 +42,29 @@ void main() {
     );
   });
 
+  test('table columns give the right criteria (#5.9, p.66)', () {
+    Set<DaCriterion> criteriaOf(String id) =>
+        bases.singleWhere((b) => b.id == id).criteria;
+
+    // Small throw: only "position on the floor" is N/A.
+    expect(criteriaOf('fig-da-ball-small-throw'), {
+      DaCriterion.outsideVisualField,
+      DaCriterion.withoutHands,
+      DaCriterion.underLeg,
+      DaCriterion.rotation,
+      DaCriterion.fullBodyWave,
+      DaCriterion.db,
+    });
+    // Thrust: "position on the floor" and "DB" are N/A.
+    expect(criteriaOf('fig-da-ball-thrust'), {
+      DaCriterion.outsideVisualField,
+      DaCriterion.withoutHands,
+      DaCriterion.underLeg,
+      DaCriterion.rotation,
+      DaCriterion.fullBodyWave,
+    });
+  });
+
   test('every base allows at least 2 criteria', () {
     for (final base in bases) {
       expect(base.criteria.length, greaterThanOrEqualTo(2), reason: base.id);
@@ -86,23 +109,25 @@ void main() {
   test('N/A criteria match the table rows (spot checks)', () {
     DaBase base(String id) => bases.singleWhere((b) => b.id == 'fig-da-$id');
 
-    expect(
-      base('hoop-thrust').criteria,
-      isNot(contains(DaCriterion.fullBodyWave)),
-    );
-    expect(base('hoop-thrust').criteria, isNot(contains(DaCriterion.rotation)));
+    expect(base('hoop-thrust').criteria, {
+      DaCriterion.outsideVisualField,
+      DaCriterion.withoutHands,
+      DaCriterion.underLeg,
+      DaCriterion.rotation,
+      DaCriterion.fullBodyWave,
+    });
     expect(
       base('ball-catch-one-hand').criteria,
       isNot(contains(DaCriterion.withoutHands)),
     );
     expect(
       base('ribbon-stick-without-hands').criteria,
-      isNot(contains(DaCriterion.positionOnFloor)),
+      isNot(contains(DaCriterion.rotation)),
     );
     expect(base('rope-passing-skips').criteria, {
       DaCriterion.outsideVisualField,
       DaCriterion.withoutHands,
-      DaCriterion.positionOnFloor,
+      DaCriterion.rotation,
       DaCriterion.ropeDoubleRotation,
       DaCriterion.ropeBackward,
       DaCriterion.ropeCrossedArms,
