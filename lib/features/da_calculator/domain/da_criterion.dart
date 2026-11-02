@@ -1,3 +1,5 @@
+import '../../../core/symbols/rg_symbol.dart';
+
 /// A criterion performed during a DA base (FIG CoP 2025-2028 #5.4.3, and
 /// #7.3 for the Rope-specific ones).
 ///
@@ -30,6 +32,33 @@ enum DaCriterion {
   final String shortLabel;
 
   final bool isRopeSpecific;
+
+  /// The order of the DA tables (#5.8-5.11, #7.3), which FIG notation
+  /// follows too.
+  static const tableOrder = [
+    outsideVisualField,
+    withoutHands,
+    underLeg,
+    rotation,
+    positionOnFloor,
+    fullBodyWave,
+    db,
+    ropeDoubleRotation,
+    ropeBackward,
+    ropeCrossedArms,
+  ];
+
+  /// Its FIG symbol (#5.4.3), or `null` when not drawn yet.
+  RgSymbol? get symbol => switch (this) {
+    outsideVisualField => RgSymbol.outsideVisualField,
+    withoutHands => RgSymbol.withoutHands,
+    underLeg => RgSymbol.underLeg,
+    positionOnFloor => RgSymbol.positionOnFloor,
+    fullBodyWave => RgSymbol.fullBodyWave,
+    db => RgSymbol.duringDb,
+    rotation => RgSymbol.rotation,
+    ropeDoubleRotation || ropeBackward || ropeCrossedArms => null,
+  };
 
   /// The criteria stored as comma-separated names in [text]; unknown names
   /// are skipped.

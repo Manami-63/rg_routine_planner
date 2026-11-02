@@ -4,9 +4,9 @@
 // #5.11 Ribbon (p.69), and Junior #7.3 Rope (pp.131-132).
 //
 // Each base lists its criteria as a pattern in the column order of the
-// tables (#5.4.3), "v" for available and "-" for "N/A":
-//   outside the visual field, without hands, under the leg, position on the
-//   floor, full body wave, DB, rotation
+// tables (`DaCriterion.tableOrder`), "v" for available and "-" for "N/A":
+//   outside the visual field, without hands, under the leg, rotation,
+//   position on the floor, full body wave, DB
 // Rope adds its specific criteria after those: double rotation, rope
 // turning backward, crossed arms (blank in the table = not available).
 //
@@ -18,6 +18,7 @@
 import '../../../core/scoring/apparatus.dart';
 import '../../../core/scoring/fig_ruleset.dart';
 import '../../../core/scoring/score.dart';
+import '../../../core/symbols/rg_symbol.dart';
 import '../domain/da_base.dart';
 import '../domain/da_criterion.dart';
 
@@ -30,6 +31,7 @@ DaBase _base(
   bool startsCombination = false,
   bool isCatchFromHighThrow = false,
   String? note,
+  RgSymbol? symbol,
 }) {
   assert(criteria.length == 7 || criteria.length == 10, name);
   return DaBase(
@@ -40,11 +42,12 @@ DaBase _base(
     rulesetId: figRulesetId,
     criteria: {
       for (final (i, mark) in criteria.split('').indexed)
-        if (mark == 'v') DaCriterion.values[i],
+        if (mark == 'v') DaCriterion.tableOrder[i],
     },
     startsCombination: startsCombination,
     isCatchFromHighThrow: isCatchFromHighThrow,
     note: note,
+    symbol: symbol,
   );
 }
 
@@ -151,6 +154,7 @@ final _ball = [
     'Large roll over min. 2 large body segments',
     30,
     'vv-vvvv',
+    symbol: RgSymbol.largeRoll,
   ),
   _base(
     Apparatus.ball,
@@ -161,6 +165,7 @@ final _ball = [
     startsCombination: true,
     isCatchFromHighThrow: true,
     note: 'Valid only when caught in 1 hand.',
+    symbol: RgSymbol.catchOneHand,
   ),
   _base(
     Apparatus.ball,
@@ -168,6 +173,7 @@ final _ball = [
     '1 high bounce from the floor (knee level or higher)',
     20,
     'vv-vvvv',
+    symbol: RgSymbol.bounces,
   ),
   _base(
     Apparatus.ball,
@@ -176,6 +182,7 @@ final _ball = [
     20,
     'vv-vvvv',
     note: 'The 2 criteria must be in the same bounce.',
+    symbol: RgSymbol.bounces,
   ),
   _base(
     Apparatus.ball,
@@ -183,6 +190,7 @@ final _ball = [
     'Free rotations on a part of the body',
     20,
     'v--vvvv',
+    symbol: RgSymbol.handling,
   ),
   _base(
     Apparatus.ball,
@@ -191,6 +199,7 @@ final _ball = [
     20,
     'v--vvvv',
     note: 'Between at least 2 body parts (not the hands).',
+    symbol: RgSymbol.handling,
   ),
   _base(
     Apparatus.ball,
@@ -198,6 +207,7 @@ final _ball = [
     'Small throw/catch (incl. free fall)',
     20,
     _smallThrow,
+    symbol: RgSymbol.smallThrow,
   ),
   _base(
     Apparatus.ball,
@@ -206,8 +216,16 @@ final _ball = [
     20,
     _thrust,
     note: 'Using different parts of the body except hands/arms.',
+    symbol: RgSymbol.smallThrow,
   ),
-  _base(Apparatus.ball, 'high-throw', 'High throw', 20, _all),
+  _base(
+    Apparatus.ball,
+    'high-throw',
+    'High throw',
+    20,
+    _all,
+    symbol: RgSymbol.highThrow,
+  ),
   _base(
     Apparatus.ball,
     'catch-high-throw',
@@ -216,6 +234,7 @@ final _ball = [
     _all,
     startsCombination: true,
     isCatchFromHighThrow: true,
+    symbol: RgSymbol.catchHighThrow,
   ),
   _base(
     Apparatus.ball,
@@ -225,6 +244,7 @@ final _ball = [
     'vv-vvvv',
     isCatchFromHighThrow: true,
     note: 'Any height, not with hands/arms.',
+    symbol: RgSymbol.rebound,
   ),
 ];
 
@@ -343,24 +363,48 @@ final _ribbon = [
     'Spirals',
     30,
     'vv-vvvv',
-    note: '"Swordsman" is not valid.',
+    note: 'Also "Swordsman", where "without hands" is not valid.',
+    symbol: RgSymbol.spiral,
   ),
-  _base(Apparatus.ribbon, 'snakes', 'Snakes', 30, 'vv-vvvv'),
-  _base(Apparatus.ribbon, 'boomerang-air', 'Boomerang in the air', 40, _all),
+  _base(
+    Apparatus.ribbon,
+    'snakes',
+    'Snakes',
+    30,
+    'vv-vvvv',
+    symbol: RgSymbol.snake,
+  ),
+  _base(
+    Apparatus.ribbon,
+    'boomerang-air',
+    'Boomerang in the air',
+    40,
+    _all,
+    symbol: RgSymbol.boomerang,
+  ),
   _base(
     Apparatus.ribbon,
     'boomerang-floor',
     'Boomerang with release and/or pull back along the floor',
     30,
     _all,
+    symbol: RgSymbol.boomerang,
   ),
-  _base(Apparatus.ribbon, 'echappe', 'Echappé and catch', 20, _all),
+  _base(
+    Apparatus.ribbon,
+    'echappe',
+    'Echappé and catch',
+    20,
+    _all,
+    symbol: RgSymbol.echappe,
+  ),
   _base(
     Apparatus.ribbon,
     'large-roll',
     'Large roll of the stick over min. 2 large body segments',
     30,
     'vv-vvvv',
+    symbol: RgSymbol.largeRoll,
   ),
   _base(
     Apparatus.ribbon,
@@ -369,6 +413,7 @@ final _ribbon = [
     20,
     'v-vvvvv',
     note: 'With the whole body or part of the body.',
+    symbol: RgSymbol.passing,
   ),
   _base(
     Apparatus.ribbon,
@@ -379,6 +424,7 @@ final _ribbon = [
     note:
         'E.g. neck, knee, elbow; during movements or Difficulties with '
         'rotation (not "slow turn").',
+    symbol: RgSymbol.handling,
   ),
   _base(
     Apparatus.ribbon,
@@ -387,6 +433,7 @@ final _ribbon = [
     20,
     'v--vvvv',
     note: 'Between at least 2 body parts (not the hands).',
+    symbol: RgSymbol.handling,
   ),
   _base(
     Apparatus.ribbon,
@@ -394,6 +441,7 @@ final _ribbon = [
     'Small throw/catch (incl. free fall)',
     20,
     _smallThrow,
+    symbol: RgSymbol.smallThrow,
   ),
   _base(
     Apparatus.ribbon,
@@ -402,14 +450,23 @@ final _ribbon = [
     20,
     _thrust,
     note: 'Using different parts of the body except hands/arms.',
+    symbol: RgSymbol.smallThrow,
   ),
-  _base(Apparatus.ribbon, 'high-throw', 'High throw', 20, _all),
+  _base(
+    Apparatus.ribbon,
+    'high-throw',
+    'High throw',
+    20,
+    _all,
+    symbol: RgSymbol.highThrow,
+  ),
   _base(
     Apparatus.ribbon,
     'high-throw-sliding',
     'High throw from sliding on the floor',
     30,
     _all,
+    symbol: RgSymbol.highThrowFromSliding,
   ),
   _base(
     Apparatus.ribbon,
@@ -419,6 +476,7 @@ final _ribbon = [
     _all,
     startsCombination: true,
     isCatchFromHighThrow: true,
+    symbol: RgSymbol.catchHighThrow,
   ),
 ];
 

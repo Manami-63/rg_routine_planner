@@ -10,6 +10,7 @@ import '../../domain/da_scoring_engine.dart';
 import '../da_calculator_providers.dart';
 import '../da_routine_providers.dart';
 import 'da_builder_sheet.dart';
+import 'da_symbols.dart';
 
 /// Why an entry is not counted or not valid, or `null` when it counts.
 String? describeDaStatus(
@@ -84,7 +85,20 @@ class DaListSection extends ConsumerWidget {
             // Greyed out (but still editable) when it adds nothing.
             textColor: valid && counted ? null : muted,
             leading: CircleAvatar(child: Text('${index + 1}')),
-            title: Text(element.name),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (DaSymbols.canShow(element))
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: DaSymbols(
+                      element,
+                      color: valid && counted ? null : muted,
+                    ),
+                  ),
+                Text(element.name),
+              ],
+            ),
             subtitle: details.isEmpty ? null : Text(details),
             onTap: bases == null
                 ? null

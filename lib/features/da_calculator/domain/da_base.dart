@@ -1,3 +1,4 @@
+import '../../../core/symbols/rg_symbol.dart';
 import '../../../core/scoring/apparatus.dart';
 import '../../../core/scoring/score.dart';
 import '../../../core/utils/list_equality.dart';
@@ -16,6 +17,7 @@ class DaBase {
     this.startsCombination = false,
     this.isCatchFromHighThrow = false,
     this.note,
+    this.symbol,
   }) : isCustom = false,
        isUnknown = false;
 
@@ -29,6 +31,7 @@ class DaBase {
       startsCombination = false,
       isCatchFromHighThrow = false,
       note = null,
+      symbol = null,
       isCustom = true,
       isUnknown = false;
 
@@ -42,6 +45,7 @@ class DaBase {
       startsCombination = false,
       isCatchFromHighThrow = false,
       note = null,
+      symbol = null,
       isCustom = false,
       isUnknown = true;
 
@@ -70,6 +74,9 @@ class DaBase {
   /// A condition from the table shown with it. Not enforced.
   final String? note;
 
+  /// Its FIG base symbol, or `null` when not drawn yet.
+  final RgSymbol? symbol;
+
   final bool isCustom;
   final bool isUnknown;
 
@@ -85,6 +92,7 @@ class DaBase {
       other.startsCombination == startsCombination &&
       other.isCatchFromHighThrow == isCatchFromHighThrow &&
       other.note == note &&
+      other.symbol == symbol &&
       other.isCustom == isCustom &&
       other.isUnknown == isUnknown;
 

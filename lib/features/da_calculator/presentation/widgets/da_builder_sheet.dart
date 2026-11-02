@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/scoring/apparatus.dart';
 import '../../../../core/scoring/score.dart';
+import '../../../../core/symbols/rg_symbol_view.dart';
 import '../../../../core/widgets/manual_value_field.dart';
 import '../../../../core/widgets/value_badge.dart';
 import '../../../routines/presentation/routine_controller.dart';
@@ -302,6 +303,10 @@ class _DaBuilderSheetState extends ConsumerState<DaBuilderSheet> {
             controlAffinity: ListTileControlAffinity.leading,
             dense: true,
             title: Text(criterion.label),
+            secondary: switch (criterion.symbol) {
+              null => null,
+              final symbol => RgSymbolView(symbol, size: 22),
+            },
             subtitle: available.contains(criterion)
                 ? null
                 : Text(
@@ -373,6 +378,13 @@ class _BaseList extends StatelessWidget {
           ListTile(
             key: ValueKey('da-base-${base.id}'),
             contentPadding: EdgeInsets.zero,
+            leading: switch (base.symbol) {
+              null => null,
+              final symbol => SizedBox(
+                width: 44,
+                child: Center(child: RgSymbolView(symbol, size: 24)),
+              ),
+            },
             title: Text(base.name),
             subtitle: base.note == null ? null : Text(base.note!),
             trailing: ValueBadge(value: base.value),

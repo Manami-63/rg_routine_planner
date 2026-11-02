@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/device/screen_awake.dart';
 import '../../../core/floor/floor_cell.dart';
+import '../../da_calculator/presentation/widgets/da_symbols.dart';
 import '../../music/presentation/music_providers.dart';
 import '../../music/presentation/music_tab.dart';
 import '../../routines/presentation/routine_details_form.dart';
@@ -196,8 +197,10 @@ class _NowSlot extends StatelessWidget {
           style: labelStyle,
         ),
         const SizedBox(height: 4),
-        Text(
-          _pairName(current, frame.currentPartner, ' · '),
+        Text.rich(
+          TextSpan(
+            children: _nameSpans(current, frame.currentPartner, ' · ', 32),
+          ),
           textAlign: TextAlign.center,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
@@ -278,11 +281,9 @@ class _NextSlot extends StatelessWidget {
           children: [
             const TextSpan(text: 'Next: '),
             ..._labelSpans(context, next, frame.nextPartner),
-            TextSpan(
-              text:
-                  ' · ${_pairName(next, frame.nextPartner, ' + ')} in '
-                  '${_seconds(frame.untilNext!)} s',
-            ),
+            const TextSpan(text: ' · '),
+            ..._nameSpans(next, frame.nextPartner, ' + ', 22),
+            TextSpan(text: ' in ${_seconds(frame.untilNext!)} s'),
           ],
         ),
         maxLines: 2,
@@ -609,12 +610,28 @@ class _DanceStepOverlay extends StatelessWidget {
 String _itemLabel(TimelineEntry entry) =>
     '${entry.kind.label} ${entry.index + 1}';
 
-/// The names of [entry] and [partner], joined by [separator].
-String _pairName(
+/// [entry] and [partner], joined by [separator]: a DA as its symbols
+/// [symbolSize] high when it has them, to save space, otherwise its name.
+List<InlineSpan> _nameSpans(
   TimelineEntry entry,
   TimelineEntry? partner,
   String separator,
-) => [entry.name, if (partner != null) partner.name].join(separator);
+  double symbolSize,
+) {
+  InlineSpan span(TimelineEntry e) {
+    final da = e.da;
+    if (da == null || !DaSymbols.canShow(da)) return TextSpan(text: e.name);
+    return WidgetSpan(
+      alignment: PlaceholderAlignment.middle,
+      child: DaSymbols(da, size: symbolSize),
+    );
+  }
+
+  return [
+    span(entry),
+    if (partner != null) ...[TextSpan(text: separator), span(partner)],
+  ];
+}
 
 /// Whole seconds, rounded up, so a countdown shows 1 until it ends.
 int _seconds(Duration time) => (time.inMilliseconds / 1000).ceil();
