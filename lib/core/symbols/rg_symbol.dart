@@ -15,6 +15,8 @@ enum RgSymbol {
   rotationAxis('Rotation around the axis', '#3.3.1'),
   rotationAxisFloor('Rotation on the floor', '#3.3.1', aspect: 1.3),
 
+  highThrowWithRotation('High throw with rotation', '#5.8'),
+
   // #3.3.2 Ball.
   figureEight('Figure eight', '#3.3.2', aspect: 0.7),
   catchOneHand('Catch with 1 hand', '#3.3.2', aspect: 0.7),
