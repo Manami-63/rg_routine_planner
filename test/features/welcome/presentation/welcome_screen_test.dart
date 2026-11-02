@@ -33,7 +33,7 @@ void main() {
     await pumpApp(tester, store, startWithWelcome: true);
 
     expect(find.byKey(const ValueKey('intro-video')), findsOneWidget);
-    expect(find.text('Practise in Play mode'), findsOneWidget);
+    expect(find.text('Practise in Play mode with FIG symbols'), findsOneWidget);
     expect(find.byType(BackButton), findsNothing);
 
     await tester.tap(find.text('Get started'));
