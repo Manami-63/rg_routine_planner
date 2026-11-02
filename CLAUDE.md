@@ -257,11 +257,16 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
 
 `RgSymbol` (`lib/core/symbols/`) is the shared FIG notation (CoP #3.3, #3.4,
 criteria #5.4.3), redrawn as vectors by `RgSymbolView`, never copied from the
-CoP images. `DaBase.symbol` is set for Ball and Ribbon so far; `DaCriterion.symbol` for
+CoP images. `DaBase.symbol` is set for all but Rope so far; `DaCriterion.symbol` for
 all but the Rope-specific criteria. `DaSymbols` writes a DA like a coach's
 sheet, "base (criteria)", only when every part has a symbol; otherwise the
 name shows. Play mode shows the symbols instead of the name; lists show both.
-Other apparatus, risks and DB are still to come. Symbols are display only:
+`RiskCriterion.symbol` is set for all but the Rope criteria; `RiskSymbols`
+writes a risk like a coach's sheet: throw criteria, "R3", rotation criteria,
+catch criteria. `entrySymbols` picks the widget for a timeline entry. Rope is still
+to come. DB symbols each have their own drawing, so they are data:
+`DbElement.symbolPath` holds a `SymbolPath` text from `fig_db_symbols.dart`
+(every catalogue DB). Symbols are display only:
 never store them or use them in scoring.
 
 ## Tests

@@ -1,6 +1,6 @@
 /// The FIG Code of Points 2025-2028 symbols shared across elements: the
 /// apparatus technical groups (#3.3), those valid for all apparatus (#3.4)
-/// and the DA criteria (#5.4.3). Redrawn as vectors by `RgSymbolView`.
+/// the DA criteria (#5.4.3) and the risk criteria (#4.8, #4.10). Redrawn as vectors by `RgSymbolView`.
 ///
 /// Rope is not here yet, and neither are the apparatus' own marks.
 enum RgSymbol {
@@ -14,6 +14,8 @@ enum RgSymbol {
   // #3.3.1 Hoop.
   rotationAxis('Rotation around the axis', '#3.3.1'),
   rotationAxisFloor('Rotation on the floor', '#3.3.1', aspect: 1.3),
+
+  highThrowWithRotation('High throw with rotation', '#5.8'),
 
   // #3.3.2 Ball.
   figureEight('Figure eight', '#3.3.2', aspect: 0.7),
@@ -53,7 +55,14 @@ enum RgSymbol {
   positionOnFloor('Position on the floor', '#5.4.3'),
   fullBodyWave('Full body wave', '#5.4.3'),
   duringDb('During a DB', '#5.4.3', aspect: 1.3),
-  rotation('Rotation', '#5.4.3', aspect: 0.7);
+  rotation('Rotation', '#5.4.3', aspect: 0.7),
+
+  // #4.8, #4.10 Risk criteria.
+  changeOfAxisOrLevel('Change of rotation axis or level', '#4.8.1'),
+  series('Series', '#4.8.1'),
+  directRebound('Direct rebound on the body', '#4.10.1', aspect: 0.9),
+  catchWithRoll('Direct catch with rolling', '#4.10.1', aspect: 1.7),
+  catchWithRotation('Direct catch with rotation', '#4.10.1');
 
   const RgSymbol(this.description, this.reference, {this.aspect = 1});
 

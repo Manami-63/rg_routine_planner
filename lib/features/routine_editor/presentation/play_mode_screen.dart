@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/device/screen_awake.dart';
 import '../../../core/floor/floor_cell.dart';
-import '../../da_calculator/presentation/widgets/da_symbols.dart';
 import '../../music/presentation/music_providers.dart';
 import '../../music/presentation/music_tab.dart';
 import '../../routines/presentation/routine_details_form.dart';
@@ -11,6 +10,7 @@ import '../../routines/presentation/routine_controller.dart';
 import '../domain/play_mode.dart';
 import '../domain/routine_timeline.dart';
 import 'dance_step_conflicts.dart';
+import 'entry_symbols.dart';
 import 'timeline_colours.dart';
 
 /// Full-screen rehearsal view: plays the music and pops up each marked DB,
@@ -610,8 +610,8 @@ class _DanceStepOverlay extends StatelessWidget {
 String _itemLabel(TimelineEntry entry) =>
     '${entry.kind.label} ${entry.index + 1}';
 
-/// [entry] and [partner], joined by [separator]: a DA as its symbols
-/// [symbolSize] high when it has them, to save space, otherwise its name.
+/// [entry] and [partner], joined by [separator]: as symbols [symbolSize]
+/// high when they have them, to save space, otherwise by name.
 List<InlineSpan> _nameSpans(
   TimelineEntry entry,
   TimelineEntry? partner,
@@ -619,12 +619,9 @@ List<InlineSpan> _nameSpans(
   double symbolSize,
 ) {
   InlineSpan span(TimelineEntry e) {
-    final da = e.da;
-    if (da == null || !DaSymbols.canShow(da)) return TextSpan(text: e.name);
-    return WidgetSpan(
-      alignment: PlaceholderAlignment.middle,
-      child: DaSymbols(da, size: symbolSize),
-    );
+    final symbols = entrySymbols(e, size: symbolSize);
+    if (symbols == null) return TextSpan(text: e.name);
+    return WidgetSpan(alignment: PlaceholderAlignment.middle, child: symbols);
   }
 
   return [

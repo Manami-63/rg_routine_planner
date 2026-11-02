@@ -6,7 +6,6 @@ import '../../../core/scoring/apparatus.dart';
 import '../../da_calculator/domain/da_base.dart';
 import '../../da_calculator/presentation/da_calculator_providers.dart';
 import '../../da_calculator/presentation/widgets/da_builder_sheet.dart';
-import '../../da_calculator/presentation/widgets/da_symbols.dart';
 import '../../db_calculator/presentation/db_calculator_providers.dart';
 import '../../db_calculator/presentation/element_picker_screen.dart';
 import '../../db_calculator/presentation/widgets/risk_builder_sheet.dart';
@@ -15,6 +14,7 @@ import '../../music/presentation/music_providers.dart';
 import '../../routines/presentation/routine_controller.dart';
 import '../domain/routine_timeline.dart';
 import 'dance_step_conflicts.dart';
+import 'entry_symbols.dart';
 import 'floor_mat.dart';
 import 'floor_notices.dart';
 import 'play_mode_screen.dart';
@@ -622,8 +622,7 @@ class _TimelineRow extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (entry.da case final da? when DaSymbols.canShow(da))
-                        DaSymbols(da, size: 18),
+                      ?entrySymbols(entry, size: 18),
                       Text(
                         entry.name,
                         maxLines: 2,

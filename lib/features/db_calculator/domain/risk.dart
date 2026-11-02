@@ -1,5 +1,6 @@
 import '../../../core/scoring/apparatus.dart';
 import '../../../core/scoring/score.dart';
+import '../../../core/symbols/rg_symbol.dart';
 import '../../../core/utils/list_equality.dart';
 
 /// One choice of rotations performed under a throw, e.g. "2 rotations".
@@ -67,6 +68,7 @@ class RiskCriterion {
     required RiskPhase this.phase,
     this.apparatus = const {},
     this.note,
+    this.symbol,
   }) : isUnknown = false;
 
   /// A saved reference whose id is not in the current risk catalogue.
@@ -76,6 +78,7 @@ class RiskCriterion {
       phase = null,
       apparatus = const {},
       note = null,
+      symbol = null,
       isUnknown = true;
 
   final String id;
@@ -93,6 +96,9 @@ class RiskCriterion {
   /// with ...". Not enforced.
   final String? note;
 
+  /// Its FIG symbol, or `null` when not drawn yet.
+  final RgSymbol? symbol;
+
   final bool isUnknown;
 
   bool appliesTo(Apparatus? routineApparatus) =>
@@ -109,6 +115,7 @@ class RiskCriterion {
       other.phase == phase &&
       setEqual(other.apparatus, apparatus) &&
       other.note == note &&
+      other.symbol == symbol &&
       other.isUnknown == isUnknown;
 
   @override

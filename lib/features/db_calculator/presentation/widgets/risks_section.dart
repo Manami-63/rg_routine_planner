@@ -7,6 +7,7 @@ import '../db_calculator_providers.dart';
 import '../db_routine_providers.dart';
 import '../../../../core/widgets/async_sliver.dart';
 import '../../../../core/widgets/value_badge.dart';
+import 'risk_symbols.dart';
 
 /// Sliver listing the risks in the routine in performance order, or an
 /// empty state. Drag the handle to reorder.
@@ -47,7 +48,17 @@ class SelectedRisksSection extends ConsumerWidget {
           child: ListTile(
             enabled: counted,
             leading: CircleAvatar(child: Text('R${index + 1}')),
-            title: Text(risk.description),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (RiskSymbols.canShow(risk))
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: RiskSymbols(risk),
+                  ),
+                Text(risk.description),
+              ],
+            ),
             subtitle: counted ? null : const Text('Not counted'),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,

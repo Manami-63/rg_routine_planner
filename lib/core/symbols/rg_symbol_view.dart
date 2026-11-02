@@ -151,6 +151,11 @@ class RgSymbolPainter extends CustomPainter {
           ..cubicTo(14, 104, 52, 100, 56, 8))
         ..addPath(_head(52, 60, 56, 8), Offset.zero),
     RgSymbol.highThrow => _arrow(14, 86, 86, 14),
+    RgSymbol.highThrowWithRotation => _circle(
+      44,
+      56,
+      26,
+    )..addPath(_arrow(12, 90, 88, 12), Offset.zero),
     RgSymbol.highThrowTwoClubs =>
       _line(8, 78, 66, 20)
         ..addPath(_line(22, 92, 80, 34), Offset.zero)
@@ -216,6 +221,41 @@ class RgSymbolPainter extends CustomPainter {
         ..lineTo(50, 34)
         ..lineTo(71, 80)
         ..lineTo(92, 22),
+    RgSymbol.changeOfAxisOrLevel =>
+      (Path()
+          ..moveTo(16, 16)
+          ..lineTo(84, 16)
+          ..lineTo(16, 84)
+          ..lineTo(84, 84))
+        ..addPath(_line(24, 50, 76, 50), Offset.zero),
+    RgSymbol.series =>
+      Path()
+        ..moveTo(78, 24)
+        ..cubicTo(60, 0, 18, 8, 22, 34)
+        ..cubicTo(26, 58, 80, 46, 78, 72)
+        ..cubicTo(76, 98, 30, 96, 18, 76),
+    RgSymbol.directRebound =>
+      Path()
+        ..moveTo(20, 12)
+        ..lineTo(20, 86)
+        ..lineTo(76, 56),
+    RgSymbol.catchWithRoll => _loops(
+      w,
+      60,
+    )..addPath(_arrow(w / 2, 4, w / 2, 62), Offset.zero),
+    RgSymbol.catchWithRotation =>
+      (Path()..addArc(
+          Rect.fromCircle(center: const Offset(50, 50), radius: 38),
+          0.2,
+          -5.6,
+        ))
+        ..addPath(
+          Path()
+            ..moveTo(50, 50)
+            ..lineTo(86, 56)
+            ..lineTo(90, 90),
+          Offset.zero,
+        ),
     RgSymbol.duringDb =>
       (Path()
           ..moveTo(10, 20)

@@ -65,6 +65,7 @@ final _hoop = [
     'Large roll over min. 2 large body segments',
     30,
     'vv-vvvv',
+    symbol: RgSymbol.largeRoll,
   ),
   _base(
     Apparatus.hoop,
@@ -73,6 +74,7 @@ final _hoop = [
     30,
     'vv-vvvv',
     note: 'Except hands; not valid on the open palm.',
+    symbol: RgSymbol.rotationAxis,
   ),
   _base(
     Apparatus.hoop,
@@ -81,6 +83,7 @@ final _hoop = [
     20,
     'v--vvvv',
     note: 'Not the hands and not on the straight arm.',
+    symbol: RgSymbol.circle,
   ),
   _base(
     Apparatus.hoop,
@@ -89,14 +92,23 @@ final _hoop = [
     20,
     _all,
     note: '2 large body segments.',
+    symbol: RgSymbol.passing,
   ),
-  _base(Apparatus.hoop, 'roll-floor', 'Roll on the floor', 20, 'vv-v-vv'),
+  _base(
+    Apparatus.hoop,
+    'roll-floor',
+    'Roll on the floor',
+    20,
+    'vv-v-vv',
+    symbol: RgSymbol.rollOnFloor,
+  ),
   _base(
     Apparatus.hoop,
     'rotation-floor',
     'Rotation (min. 1) on the floor around the axis',
     20,
     'vv-v-vv',
+    symbol: RgSymbol.rotationAxisFloor,
   ),
   _base(
     Apparatus.hoop,
@@ -105,6 +117,7 @@ final _hoop = [
     20,
     'v--vvvv',
     note: 'Between at least 2 body parts (not the hands).',
+    symbol: RgSymbol.handling,
   ),
   _base(
     Apparatus.hoop,
@@ -112,6 +125,7 @@ final _hoop = [
     'Sliding over min. 2 large body segments',
     20,
     'vv-vvvv',
+    symbol: RgSymbol.handling,
   ),
   _base(
     Apparatus.hoop,
@@ -119,6 +133,7 @@ final _hoop = [
     'Small throw/catch (incl. free fall)',
     20,
     _smallThrow,
+    symbol: RgSymbol.smallThrow,
   ),
   _base(
     Apparatus.hoop,
@@ -127,14 +142,23 @@ final _hoop = [
     20,
     _thrust,
     note: 'Using different parts of the body except hands/arms.',
+    symbol: RgSymbol.smallThrow,
   ),
-  _base(Apparatus.hoop, 'high-throw', 'High throw', 20, _all),
+  _base(
+    Apparatus.hoop,
+    'high-throw',
+    'High throw',
+    20,
+    _all,
+    symbol: RgSymbol.highThrow,
+  ),
   _base(
     Apparatus.hoop,
     'high-throw-rotation',
     'High throw with rotation around the axis',
     30,
     _all,
+    symbol: RgSymbol.highThrowWithRotation,
   ),
   _base(
     Apparatus.hoop,
@@ -144,6 +168,7 @@ final _hoop = [
     _all,
     startsCombination: true,
     isCatchFromHighThrow: true,
+    symbol: RgSymbol.catchHighThrow,
   ),
 ];
 
@@ -249,7 +274,14 @@ final _ball = [
 ];
 
 final _clubs = [
-  _base(Apparatus.clubs, 'mills', 'Mills (min. 4/6 circles)', 30, 'v-vvvvv'),
+  _base(
+    Apparatus.clubs,
+    'mills',
+    'Mills (min. 4/6 circles)',
+    30,
+    'v-vvvvv',
+    symbol: RgSymbol.mill,
+  ),
   _base(
     Apparatus.clubs,
     'small-throw-unlocked',
@@ -257,6 +289,7 @@ final _clubs = [
     30,
     _smallThrow,
     note: 'Min. 2 criteria on the same action (e.g. the catch).',
+    symbol: RgSymbol.smallThrowTwoClubs,
   ),
   _base(
     Apparatus.clubs,
@@ -264,6 +297,7 @@ final _clubs = [
     'Small circles with 2 Clubs',
     20,
     'v-vvvvv',
+    symbol: RgSymbol.smallCirclesBothClubs,
   ),
   _base(
     Apparatus.clubs,
@@ -271,6 +305,7 @@ final _clubs = [
     'Large roll over min. 2 large body segments',
     30,
     'vv-vvvv',
+    symbol: RgSymbol.largeRoll,
   ),
   _base(
     Apparatus.clubs,
@@ -279,6 +314,7 @@ final _clubs = [
         'around the other Club',
     20,
     'vv-vvvv',
+    symbol: RgSymbol.handling,
   ),
   _base(
     Apparatus.clubs,
@@ -287,6 +323,7 @@ final _clubs = [
     20,
     'v--vvvv',
     note: 'Between at least 2 body parts (not the hands).',
+    symbol: RgSymbol.handling,
   ),
   _base(
     Apparatus.clubs,
@@ -294,6 +331,7 @@ final _clubs = [
     'Sliding over min. 2 large body segments',
     20,
     'vv-vvvv',
+    symbol: RgSymbol.handling,
   ),
   _base(
     Apparatus.clubs,
@@ -301,6 +339,7 @@ final _clubs = [
     'Small throw of 2 locked Clubs/catch',
     20,
     _smallThrow,
+    symbol: RgSymbol.smallThrowLockedClubs,
   ),
   _base(
     Apparatus.clubs,
@@ -308,6 +347,7 @@ final _clubs = [
     'Small throw/catch (incl. free fall), rebound from the floor',
     20,
     _smallThrow,
+    symbol: RgSymbol.smallThrow,
   ),
   _base(
     Apparatus.clubs,
@@ -316,8 +356,16 @@ final _clubs = [
     20,
     _thrust,
     note: 'Using different parts of the body except hands/arms.',
+    symbol: RgSymbol.smallThrow,
   ),
-  _base(Apparatus.clubs, 'high-throw', 'High throw', 20, _all),
+  _base(
+    Apparatus.clubs,
+    'high-throw',
+    'High throw',
+    20,
+    _all,
+    symbol: RgSymbol.highThrow,
+  ),
   _base(
     Apparatus.clubs,
     'high-throw-unlocked',
@@ -325,6 +373,7 @@ final _clubs = [
     30,
     _all,
     note: 'Simultaneous, asymmetric or cascade.',
+    symbol: RgSymbol.highThrowTwoClubs,
   ),
   _base(
     Apparatus.clubs,
@@ -334,6 +383,7 @@ final _clubs = [
     _all,
     startsCombination: true,
     isCatchFromHighThrow: true,
+    symbol: RgSymbol.catchHighThrow,
   ),
   _base(
     Apparatus.clubs,
@@ -344,6 +394,7 @@ final _clubs = [
     'v-vvvvv',
     startsCombination: true,
     isCatchFromHighThrow: true,
+    symbol: RgSymbol.catchOneHand,
   ),
   _base(
     Apparatus.clubs,
@@ -353,6 +404,7 @@ final _clubs = [
     _all,
     startsCombination: true,
     isCatchFromHighThrow: true,
+    symbol: RgSymbol.catchTwoClubs,
   ),
 ];
 

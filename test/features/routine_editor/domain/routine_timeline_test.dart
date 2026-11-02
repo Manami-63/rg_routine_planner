@@ -55,6 +55,7 @@ void main() {
         index: 0,
         name: testJump.name,
         time: s(12),
+        db: testJump,
       ),
       TimelineEntry(
         kind: TimelineKind.da,
@@ -68,6 +69,7 @@ void main() {
         index: 0,
         name: risk.description,
         time: s(20),
+        risk: risk,
       ),
     ]);
     expect(marked.nextUnmarked(TimelineKind.db), 1);

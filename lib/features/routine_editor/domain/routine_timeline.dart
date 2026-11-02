@@ -1,5 +1,7 @@
 import '../../../core/floor/floor_cell.dart';
 import '../../da_calculator/domain/da_element.dart';
+import '../../db_calculator/domain/db_element.dart';
+import '../../db_calculator/domain/risk.dart';
 import '../../routines/domain/routine.dart';
 
 /// The kinds of item that can be marked on the music.
@@ -32,7 +34,9 @@ class TimelineEntry {
     required this.name,
     required this.time,
     this.cell,
+    this.db,
     this.da,
+    this.risk,
   });
 
   final TimelineKind kind;
@@ -47,8 +51,14 @@ class TimelineEntry {
   /// Where on the floor it starts, or `null` when not set.
   final FloorCell? cell;
 
+  /// The DB, when this entry is one (for showing its symbol).
+  final DbElement? db;
+
   /// The DA, when this entry is one (for showing its symbols).
   final DaElement? da;
+
+  /// The risk, when this entry is one (for showing its symbols).
+  final RiskElement? risk;
 
   @override
   bool operator ==(Object other) =>
@@ -58,10 +68,12 @@ class TimelineEntry {
       other.name == name &&
       other.time == time &&
       other.cell == cell &&
-      other.da == da;
+      other.db == db &&
+      other.da == da &&
+      other.risk == risk;
 
   @override
-  int get hashCode => Object.hash(kind, index, name, time, cell, da);
+  int get hashCode => Object.hash(kind, index, name, time, cell, db, da, risk);
 
   @override
   String toString() => 'TimelineEntry(${kind.label} $index, $time)';
@@ -107,7 +119,9 @@ extension RoutineTimeline on Routine {
               name: _nameOf(kind, i),
               time: time,
               cell: cellsOf(kind)[i],
+              db: kind == TimelineKind.db ? db.elements[i] : null,
               da: kind == TimelineKind.da ? da.elements[i] : null,
+              risk: kind == TimelineKind.risk ? db.risks[i] : null,
             ),
     ];
     // `sort` is not stable, so ties are broken explicitly.

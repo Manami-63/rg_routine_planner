@@ -65,8 +65,8 @@ void main() {
     });
   });
 
-  test('every Ball and Ribbon base has its symbol (#5.9, #5.11)', () {
-    for (final base in [...of(Apparatus.ball), ...of(Apparatus.ribbon)]) {
+  test('every base but Rope has its symbol (#5.8-5.11)', () {
+    for (final base in bases.where((b) => b.apparatus != Apparatus.rope)) {
       expect(base.symbol, isNotNull, reason: base.id);
     }
   });

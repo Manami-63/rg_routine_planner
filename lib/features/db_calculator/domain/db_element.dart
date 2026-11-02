@@ -17,6 +17,7 @@ class DbElement {
     this.canBeInSeries = false,
     this.family,
     this.baseRotationDegrees = 360,
+    this.symbolPath,
   }) : isCustom = false;
 
   /// An element the user entered themselves, e.g. a DB newly approved by
@@ -35,6 +36,7 @@ class DbElement {
        canBeInSeries = group != DbElementGroup.balance,
        family = null,
        baseRotationDegrees = 360,
+       symbolPath = null,
        isCustom = true;
 
   /// The id stored for every custom element.
@@ -52,7 +54,11 @@ class DbElement {
       canBeInSeries = false,
       family = null,
       baseRotationDegrees = 360,
+      symbolPath = null,
       isCustom = false;
+
+  /// Its FIG symbol as a `SymbolPath`, or `null` when not drawn yet.
+  final String? symbolPath;
 
   final String id;
   final String name;

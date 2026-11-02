@@ -1,3 +1,5 @@
+import '../../../../core/symbols/path_symbol_view.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -62,7 +64,17 @@ class SelectedElementsSection extends ConsumerWidget {
             // not count.
             textColor: counted > 0 ? null : muted,
             leading: CircleAvatar(child: Text('${index + 1}')),
-            title: Text(element.name),
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (element.symbolPath case final path?)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: PathSymbolView(path, label: element.name),
+                  ),
+                Text(element.name),
+              ],
+            ),
             subtitle: Text(details),
             onTap: () => AdjustElementSheet.show(
               context,
