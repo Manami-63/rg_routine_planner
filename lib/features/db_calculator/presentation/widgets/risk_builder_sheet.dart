@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/symbols/rg_symbol_view.dart';
 import '../../../routines/presentation/routine_controller.dart';
 import '../../domain/risk.dart';
 import '../db_calculator_providers.dart';
@@ -81,7 +82,16 @@ class _RiskBuilderSheetState extends ConsumerState<RiskBuilderSheet> {
           dense: true,
           title: Text(criterion.name),
           subtitle: criterion.note == null ? null : Text(criterion.note!),
-          secondary: ValueBadge(value: criterion.value),
+          secondary: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (criterion.symbol case final symbol?) ...[
+                RgSymbolView(symbol, size: 22),
+                const SizedBox(width: 8),
+              ],
+              ValueBadge(value: criterion.value),
+            ],
+          ),
           value: _criteria.contains(criterion),
           onChanged: (selected) => _toggle(criterion, selected ?? false),
         ),

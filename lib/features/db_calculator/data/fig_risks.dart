@@ -5,6 +5,7 @@
 
 import '../../../core/scoring/apparatus.dart';
 import '../../../core/scoring/score.dart';
+import '../../../core/symbols/rg_symbol.dart';
 import '../domain/risk.dart';
 import '../../../core/scoring/fig_ruleset.dart';
 
@@ -32,6 +33,7 @@ const figRiskCriteria = <RiskCriterion>[
     value: Score.hundredths(10),
     rulesetId: figRulesetId,
     phase: RiskPhase.throwing,
+    symbol: RgSymbol.outsideVisualField,
   ),
   RiskCriterion(
     id: 'fig-r-throw-without-hands',
@@ -39,6 +41,7 @@ const figRiskCriteria = <RiskCriterion>[
     value: Score.hundredths(10),
     rulesetId: figRulesetId,
     phase: RiskPhase.throwing,
+    symbol: RgSymbol.withoutHands,
   ),
   // #4.10.1: specific criteria of the throw.
   RiskCriterion(
@@ -49,6 +52,7 @@ const figRiskCriteria = <RiskCriterion>[
     phase: RiskPhase.throwing,
     apparatus: {Apparatus.hoop},
     note: 'Only valid together with "Without the help of the hands"',
+    symbol: RgSymbol.directRebound,
   ),
   RiskCriterion(
     id: 'fig-r-throw-two-unlocked-clubs',
@@ -58,6 +62,7 @@ const figRiskCriteria = <RiskCriterion>[
     phase: RiskPhase.throwing,
     apparatus: {Apparatus.clubs},
     note: 'Simultaneous, asymmetric or cascade',
+    symbol: RgSymbol.highThrowTwoClubs,
   ),
   // Annex E.6.4: Junior Rope, specific criteria of the throw.
   RiskCriterion(
@@ -93,6 +98,7 @@ const figRiskCriteria = <RiskCriterion>[
     rulesetId: figRulesetId,
     phase: RiskPhase.rotations,
     note: 'Only 1 per risk: change of axis or change of level, not both',
+    symbol: RgSymbol.changeOfAxisOrLevel,
   ),
   RiskCriterion(
     id: 'fig-r-series',
@@ -103,6 +109,7 @@ const figRiskCriteria = <RiskCriterion>[
     note:
         '3 or more identical pre-acrobatic elements under the flight, or 3 '
         'turning leaps with throw and catch',
+    symbol: RgSymbol.series,
   ),
   // #4.9: general criteria for all apparatus, during the catch.
   RiskCriterion(
@@ -111,6 +118,7 @@ const figRiskCriteria = <RiskCriterion>[
     value: Score.hundredths(10),
     rulesetId: figRulesetId,
     phase: RiskPhase.catching,
+    symbol: RgSymbol.outsideVisualField,
   ),
   RiskCriterion(
     id: 'fig-r-catch-without-hands',
@@ -118,6 +126,7 @@ const figRiskCriteria = <RiskCriterion>[
     value: Score.hundredths(10),
     rulesetId: figRulesetId,
     phase: RiskPhase.catching,
+    symbol: RgSymbol.withoutHands,
   ),
   // #4.10.1: specific criteria of the catch.
   RiskCriterion(
@@ -128,6 +137,7 @@ const figRiskCriteria = <RiskCriterion>[
     phase: RiskPhase.catching,
     apparatus: {Apparatus.hoop},
     note: 'Minimum 2 large body segments',
+    symbol: RgSymbol.passing,
   ),
   RiskCriterion(
     id: 'fig-r-catch-direct-rebound',
@@ -137,6 +147,7 @@ const figRiskCriteria = <RiskCriterion>[
     phase: RiskPhase.catching,
     apparatus: {Apparatus.hoop, Apparatus.ball},
     note: 'Without stops, without arm(s) or hand(s)',
+    symbol: RgSymbol.directRebound,
   ),
   // The Code gives no apparatus for this criterion, so it is offered for
   // every apparatus.
@@ -147,6 +158,7 @@ const figRiskCriteria = <RiskCriterion>[
     rulesetId: figRulesetId,
     phase: RiskPhase.catching,
     note: 'Minimum 2 large body segments; not on the arm/hand',
+    symbol: RgSymbol.catchWithRoll,
   ),
   RiskCriterion(
     id: 'fig-r-catch-two-unlocked-clubs',
@@ -155,6 +167,7 @@ const figRiskCriteria = <RiskCriterion>[
     rulesetId: figRulesetId,
     phase: RiskPhase.catching,
     apparatus: {Apparatus.clubs},
+    symbol: RgSymbol.catchTwoClubs,
   ),
   RiskCriterion(
     id: 'fig-r-catch-ball-one-hand',
@@ -164,6 +177,7 @@ const figRiskCriteria = <RiskCriterion>[
     phase: RiskPhase.catching,
     apparatus: {Apparatus.ball},
     note: 'Without support of the body or the other hand',
+    symbol: RgSymbol.catchOneHand,
   ),
   RiskCriterion(
     id: 'fig-r-catch-hoop-rotation-around-body',
@@ -173,6 +187,7 @@ const figRiskCriteria = <RiskCriterion>[
     phase: RiskPhase.catching,
     apparatus: {Apparatus.hoop},
     note: 'Without hands; not on the straight arm',
+    symbol: RgSymbol.catchWithRotation,
   ),
   // Annex E.6.4: Junior Rope, specific criterion of the catch.
   RiskCriterion(

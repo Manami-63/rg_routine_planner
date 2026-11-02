@@ -68,6 +68,7 @@ void main() {
         index: 0,
         name: risk.description,
         time: s(20),
+        risk: risk,
       ),
     ]);
     expect(marked.nextUnmarked(TimelineKind.db), 1);
