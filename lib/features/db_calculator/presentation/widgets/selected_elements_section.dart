@@ -1,5 +1,3 @@
-import '../../../../core/symbols/path_symbol_view.dart';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -8,6 +6,7 @@ import '../../../routines/presentation/routine_controller.dart';
 import '../db_routine_providers.dart';
 import '../element_picker_screen.dart';
 import 'adjust_element_sheet.dart';
+import 'db_symbol.dart';
 import '../../../../core/widgets/value_badge.dart';
 
 /// Sliver listing the elements in the routine in performance order, or an
@@ -71,7 +70,11 @@ class SelectedElementsSection extends ConsumerWidget {
                 if (element.symbolPath case final path?)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 4),
-                    child: PathSymbolView(path, label: element.name),
+                    child: DbSymbol(
+                      path,
+                      label: element.name,
+                      cycles: options[index].rotationCycles,
+                    ),
                   ),
                 Text(element.name),
               ],

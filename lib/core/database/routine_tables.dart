@@ -67,6 +67,9 @@ class RoutineBodyElements extends Table {
   /// Identical elements performed in a series (1 = none). Added in v5.
   IntColumn get seriesCount => integer().withDefault(const Constant(1))();
 
+  /// Rotations in each cycle of a Fouetté as digits, e.g. "2121", or `null`.
+  TextColumn get rotationCycles => text().nullable()();
+
   /// A value entered by the user, in hundredths. Null when not set.
   IntColumn get manualValue => integer().nullable()();
 

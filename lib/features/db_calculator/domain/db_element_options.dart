@@ -11,7 +11,20 @@ class DbElementOptions {
     this.extraRotations = 0,
     this.seriesCount = 1,
     this.manualValue,
+    this.rotationCycles,
   });
+
+  /// Only the first 10 Fouetté components are evaluated (#12.11).
+  static const maxCycles = 10;
+
+  /// Whether [text] is a valid [rotationCycles]: digits from 1 to 9.
+  static bool areValidCycles(String text) => RegExp(r'^[1-9]+$').hasMatch(text);
+
+  /// The rotations that count in [cycles]: those of the first 10.
+  static int rotationsIn(String cycles) => cycles
+      .split('')
+      .take(maxCycles)
+      .fold(0, (sum, digit) => sum + int.parse(digit));
 
   static const none = DbElementOptions();
 
@@ -34,6 +47,11 @@ class DbElementOptions {
   /// it. `null` when not set.
   final Score? manualValue;
 
+  /// The rotations in each cycle of a Fouetté as digits, e.g. "2121" (6
+  /// rotations), or `null`. It only records how it is performed:
+  /// [extraRotations] is set from it and gives the value (#12.2.5).
+  final String? rotationCycles;
+
   bool get isDefault => this == none;
 
   @override
@@ -43,14 +61,22 @@ class DbElementOptions {
       other.slowTurn == slowTurn &&
       other.extraRotations == extraRotations &&
       other.seriesCount == seriesCount &&
-      other.manualValue == manualValue;
+      other.manualValue == manualValue &&
+      other.rotationCycles == rotationCycles;
 
   @override
-  int get hashCode =>
-      Object.hash(flatFoot, slowTurn, extraRotations, seriesCount, manualValue);
+  int get hashCode => Object.hash(
+    flatFoot,
+    slowTurn,
+    extraRotations,
+    seriesCount,
+    manualValue,
+    rotationCycles,
+  );
 
   @override
   String toString() =>
       'DbElementOptions(flat: $flatFoot, slow: $slowTurn, '
-      '+$extraRotations, x$seriesCount, manual: $manualValue)';
+      '+$extraRotations, x$seriesCount, manual: $manualValue, '
+      'cycles: $rotationCycles)';
 }

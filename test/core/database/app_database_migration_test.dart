@@ -153,6 +153,29 @@ void main() {
     expect(await repository.fetchRoutine('r1'), withDa);
   });
 
+  test('upgraded databases can save Fouetté cycles', () async {
+    final db = _v1Database(const []);
+    addTearDown(db.close);
+    final repository = DriftRoutineRepository(
+      db,
+      catalogue: FakeDbCatalogueRepository(),
+      daCatalogue: FakeDaCatalogueRepository(),
+      presetLevels: figLevels,
+    );
+    final routine = (await repository.fetchRoutine('r1'))!;
+    expect(routine.db.elementOptions.single.rotationCycles, isNull);
+    final withCycles = routine.withDb(
+      routine.db.withElementOptionsAt(
+        0,
+        const DbElementOptions(extraRotations: 5, rotationCycles: '2121'),
+      ),
+    );
+
+    await repository.saveRoutine(withCycles);
+
+    expect(await repository.fetchRoutine('r1'), withCycles);
+  });
+
   test('v9 S counts become S rows without times or cells', () async {
     driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
     final db = AppDatabase(

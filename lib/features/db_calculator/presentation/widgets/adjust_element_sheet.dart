@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/scoring/score.dart';
@@ -87,6 +88,9 @@ class _AdjustElementSheetState extends ConsumerState<AdjustElementSheet> {
   late bool _slowTurn = widget.options.slowTurn;
   late int _extraRotations = widget.options.extraRotations;
   late int _seriesCount = widget.options.seriesCount;
+  late final _cyclesText = TextEditingController(
+    text: widget.options.rotationCycles ?? '',
+  );
 
   // Custom elements always use a manual value.
   late bool _manual =
@@ -104,6 +108,14 @@ class _AdjustElementSheetState extends ConsumerState<AdjustElementSheet> {
 
   Score? get _manualValue => Score.tryParse(_manualText.text);
 
+  String get _cycles => _cyclesText.text;
+
+  /// Rotations come from the cycles while any are entered.
+  void _cyclesChanged(String cycles) => setState(() {
+    if (cycles.isEmpty) return;
+    _extraRotations = DbElementOptions.rotationsIn(cycles) - 1;
+  });
+
   bool get _canSave => !_manual || _manualValue != null;
 
   DbElementOptions _options({bool? flatFoot, bool? slowTurn}) =>
@@ -113,11 +125,15 @@ class _AdjustElementSheetState extends ConsumerState<AdjustElementSheet> {
         extraRotations: _extraRotations,
         seriesCount: _seriesCount,
         manualValue: _manual ? _manualValue : null,
+        rotationCycles: _element.canHaveCycles && _cycles.isNotEmpty
+            ? _cycles
+            : null,
       );
 
   @override
   void dispose() {
     _manualText.dispose();
+    _cyclesText.dispose();
     super.dispose();
   }
 
@@ -204,6 +220,29 @@ class _AdjustElementSheetState extends ConsumerState<AdjustElementSheet> {
                 value: _slowTurn,
                 onChanged: (on) => setState(() => _slowTurn = on),
               ),
+            if (_element.canHaveCycles && structured)
+              Padding(
+                padding: const EdgeInsets.only(top: 8, bottom: 8),
+                child: TextField(
+                  key: const ValueKey('rotation-cycles'),
+                  controller: _cyclesText,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp('[1-9]')),
+                  ],
+                  decoration: InputDecoration(
+                    labelText: 'Cycles',
+                    hintText: 'e.g. 2121',
+                    helperText: 'Rotations in each cycle, between each plié',
+                    errorText: _cycles.length > DbElementOptions.maxCycles
+                        ? 'Only the first ${DbElementOptions.maxCycles} '
+                              'cycles count'
+                        : null,
+                    border: const OutlineInputBorder(),
+                  ),
+                  onChanged: _cyclesChanged,
+                ),
+              ),
             if (_element.extraRotationValue case final perRotation?
                 when structured)
               Row(
@@ -225,7 +264,7 @@ class _AdjustElementSheetState extends ConsumerState<AdjustElementSheet> {
                   IconButton(
                     tooltip: 'Fewer rotations',
                     icon: const Icon(Icons.remove),
-                    onPressed: _extraRotations == 0
+                    onPressed: _extraRotations == 0 || _cycles.isNotEmpty
                         ? null
                         : () => setState(() => _extraRotations--),
                   ),
@@ -239,7 +278,9 @@ class _AdjustElementSheetState extends ConsumerState<AdjustElementSheet> {
                   IconButton(
                     tooltip: 'More rotations',
                     icon: const Icon(Icons.add),
-                    onPressed: _extraRotations == _maxExtraRotations
+                    onPressed:
+                        _extraRotations >= _maxExtraRotations ||
+                            _cycles.isNotEmpty
                         ? null
                         : () => setState(() => _extraRotations++),
                   ),

@@ -51,7 +51,11 @@ void main() {
         ),
       ],
       elementOptions: [
-        const DbElementOptions(flatFoot: true, seriesCount: 2),
+        const DbElementOptions(
+          flatFoot: true,
+          seriesCount: 2,
+          rotationCycles: '2121',
+        ),
         DbElementOptions(manualValue: Score.hundredths(40)),
       ],
       elementTimes: const [Duration(seconds: 5), null],
@@ -235,6 +239,10 @@ void main() {
       ),
       edited(
         (json) => (json['elements'] as List<dynamic>).first['seriesCount'] = 0,
+      ),
+      edited(
+        (json) =>
+            (json['elements'] as List<dynamic>).first['rotationCycles'] = '2x',
       ),
       edited((json) => (json['da'] as List<dynamic>).last['manualValue'] = 0.3),
       edited((json) => json['levelId'] = 'custom'),
