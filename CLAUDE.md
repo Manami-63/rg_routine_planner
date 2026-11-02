@@ -30,7 +30,7 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   `<feature>_providers.dart` is the single place that wires concrete
   repositories/engines; tests override providers there.
 - `lib/core/` holds code shared across features (`Score`, `RulesetVersion`,
-  shared widgets). `lib/app/` holds the app shell, router and theme.
+  `RgSymbol`, shared widgets). `lib/app/` holds the app shell, router and theme.
 
 ## Persistence
 
@@ -252,6 +252,14 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   (`requirementsFor(apparatus)`). Freehand has no risks or DA: they cannot
   be built and existing ones are not counted.
 - The UI must label totals as provisional while any notice is present.
+
+## Symbols
+
+`RgSymbol` (`lib/core/symbols/`) is the shared FIG notation (CoP #3.3, #3.4),
+redrawn as vectors by `RgSymbolView`, never copied from the CoP images. Not
+shown in the UI yet; Rope, the DA criteria, risks and DB are still to come.
+Symbols are display only: never store them or use them in scoring. Keep a
+text description beside them outside Play mode.
 
 ## Tests
 
