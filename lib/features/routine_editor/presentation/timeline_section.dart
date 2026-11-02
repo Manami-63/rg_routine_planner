@@ -3,6 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/floor/floor_cell.dart';
 import '../../../core/scoring/apparatus.dart';
+import '../../da_calculator/domain/da_base.dart';
+import '../../da_calculator/presentation/da_calculator_providers.dart';
+import '../../da_calculator/presentation/widgets/da_builder_sheet.dart';
+import '../../db_calculator/presentation/db_calculator_providers.dart';
+import '../../db_calculator/presentation/element_picker_screen.dart';
+import '../../db_calculator/presentation/widgets/risk_builder_sheet.dart';
 import '../../music/presentation/music_player.dart';
 import '../../music/presentation/music_providers.dart';
 import '../../routines/presentation/routine_controller.dart';
@@ -41,9 +47,12 @@ class _TimelineSectionState extends ConsumerState<TimelineSection> {
 
   String get routineId => widget.routineId;
 
-  /// Marks the next item of [kind] at [time] (and [cell]). Pauses the
-  /// music after a drop on the mat, so the DB or DA done with it can be
-  /// marked at the same time.
+  /// Whether the picker for a new item is open (or opening).
+  bool _adding = false;
+
+  /// Marks the next item of [kind] at [time] (and [cell]), or adds a new
+  /// one when all are marked. Pauses the music after a drop on the mat, so
+  /// the DB or DA done with it can be marked at the same time.
   Future<void> _mark(
     TimelineKind kind,
     Duration time, {
@@ -52,6 +61,16 @@ class _TimelineSectionState extends ConsumerState<TimelineSection> {
   }) async {
     final controller = ref.read(routineControllerProvider(routineId).notifier);
     final player = ref.read(musicPlayerProvider(routineId));
+    final routine = ref.read(routineProvider(routineId));
+    if (routine.nextUnmarked(kind) == null) {
+      if (kind != TimelineKind.danceStep) {
+        return _addAndMark(kind, time, cell);
+      }
+      // An S has nothing to choose, so the music can play on.
+      controller.updateRoutine(
+        (routine) => routine.withDanceStepCount(routine.danceStepCount + 1),
+      );
+    }
     final together = _togetherTime(kind, player);
     if (together != null) {
       _dropped = null;
@@ -64,6 +83,80 @@ class _TimelineSectionState extends ConsumerState<TimelineSection> {
     if (!mounted) return;
     _dropped = (kind: kind, time: time, pausedAt: player.position);
   }
+
+  /// Pauses the music, asks which item of [kind] to add, and marks it at
+  /// [time] (the moment of the tap) and [cell]. The music stays paused, so
+  /// the DB or DA done with it can be added at the same time. Nothing
+  /// changes when the user closes the picker without choosing.
+  Future<void> _addAndMark(
+    TimelineKind kind,
+    Duration time,
+    FloorCell? cell,
+  ) async {
+    if (_adding) return;
+    _adding = true;
+    try {
+      final player = ref.read(musicPlayerProvider(routineId));
+      await player.pause();
+      if (!mounted) return;
+      final pausedAt = player.position;
+      await _showPicker(kind);
+      if (!mounted) return;
+      final controller = ref.read(
+        routineControllerProvider(routineId).notifier,
+      );
+      if (ref.read(routineProvider(routineId)).nextUnmarked(kind) == null) {
+        return;
+      }
+      final together = _togetherTime(kind, player);
+      controller.markNext(kind, together ?? time, cell);
+      _dropped = together != null
+          ? null
+          : (kind: kind, time: time, pausedAt: pausedAt);
+    } finally {
+      _adding = false;
+    }
+  }
+
+  /// Opens the screen that adds one DB, risk or DA.
+  Future<void> _showPicker(TimelineKind kind) => switch (kind) {
+    TimelineKind.db => ElementPickerScreen.show(
+      context,
+      routineId: routineId,
+      addOne: true,
+    ),
+    TimelineKind.risk => RiskBuilderSheet.show(
+      context,
+      routineId: routineId,
+      catalogue: ref.read(riskCatalogueProvider).requireValue,
+    ),
+    TimelineKind.da => DaBuilderSheet.show(
+      context,
+      routineId: routineId,
+      bases: _daBases,
+    ),
+    // S are added directly, with nothing to choose.
+    TimelineKind.danceStep => Future.value(),
+  };
+
+  /// The DA bases of the routine's apparatus.
+  List<DaBase> get _daBases {
+    final apparatus = ref.read(routineProvider(routineId)).apparatus;
+    return [
+      for (final base in ref.read(daBasesProvider).value ?? const <DaBase>[])
+        if (base.apparatus == apparatus) base,
+    ];
+  }
+
+  /// Whether a new item of [kind] can be added: risks and DA need their
+  /// catalogues, and DA an apparatus.
+  bool _canAdd(TimelineKind kind) => switch (kind) {
+    TimelineKind.db || TimelineKind.danceStep => true,
+    TimelineKind.risk =>
+      !(ref.watch(riskCatalogueProvider).value?.isEmpty ?? true),
+    TimelineKind.da =>
+      ref.watch(daBasesProvider).hasValue && _daBases.isNotEmpty,
+  };
 
   /// The time of the dropped DB or DA that an item of [kind] is performed
   /// together with, or `null`: only while the music is still paused where
@@ -105,9 +198,10 @@ class _TimelineSectionState extends ConsumerState<TimelineSection> {
         const SizedBox(height: 16),
         Text('Mark times', style: theme.textTheme.titleMedium),
         Text(
-          'Play the music and tap when each one starts. Drag onto the mat '
-          'to also mark where: the music pauses, so you can add the DB or '
-          'DA done in the same moment before playing on.',
+          'Play the music and tap when each one starts. "Next" marks what '
+          'is already in the routine; "Add" pauses the music so you can '
+          'choose a new one. Drag onto the mat to also mark where. While '
+          'paused, you can add the DB or DA done in the same moment.',
           style: theme.textTheme.bodySmall,
         ),
         const SizedBox(height: 8),
@@ -120,6 +214,7 @@ class _TimelineSectionState extends ConsumerState<TimelineSection> {
                   child: _MarkButton(
                     kind: kind,
                     times: routine.timesOf(kind),
+                    canAdd: _canAdd(kind),
                     position: () => player.position,
                     onMark: (time) => _mark(kind, time),
                   ),
@@ -361,9 +456,7 @@ class _TimelineSectionState extends ConsumerState<TimelineSection> {
   }
 }
 
-/// "Next DB" with how many are marked, e.g. "2 of 5". Disabled when all
-/// are marked or there are none.
-/// The data of a "Next" button being dragged: what it marks, and the
+/// The data of a "Next" or "Add" button being dragged: what it marks, and the
 /// music time when the finger went down.
 class _PendingMark {
   _PendingMark(this.kind);
@@ -372,19 +465,24 @@ class _PendingMark {
   Duration time = Duration.zero;
 }
 
-/// "Next DB" with how many are marked, e.g. "2 of 5". Tap to mark the time;
-/// drag onto the floor mat to mark the time and where (dropped elsewhere,
-/// only the time). Disabled when all are marked or there are none.
+/// "Next DB" with how many are marked, e.g. "2 of 5", or "Add DB" when all
+/// are marked (or there are none). Tap to mark the time; drag onto the floor
+/// mat to mark the time and where (dropped elsewhere, only the time).
+/// Disabled when there is nothing to mark and nothing can be added.
 class _MarkButton extends StatefulWidget {
   const _MarkButton({
     required this.kind,
     required this.times,
+    required this.canAdd,
     required this.position,
     required this.onMark,
   });
 
   final TimelineKind kind;
   final List<Duration?> times;
+
+  /// Whether a new item can be added once all are marked.
+  final bool canAdd;
 
   /// The music position now.
   final Duration Function() position;
@@ -402,7 +500,8 @@ class _MarkButtonState extends State<_MarkButton> {
   @override
   Widget build(BuildContext context) {
     final marked = widget.times.where((time) => time != null).length;
-    final done = marked == widget.times.length;
+    final allMarked = marked == widget.times.length;
+    final enabled = !allMarked || widget.canAdd;
     final colours = ItemColours.of(widget.kind, Theme.of(context).colorScheme);
     final button = FilledButton.tonal(
       key: ValueKey('mark-${widget.kind.name}'),
@@ -411,11 +510,11 @@ class _MarkButtonState extends State<_MarkButton> {
         backgroundColor: colours.container,
         foregroundColor: colours.onContainer,
       ),
-      onPressed: done ? null : () => widget.onMark(_mark.time),
+      onPressed: enabled ? () => widget.onMark(_mark.time) : null,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Next ${widget.kind.label}'),
+          Text('${allMarked ? 'Add' : 'Next'} ${widget.kind.label}'),
           Text(
             widget.times.isEmpty ? 'none' : '$marked of ${widget.times.length}',
             style: Theme.of(context).textTheme.labelSmall,
@@ -423,7 +522,7 @@ class _MarkButtonState extends State<_MarkButton> {
         ],
       ),
     );
-    if (done) return button;
+    if (!enabled) return button;
     // The time is taken when the finger goes down, so a drag is as exact
     // as a tap.
     return Listener(

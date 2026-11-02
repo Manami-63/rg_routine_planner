@@ -67,18 +67,125 @@ void main() {
     expect(find.text('1 of 2'), findsOneWidget);
   });
 
-  testWidgets('a button is disabled once all are marked', (tester) async {
-    final (_, music) = await pumpMusicTab(tester);
-
+  testWidgets('Add S adds a new S at the position and plays on', (
+    tester,
+  ) async {
+    final (routines, music) = await pumpMusicTab(tester);
     await music.player.seek(const Duration(seconds: 5));
     await tester.tap(find.byKey(const ValueKey('mark-danceStep')));
     await tester.pump();
+    expect(find.text('Add S'), findsOneWidget);
 
-    final button = tester.widget<FilledButton>(
-      find.byKey(const ValueKey('mark-danceStep')),
-    );
-    expect(button.onPressed, isNull);
-    expect(rowOf('timeline-danceStep-0'), findsOneWidget);
+    await music.player.play();
+    await music.player.seek(const Duration(seconds: 9));
+    await tester.tap(find.byKey(const ValueKey('mark-danceStep')));
+    await tester.pump();
+
+    expect(routines.routines[testRoutineId]!.danceStepTimes, [
+      const Duration(seconds: 5),
+      const Duration(seconds: 9),
+    ]);
+    expect(music.player.playing, isTrue);
+  });
+
+  group('adding at a moment in the music', () {
+    Routine emptyWithMusic() =>
+        emptyTestRoutine().withMusic(bolero).withApparatus(Apparatus.hoop);
+
+    Future<void> chooseDb(WidgetTester tester, String name) async {
+      await tester.tap(find.byKey(const ValueKey('mark-db')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Add $name'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('Add DB pauses, and the chosen DB gets the tapped time', (
+      tester,
+    ) async {
+      final (routines, music) = await pumpMusicTab(
+        tester,
+        routine: emptyWithMusic(),
+      );
+      expect(find.text('Add DB'), findsOneWidget);
+      await music.player.play();
+      await music.player.seek(const Duration(milliseconds: 7300));
+
+      await chooseDb(tester, testJump.name);
+
+      expect(music.player.playing, isFalse);
+      final saved = routines.routines[testRoutineId]!;
+      expect(saved.db.elements.single.id, testJump.id);
+      expect(saved.db.elementTimes, [const Duration(milliseconds: 7300)]);
+      expect(rowOf('timeline-db-0'), findsOneWidget);
+    });
+
+    testWidgets('closing the picker adds nothing', (tester) async {
+      final (routines, _) = await pumpMusicTab(
+        tester,
+        routine: emptyWithMusic(),
+      );
+      await tester.tap(find.byKey(const ValueKey('mark-db')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Done'));
+      await tester.pumpAndSettle();
+
+      expect(routines.routines[testRoutineId]!.db.elements, isEmpty);
+      expect(find.text('Nothing marked yet.'), findsOneWidget);
+    });
+
+    testWidgets('a DA added while paused is done together with the DB', (
+      tester,
+    ) async {
+      final (routines, music) = await pumpMusicTab(
+        tester,
+        routine: emptyWithMusic(),
+      );
+      await music.player.seek(const Duration(seconds: 12));
+      await chooseDb(tester, testJump.name);
+
+      await tester.tap(find.byKey(const ValueKey('mark-da')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(ValueKey('da-base-${testRoll.id}')));
+      await tester.pumpAndSettle();
+      // The sheet's button, not the "Add DA" button behind it.
+      final add = find.widgetWithText(FilledButton, 'Add DA').last;
+      await tester.ensureVisible(add);
+      await tester.pumpAndSettle();
+      await tester.tap(add);
+      await tester.pumpAndSettle();
+
+      final saved = routines.routines[testRoutineId]!;
+      expect(saved.da.times, [const Duration(seconds: 12)]);
+      expect(find.text('With DB 1'), findsOneWidget);
+      expect(find.text('With DA 1'), findsOneWidget);
+    });
+
+    testWidgets('Add R builds a risk at the tapped time', (tester) async {
+      final (routines, music) = await pumpMusicTab(
+        tester,
+        routine: emptyWithMusic(),
+      );
+      await music.player.seek(const Duration(seconds: 20));
+
+      await tester.tap(find.byKey(const ValueKey('mark-risk')));
+      await tester.pumpAndSettle();
+      final add = find.widgetWithText(FilledButton, 'Add risk');
+      await tester.ensureVisible(add);
+      await tester.pumpAndSettle();
+      await tester.tap(add);
+      await tester.pumpAndSettle();
+
+      final saved = routines.routines[testRoutineId]!;
+      expect(saved.db.riskTimes, [const Duration(seconds: 20)]);
+    });
+
+    testWidgets('Add DA is disabled without an apparatus', (tester) async {
+      await pumpMusicTab(tester, routine: emptyWithMusic().withApparatus(null));
+      final button = tester.widget<FilledButton>(
+        find.byKey(const ValueKey('mark-da')),
+      );
+      expect(button.onPressed, isNull);
+    });
   });
 
   testWidgets('nudges move a time and clear removes it', (tester) async {

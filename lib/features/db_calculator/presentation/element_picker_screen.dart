@@ -36,17 +36,29 @@ class PickerGroup extends Notifier<DbElementGroup> {
 
 /// Full-screen catalogue for adding DB to a routine: one body group at a
 /// time, narrowed by a search, sectioned by catalogue row. Stays open so
-/// several elements can be added in a row.
+/// several elements can be added in a row, unless [addOne] is set.
 class ElementPickerScreen extends ConsumerStatefulWidget {
-  const ElementPickerScreen({super.key, required this.routineId});
+  const ElementPickerScreen({
+    super.key,
+    required this.routineId,
+    this.addOne = false,
+  });
 
   final String routineId;
 
-  static Future<void> show(BuildContext context, {required String routineId}) {
+  /// Closes after one element is added (adding at a moment in the music).
+  final bool addOne;
+
+  static Future<void> show(
+    BuildContext context, {
+    required String routineId,
+    bool addOne = false,
+  }) {
     return Navigator.of(context).push(
       MaterialPageRoute<void>(
         fullscreenDialog: true,
-        builder: (context) => ElementPickerScreen(routineId: routineId),
+        builder: (context) =>
+            ElementPickerScreen(routineId: routineId, addOne: addOne),
       ),
     );
   }
@@ -74,6 +86,10 @@ class _ElementPickerScreenState extends ConsumerState<ElementPickerScreen> {
     ref
         .read(routineControllerProvider(widget.routineId).notifier)
         .addElement(element);
+    if (widget.addOne) {
+      Navigator.of(context).pop();
+      return;
+    }
     _messenger.currentState!
       ..hideCurrentSnackBar()
       ..showSnackBar(
@@ -82,6 +98,15 @@ class _ElementPickerScreenState extends ConsumerState<ElementPickerScreen> {
           duration: const Duration(seconds: 1),
         ),
       );
+  }
+
+  Future<void> _addCustom() async {
+    final count = ref.read(dbRoutineProvider(widget.routineId)).elements.length;
+    await CustomElementSheet.show(context, routineId: widget.routineId);
+    if (!mounted || !widget.addOne) return;
+    final added =
+        ref.read(dbRoutineProvider(widget.routineId)).elements.length > count;
+    if (added) Navigator.of(context).pop();
   }
 
   @override
@@ -156,10 +181,7 @@ class _ElementPickerScreenState extends ConsumerState<ElementPickerScreen> {
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                     child: OutlinedButton.icon(
-                      onPressed: () => CustomElementSheet.show(
-                        context,
-                        routineId: widget.routineId,
-                      ),
+                      onPressed: _addCustom,
                       icon: const Icon(Icons.edit_note),
                       label: const Text('Add an element not in the list'),
                     ),
