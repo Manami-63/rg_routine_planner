@@ -34,6 +34,7 @@ enum RgSymbol {
   snake('Snakes', '#3.3.4', aspect: 0.5),
   boomerang('Boomerang', '#3.3.4', aspect: 1.5),
   echappe('Echappé', '#3.3.4', aspect: 1.3),
+  highThrowFromSliding('High throw from sliding', '#5.11', aspect: 0.8),
 
   // #3.4 All apparatus.
   highThrow('High throw', '#3.4.1'),

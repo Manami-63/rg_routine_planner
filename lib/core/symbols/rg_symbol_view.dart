@@ -145,6 +145,11 @@ class RgSymbolPainter extends CustomPainter {
           ..cubicTo(50, 22, 46, 62, 74, 50)
           ..lineTo(122, 12))
         ..addPath(_head(74, 50, 122, 12), Offset.zero),
+    RgSymbol.highThrowFromSliding =>
+      (Path()
+          ..moveTo(6, 66)
+          ..cubicTo(14, 104, 52, 100, 56, 8))
+        ..addPath(_head(52, 60, 56, 8), Offset.zero),
     RgSymbol.highThrow => _arrow(14, 86, 86, 14),
     RgSymbol.highThrowTwoClubs =>
       _line(8, 78, 66, 20)

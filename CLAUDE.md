@@ -257,7 +257,7 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
 
 `RgSymbol` (`lib/core/symbols/`) is the shared FIG notation (CoP #3.3, #3.4,
 criteria #5.4.3), redrawn as vectors by `RgSymbolView`, never copied from the
-CoP images. `DaBase.symbol` is set for Ball so far; `DaCriterion.symbol` for
+CoP images. `DaBase.symbol` is set for Ball and Ribbon so far; `DaCriterion.symbol` for
 all but the Rope-specific criteria. `DaSymbols` writes a DA like a coach's
 sheet, "base (criteria)", only when every part has a symbol; otherwise the
 name shows. Play mode shows the symbols instead of the name; lists show both.

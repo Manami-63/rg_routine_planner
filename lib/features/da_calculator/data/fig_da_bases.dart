@@ -363,24 +363,48 @@ final _ribbon = [
     'Spirals',
     30,
     'vv-vvvv',
-    note: '"Swordsman" is not valid.',
+    note: 'Also "Swordsman", where "without hands" is not valid.',
+    symbol: RgSymbol.spiral,
   ),
-  _base(Apparatus.ribbon, 'snakes', 'Snakes', 30, 'vv-vvvv'),
-  _base(Apparatus.ribbon, 'boomerang-air', 'Boomerang in the air', 40, _all),
+  _base(
+    Apparatus.ribbon,
+    'snakes',
+    'Snakes',
+    30,
+    'vv-vvvv',
+    symbol: RgSymbol.snake,
+  ),
+  _base(
+    Apparatus.ribbon,
+    'boomerang-air',
+    'Boomerang in the air',
+    40,
+    _all,
+    symbol: RgSymbol.boomerang,
+  ),
   _base(
     Apparatus.ribbon,
     'boomerang-floor',
     'Boomerang with release and/or pull back along the floor',
     30,
     _all,
+    symbol: RgSymbol.boomerang,
   ),
-  _base(Apparatus.ribbon, 'echappe', 'Echappé and catch', 20, _all),
+  _base(
+    Apparatus.ribbon,
+    'echappe',
+    'Echappé and catch',
+    20,
+    _all,
+    symbol: RgSymbol.echappe,
+  ),
   _base(
     Apparatus.ribbon,
     'large-roll',
     'Large roll of the stick over min. 2 large body segments',
     30,
     'vv-vvvv',
+    symbol: RgSymbol.largeRoll,
   ),
   _base(
     Apparatus.ribbon,
@@ -389,6 +413,7 @@ final _ribbon = [
     20,
     'v-vvvvv',
     note: 'With the whole body or part of the body.',
+    symbol: RgSymbol.passing,
   ),
   _base(
     Apparatus.ribbon,
@@ -399,6 +424,7 @@ final _ribbon = [
     note:
         'E.g. neck, knee, elbow; during movements or Difficulties with '
         'rotation (not "slow turn").',
+    symbol: RgSymbol.handling,
   ),
   _base(
     Apparatus.ribbon,
@@ -407,6 +433,7 @@ final _ribbon = [
     20,
     'v--vvvv',
     note: 'Between at least 2 body parts (not the hands).',
+    symbol: RgSymbol.handling,
   ),
   _base(
     Apparatus.ribbon,
@@ -414,6 +441,7 @@ final _ribbon = [
     'Small throw/catch (incl. free fall)',
     20,
     _smallThrow,
+    symbol: RgSymbol.smallThrow,
   ),
   _base(
     Apparatus.ribbon,
@@ -422,14 +450,23 @@ final _ribbon = [
     20,
     _thrust,
     note: 'Using different parts of the body except hands/arms.',
+    symbol: RgSymbol.smallThrow,
   ),
-  _base(Apparatus.ribbon, 'high-throw', 'High throw', 20, _all),
+  _base(
+    Apparatus.ribbon,
+    'high-throw',
+    'High throw',
+    20,
+    _all,
+    symbol: RgSymbol.highThrow,
+  ),
   _base(
     Apparatus.ribbon,
     'high-throw-sliding',
     'High throw from sliding on the floor',
     30,
     _all,
+    symbol: RgSymbol.highThrowFromSliding,
   ),
   _base(
     Apparatus.ribbon,
@@ -439,6 +476,7 @@ final _ribbon = [
     _all,
     startsCombination: true,
     isCatchFromHighThrow: true,
+    symbol: RgSymbol.catchHighThrow,
   ),
 ];
 

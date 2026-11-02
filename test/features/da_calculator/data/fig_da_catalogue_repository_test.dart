@@ -65,8 +65,8 @@ void main() {
     });
   });
 
-  test('every Ball base has its symbol (#5.9)', () {
-    for (final base in of(Apparatus.ball)) {
+  test('every Ball and Ribbon base has its symbol (#5.9, #5.11)', () {
+    for (final base in [...of(Apparatus.ball), ...of(Apparatus.ribbon)]) {
       expect(base.symbol, isNotNull, reason: base.id);
     }
   });
