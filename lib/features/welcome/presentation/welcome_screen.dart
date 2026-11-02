@@ -12,9 +12,9 @@ class WelcomeScreen extends ConsumerWidget {
   const WelcomeScreen({super.key});
 
   static const steps = [
-    'Add your DB, R and DA',
-    'Add music and tap to mark each one',
-    'Practise in Play mode',
+    'Add your music and press play',
+    'Tap Add when each DB, R, DA or S starts',
+    'Practise in Play mode with FIG symbols',
   ];
 
   Future<void> _done(BuildContext context, WidgetRef ref) async {
