@@ -4,22 +4,35 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/scoring/score.dart';
 import '../../../routines/presentation/routine_controller.dart';
 import '../../domain/db_element.dart';
+import '../../domain/db_element_options.dart';
 import '../db_routine_providers.dart';
 import '../../../../core/widgets/manual_value_field.dart';
 
 /// Bottom sheet for adding a DB that is not in the catalogue, e.g. one
 /// newly approved by FIG during the Olympic cycle.
 class CustomElementSheet extends ConsumerStatefulWidget {
-  const CustomElementSheet({super.key, required this.routineId});
+  const CustomElementSheet({
+    super.key,
+    required this.routineId,
+    this.replaceIndex,
+  });
 
   final String routineId;
 
-  static Future<void> show(BuildContext context, {required String routineId}) {
+  /// The element it replaces, or `null` to add one.
+  final int? replaceIndex;
+
+  static Future<void> show(
+    BuildContext context, {
+    required String routineId,
+    int? replaceIndex,
+  }) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (context) => CustomElementSheet(routineId: routineId),
+      builder: (context) =>
+          CustomElementSheet(routineId: routineId, replaceIndex: replaceIndex),
     );
   }
 
@@ -46,16 +59,23 @@ class _CustomElementSheetState extends ConsumerState<CustomElementSheet> {
 
   void _add() {
     final routine = ref.read(routineProvider(widget.routineId));
-    ref
-        .read(routineControllerProvider(widget.routineId).notifier)
-        .addCustomElement(
-          DbElement.custom(
-            name: _name.text.trim(),
-            group: _group!,
-            rulesetId: routine.rulesetId,
-          ),
-          _parsedValue!,
-        );
+    final controller = ref.read(
+      routineControllerProvider(widget.routineId).notifier,
+    );
+    final element = DbElement.custom(
+      name: _name.text.trim(),
+      group: _group!,
+      rulesetId: routine.rulesetId,
+    );
+    if (widget.replaceIndex case final index?) {
+      controller.replaceElementAt(
+        index,
+        element,
+        DbElementOptions(manualValue: _parsedValue),
+      );
+    } else {
+      controller.addCustomElement(element, _parsedValue!);
+    }
     Navigator.of(context).pop();
   }
 

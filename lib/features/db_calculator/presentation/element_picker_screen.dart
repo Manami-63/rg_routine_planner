@@ -43,6 +43,7 @@ class ElementPickerScreen extends ConsumerStatefulWidget {
     super.key,
     required this.routineId,
     this.addOne = false,
+    this.replaceIndex,
   });
 
   final String routineId;
@@ -50,16 +51,24 @@ class ElementPickerScreen extends ConsumerStatefulWidget {
   /// Closes after one element is added (adding at a moment in the music).
   final bool addOne;
 
+  /// The element the choice replaces, or `null` to add one. Closes after
+  /// the choice, like [addOne].
+  final int? replaceIndex;
+
   static Future<void> show(
     BuildContext context, {
     required String routineId,
     bool addOne = false,
+    int? replaceIndex,
   }) {
     return Navigator.of(context).push(
       MaterialPageRoute<void>(
         fullscreenDialog: true,
-        builder: (context) =>
-            ElementPickerScreen(routineId: routineId, addOne: addOne),
+        builder: (context) => ElementPickerScreen(
+          routineId: routineId,
+          addOne: addOne,
+          replaceIndex: replaceIndex,
+        ),
       ),
     );
   }
@@ -84,9 +93,15 @@ class _ElementPickerScreenState extends ConsumerState<ElementPickerScreen> {
   }
 
   void _add(DbElement element) {
-    ref
-        .read(routineControllerProvider(widget.routineId).notifier)
-        .addElement(element);
+    final controller = ref.read(
+      routineControllerProvider(widget.routineId).notifier,
+    );
+    if (widget.replaceIndex case final index?) {
+      controller.replaceElementAt(index, element);
+      Navigator.of(context).pop();
+      return;
+    }
+    controller.addElement(element);
     if (widget.addOne) {
       Navigator.of(context).pop();
       return;
@@ -102,12 +117,19 @@ class _ElementPickerScreenState extends ConsumerState<ElementPickerScreen> {
   }
 
   Future<void> _addCustom() async {
+    final index = widget.replaceIndex;
     final count = ref.read(dbRoutineProvider(widget.routineId)).elements.length;
-    await CustomElementSheet.show(context, routineId: widget.routineId);
-    if (!mounted || !widget.addOne) return;
-    final added =
-        ref.read(dbRoutineProvider(widget.routineId)).elements.length > count;
-    if (added) Navigator.of(context).pop();
+    await CustomElementSheet.show(
+      context,
+      routineId: widget.routineId,
+      replaceIndex: index,
+    );
+    if (!mounted) return;
+    final elements = ref.read(dbRoutineProvider(widget.routineId)).elements;
+    final done = index == null
+        ? widget.addOne && elements.length > count
+        : !elements[index].isPending;
+    if (done) Navigator.of(context).pop();
   }
 
   @override

@@ -1,4 +1,5 @@
 import '../../../core/floor/floor_cell.dart';
+import '../../da_calculator/domain/da_base.dart';
 import '../../da_calculator/domain/da_element.dart';
 import '../../db_calculator/domain/db_element.dart';
 import '../../db_calculator/domain/risk.dart';
@@ -59,6 +60,12 @@ class TimelineEntry {
 
   /// The risk, when this entry is one (for showing its symbols).
   final RiskElement? risk;
+
+  /// Whether it was marked to be chosen later.
+  bool get isPending =>
+      (db?.isPending ?? false) ||
+      (da?.isPending ?? false) ||
+      (risk?.isPending ?? false);
 
   @override
   bool operator ==(Object other) =>
@@ -183,6 +190,24 @@ extension RoutineTimeline on Routine {
         ? moved
         : moved.withTime(kind.partnerKind!, partner, time + offset);
   }
+
+  /// Adds an item of [kind] that is chosen later (an S needs no choice).
+  Routine withPendingAdded(TimelineKind kind) => switch (kind) {
+    TimelineKind.db => withDb(
+      db.withElementAdded(DbElement.pending(rulesetId: rulesetId)),
+    ),
+    TimelineKind.risk => withDb(
+      db.withRiskAdded(
+        RiskElement(rotation: RiskRotationOption.pending(rulesetId: rulesetId)),
+      ),
+    ),
+    TimelineKind.da => withDa(
+      da.withElementAdded(
+        DaElement(base: DaBase.pending(rulesetId: rulesetId)),
+      ),
+    ),
+    TimelineKind.danceStep => withDanceStepCount(danceStepCount + 1),
+  };
 
   /// Sets where on the floor the item of [kind] at [index] starts (`null`
   /// clears it).

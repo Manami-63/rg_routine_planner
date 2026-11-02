@@ -21,6 +21,9 @@ enum DaScoreNotice {
 enum DaStatus {
   valid,
 
+  /// Marked on the music, chosen later: holds its place, worth nothing.
+  notChosen,
+
   // Not a DA (does not use one of the counted DA).
   /// Fewer criteria than the base(s) need (#5.1.3, #5.5.4).
   tooFewCriteria,
@@ -42,7 +45,7 @@ enum DaStatus {
   /// Whether it is a DA at all (valid or not), so it takes one of the
   /// counted DA in chronological order (#5.2.1).
   bool get isDa => switch (this) {
-    valid || repetition || tooManyPreAcrobatic => true,
+    valid || notChosen || repetition || tooManyPreAcrobatic => true,
     tooFewCriteria || otherApparatus || unknownBase => false,
   };
 }
@@ -221,6 +224,7 @@ class ProvisionalDaScoringEngine implements DaScoringEngine {
 
   /// The status of [element] on its own, before comparing it with others.
   DaStatus _statusOf(DaElement element, Apparatus? apparatus) {
+    if (element.isPending) return DaStatus.notChosen;
     if (element.manualValue != null || element.isCustom) return DaStatus.valid;
     final base = element.base, second = element.secondBase;
     if (base.isUnknown || (second?.isUnknown ?? false)) {

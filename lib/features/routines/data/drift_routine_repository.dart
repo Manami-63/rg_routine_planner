@@ -172,6 +172,8 @@ class DriftRoutineRepository implements RoutineRepository {
                 group: _parseGroup(e.customGroup),
                 rulesetId: row.rulesetId,
               )
+            else if (e.elementId == DbElement.pendingId)
+              DbElement.pending(rulesetId: row.rulesetId)
             else
               elements[e.elementId] ??
                   DbElement.unknown(id: e.elementId, rulesetId: row.rulesetId),
@@ -196,12 +198,13 @@ class DriftRoutineRepository implements RoutineRepository {
         risks: [
           for (final r in riskRows)
             RiskElement(
-              rotation:
-                  rotations[r.rotationOptionId] ??
-                  RiskRotationOption.unknown(
-                    id: r.rotationOptionId,
-                    rulesetId: row.rulesetId,
-                  ),
+              rotation: r.rotationOptionId == RiskRotationOption.pendingId
+                  ? RiskRotationOption.pending(rulesetId: row.rulesetId)
+                  : rotations[r.rotationOptionId] ??
+                        RiskRotationOption.unknown(
+                          id: r.rotationOptionId,
+                          rulesetId: row.rulesetId,
+                        ),
               criteria: [
                 for (final c in criterionRows.where(
                   (c) => c.routineRiskId == r.id,
@@ -229,6 +232,8 @@ class DriftRoutineRepository implements RoutineRepository {
                       name: a.customName ?? '',
                       rulesetId: row.rulesetId,
                     )
+                  : a.baseId == DaBase.pendingId
+                  ? DaBase.pending(rulesetId: row.rulesetId)
                   : base(a.baseId),
               secondBase: switch (a.secondBaseId) {
                 final id? => base(id),

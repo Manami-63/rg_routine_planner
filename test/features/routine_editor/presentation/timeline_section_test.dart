@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rg_routine_planner/core/scoring/apparatus.dart';
 import 'package:rg_routine_planner/features/da_calculator/domain/da_element.dart';
+import 'package:rg_routine_planner/features/db_calculator/presentation/element_picker_screen.dart';
 import 'package:rg_routine_planner/features/music/domain/routine_music.dart';
 import 'package:rg_routine_planner/features/routine_editor/presentation/routine_screen.dart';
 import 'package:rg_routine_planner/features/routine_editor/presentation/timeline_section.dart';
@@ -185,6 +186,65 @@ void main() {
         find.byKey(const ValueKey('mark-da')),
       );
       expect(button.onPressed, isNull);
+    });
+  });
+
+  group('choose later', () {
+    Routine emptyWithMusic() =>
+        emptyTestRoutine().withMusic(bolero).withApparatus(Apparatus.hoop);
+
+    testWidgets('Add only marks the moment and the music plays on', (
+      tester,
+    ) async {
+      final (routines, music) = await pumpMusicTab(
+        tester,
+        routine: emptyWithMusic(),
+      );
+      await tester.tap(find.byKey(const ValueKey('choose-later')));
+      await tester.pumpAndSettle();
+      await music.player.play();
+
+      for (final (kind, seconds) in [('db', 4), ('risk', 8), ('da', 12)]) {
+        await music.player.seek(Duration(seconds: seconds));
+        await tester.tap(find.byKey(ValueKey('mark-$kind')));
+        await tester.pumpAndSettle();
+      }
+
+      expect(music.player.playing, isTrue);
+      expect(find.byType(ElementPickerScreen), findsNothing);
+      final saved = routines.routines[testRoutineId]!;
+      expect(saved.db.elements.single.isPending, isTrue);
+      expect(saved.db.elementTimes, [const Duration(seconds: 4)]);
+      expect(saved.db.risks.single.isPending, isTrue);
+      expect(saved.db.riskTimes, [const Duration(seconds: 8)]);
+      expect(saved.da.elements.single.isPending, isTrue);
+      expect(saved.da.times, [const Duration(seconds: 12)]);
+      expect(find.text('Not chosen yet'), findsNWidgets(3));
+    });
+
+    testWidgets('choosing keeps the time', (tester) async {
+      final (routines, music) = await pumpMusicTab(
+        tester,
+        routine: emptyWithMusic(),
+      );
+      await tester.tap(find.byKey(const ValueKey('choose-later')));
+      await tester.pumpAndSettle();
+      await music.player.seek(const Duration(seconds: 4));
+      await tester.tap(find.byKey(const ValueKey('mark-db')));
+      await tester.pumpAndSettle();
+
+      final choose = find.byKey(const ValueKey('choose-db-0'));
+      await tester.ensureVisible(choose);
+      await tester.pumpAndSettle();
+      await tester.tap(choose);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Add ${testJump.name}'));
+      await tester.pumpAndSettle();
+
+      final saved = routines.routines[testRoutineId]!;
+      expect(saved.db.elements.single.id, testJump.id);
+      expect(saved.db.elementTimes, [const Duration(seconds: 4)]);
+      expect(find.byKey(const ValueKey('choose-db-0')), findsNothing);
     });
   });
 

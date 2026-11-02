@@ -19,22 +19,30 @@ class RiskBuilderSheet extends ConsumerStatefulWidget {
     super.key,
     required this.routineId,
     required this.catalogue,
+    this.index,
   });
 
   final String routineId;
   final RiskCatalogue catalogue;
 
+  /// The risk it replaces, or `null` to add one.
+  final int? index;
+
   static Future<void> show(
     BuildContext context, {
     required String routineId,
     required RiskCatalogue catalogue,
+    int? index,
   }) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
-      builder: (context) =>
-          RiskBuilderSheet(routineId: routineId, catalogue: catalogue),
+      builder: (context) => RiskBuilderSheet(
+        routineId: routineId,
+        catalogue: catalogue,
+        index: index,
+      ),
     );
   }
 
@@ -55,9 +63,14 @@ class _RiskBuilderSheetState extends ConsumerState<RiskBuilderSheet> {
   );
 
   void _add() {
-    ref
-        .read(routineControllerProvider(widget.routineId).notifier)
-        .addRisk(_risk);
+    final controller = ref.read(
+      routineControllerProvider(widget.routineId).notifier,
+    );
+    if (widget.index case final index?) {
+      controller.replaceRiskAt(index, _risk);
+    } else {
+      controller.addRisk(_risk);
+    }
     Navigator.of(context).pop();
   }
 

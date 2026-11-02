@@ -39,6 +39,25 @@ class DbElement {
        symbolPath = null,
        isCustom = true;
 
+  /// A moment marked on the music whose DB is chosen later. Worth nothing
+  /// and not counted as a DB until it is replaced.
+  const DbElement.pending({required this.rulesetId})
+    : id = pendingId,
+      name = 'Not chosen yet',
+      group = DbElementGroup.unknown,
+      value = Score.zero,
+      canBeOnFlatFoot = false,
+      canSlowTurn = false,
+      extraRotationValue = null,
+      canBeInSeries = false,
+      family = null,
+      baseRotationDegrees = 360,
+      symbolPath = null,
+      isCustom = false;
+
+  /// The id stored for every element chosen later.
+  static const pendingId = 'pending';
+
   /// The id stored for every custom element.
   static const customId = 'custom';
 
@@ -94,7 +113,9 @@ class DbElement {
 
   final bool isCustom;
 
-  bool get isUnknown => group == DbElementGroup.unknown;
+  bool get isPending => id == pendingId;
+
+  bool get isUnknown => group == DbElementGroup.unknown && !isPending;
 
   @override
   bool operator ==(Object other) =>

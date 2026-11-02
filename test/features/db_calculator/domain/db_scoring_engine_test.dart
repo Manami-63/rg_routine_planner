@@ -16,6 +16,46 @@ void main() {
   DbRoutine routineOf(List<DbElement> elements) =>
       DbRoutine(rulesetId: 'test-v1', elements: elements);
 
+  group('chosen later', () {
+    const pending = DbElement.pending(rulesetId: 'test-v1');
+
+    test('a pending DB adds nothing and is not counted as a DB', () {
+      final result = engine.calculate(
+        routineOf(const [pending, testJump, pending]),
+        limits: const DbCountLimits(maxElements: 1),
+      );
+      expect(result.subtotal, testJump.value);
+      expect(result.elementCount, 1);
+      expect(result.repeatedElements, isEmpty);
+      expect(result.counting.countedPerElement, [0, 1, 0]);
+    });
+
+    test('a pending risk adds nothing but holds its place', () {
+      final result = engine.calculate(
+        DbRoutine(
+          rulesetId: 'test-v1',
+          risks: [
+            RiskElement(
+              rotation: const RiskRotationOption.pending(rulesetId: 'test-v1'),
+            ),
+            RiskElement(rotation: testTwoRotations),
+          ],
+        ),
+        limits: const DbCountLimits(maxRisks: 1),
+      );
+      expect(result.riskSubtotal, Score.zero);
+      expect(result.counting.countedRisks, {0});
+    });
+
+    test('replacing keeps the time and the place', () {
+      final routine = routineOf(const [pending, testBalance])
+          .withElementTimeAt(0, const Duration(seconds: 3));
+      final replaced = routine.withElementReplacedAt(0, testJump);
+      expect(replaced.elements, const [testJump, testBalance]);
+      expect(replaced.elementTimes, [const Duration(seconds: 3), null]);
+    });
+  });
+
   group('ProvisionalDbScoringEngine', () {
     test('empty routine has a zero subtotal', () {
       final result = engine.calculate(routineOf([]));

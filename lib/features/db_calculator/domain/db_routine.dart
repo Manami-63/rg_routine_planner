@@ -114,6 +114,16 @@ class DbRoutine {
     elementCells: [...elementCells, null],
   );
 
+  /// Puts [element] at [index], keeping its time and cell.
+  DbRoutine withElementReplacedAt(
+    int index,
+    DbElement element, [
+    DbElementOptions options = DbElementOptions.none,
+  ]) => _copyWith(
+    elements: [...elements]..[index] = element,
+    elementOptions: [...elementOptions]..[index] = options,
+  );
+
   /// Removes by position rather than by id, because a routine can contain
   /// the same element more than once.
   DbRoutine withElementRemovedAt(int index) => _copyWith(
@@ -159,6 +169,10 @@ class DbRoutine {
     riskTimes: [...riskTimes, null],
     riskCells: [...riskCells, null],
   );
+
+  /// Puts [risk] at [index], keeping its time and cell.
+  DbRoutine withRiskReplacedAt(int index, RiskElement risk) =>
+      _copyWith(risks: [...risks]..[index] = risk);
 
   DbRoutine withRiskRemovedAt(int index) => _copyWith(
     risks: [...risks]..removeAt(index),

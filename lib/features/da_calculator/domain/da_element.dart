@@ -35,6 +35,8 @@ class DaElement {
 
   bool get isCustom => base.isCustom;
 
+  bool get isPending => base.isPending;
+
   bool get usesPreAcrobatic =>
       preAcrobatic && criteria.contains(DaCriterion.rotation);
 

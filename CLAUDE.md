@@ -113,6 +113,15 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   marks the new item at the time of the tap. S have nothing to choose, so
   the music plays on. While still paused, adding the other kind makes a DB
   and DA together.
+  The "Choose later" switch above the buttons (not saved) makes Add only
+  mark the moment: the music plays on and a placeholder is added
+  (`withPendingAdded`). `DbElement.pending`, `RiskRotationOption.pending` and
+  `DaBase.pending` are stored with the id `pending`, like custom items, so
+  no schema change. They show "Not chosen yet" and are chosen from the
+  timeline's Choose button or by tapping their list row, which replaces them
+  and keeps the time and cell (`replaceIndex`/`index`). A pending DB is
+  worth nothing and is not counted as a DB; a pending risk or DA also adds
+  nothing but holds its place, because the first N count.
 - Floor locations: each DB, risk, DA and S can also have a `FloorCell`
   (`lib/core/floor/`: a 3 x 3 grid of the floor, front/judges at the
   bottom; corners and centre stand for the 5 zones of CoP #9.2.1.A),

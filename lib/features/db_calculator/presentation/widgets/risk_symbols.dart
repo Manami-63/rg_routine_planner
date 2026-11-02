@@ -18,6 +18,7 @@ class RiskSymbols extends StatelessWidget {
   /// Whether every part of [risk] can be shown.
   static bool canShow(RiskElement risk) =>
       !risk.rotation.isUnknown &&
+      !risk.isPending &&
       risk.criteria.every((criterion) => criterion.symbol != null);
 
   List<RgSymbol> _symbolsOf(RiskPhase phase) => [

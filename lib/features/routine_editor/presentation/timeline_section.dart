@@ -51,6 +51,10 @@ class _TimelineSectionState extends ConsumerState<TimelineSection> {
   /// Whether the picker for a new item is open (or opening).
   bool _adding = false;
 
+  /// Whether Add only marks the moment, to choose the item later. Not
+  /// saved: it is back off when the routine is opened again.
+  bool _chooseLater = false;
+
   /// Marks the next item of [kind] at [time] (and [cell]), or adds a new
   /// one when all are marked. Pauses the music after a drop on the mat, so
   /// the DB or DA done with it can be marked at the same time.
@@ -64,13 +68,11 @@ class _TimelineSectionState extends ConsumerState<TimelineSection> {
     final player = ref.read(musicPlayerProvider(routineId));
     final routine = ref.read(routineProvider(routineId));
     if (routine.nextUnmarked(kind) == null) {
-      if (kind != TimelineKind.danceStep) {
+      if (kind != TimelineKind.danceStep && !_chooseLater) {
         return _addAndMark(kind, time, cell);
       }
-      // An S has nothing to choose, so the music can play on.
-      controller.updateRoutine(
-        (routine) => routine.withDanceStepCount(routine.danceStepCount + 1),
-      );
+      // Nothing to choose now, so the music can play on.
+      controller.updateRoutine((routine) => routine.withPendingAdded(kind));
     }
     final together = _togetherTime(kind, player);
     if (together != null) {
@@ -120,25 +122,32 @@ class _TimelineSectionState extends ConsumerState<TimelineSection> {
   }
 
   /// Opens the screen that adds one DB, risk or DA.
-  Future<void> _showPicker(TimelineKind kind) => switch (kind) {
-    TimelineKind.db => ElementPickerScreen.show(
-      context,
-      routineId: routineId,
-      addOne: true,
-    ),
-    TimelineKind.risk => RiskBuilderSheet.show(
-      context,
-      routineId: routineId,
-      catalogue: ref.read(riskCatalogueProvider).requireValue,
-    ),
-    TimelineKind.da => DaBuilderSheet.show(
-      context,
-      routineId: routineId,
-      bases: _daBases,
-    ),
-    // S are added directly, with nothing to choose.
-    TimelineKind.danceStep => Future.value(),
-  };
+  Future<void> _showPicker(TimelineKind kind, {int? replaceIndex}) =>
+      switch (kind) {
+        TimelineKind.db => ElementPickerScreen.show(
+          context,
+          routineId: routineId,
+          addOne: true,
+          replaceIndex: replaceIndex,
+        ),
+        TimelineKind.risk => RiskBuilderSheet.show(
+          context,
+          routineId: routineId,
+          catalogue: ref.read(riskCatalogueProvider).requireValue,
+          index: replaceIndex,
+        ),
+        TimelineKind.da => DaBuilderSheet.show(
+          context,
+          routineId: routineId,
+          bases: _daBases,
+          index: replaceIndex,
+          initial: replaceIndex == null
+              ? null
+              : ref.read(routineProvider(routineId)).da.elements[replaceIndex],
+        ),
+        // S are added directly, with nothing to choose.
+        TimelineKind.danceStep => Future.value(),
+      };
 
   /// The DA bases of the routine's apparatus.
   List<DaBase> get _daBases {
@@ -205,7 +214,17 @@ class _TimelineSectionState extends ConsumerState<TimelineSection> {
           'paused, you can add the DB or DA done in the same moment.',
           style: theme.textTheme.bodySmall,
         ),
-        const SizedBox(height: 8),
+        SwitchListTile(
+          key: const ValueKey('choose-later'),
+          contentPadding: EdgeInsets.zero,
+          dense: true,
+          title: const Text('Choose later'),
+          subtitle: const Text(
+            'Add only marks the moment, so the music keeps playing.',
+          ),
+          value: _chooseLater,
+          onChanged: (on) => setState(() => _chooseLater = on),
+        ),
         Row(
           children: [
             for (final kind in kinds)
@@ -279,6 +298,9 @@ class _TimelineSectionState extends ConsumerState<TimelineSection> {
               },
               conflictWith: conflicts[(entry.kind, entry.index)],
               onTap: () => player.seek(entry.time),
+              onChoose: entry.isPending && _canAdd(entry.kind)
+                  ? () => _showPicker(entry.kind, replaceIndex: entry.index)
+                  : null,
               onNudge: (offset) =>
                   controller.moveTime(entry.kind, entry.index, offset),
               onPair:
@@ -559,6 +581,7 @@ class _TimelineRow extends StatelessWidget {
     required this.onPair,
     required this.conflictWith,
     required this.onTap,
+    required this.onChoose,
     required this.onNudge,
     required this.onClear,
     required this.onPickCell,
@@ -576,6 +599,9 @@ class _TimelineRow extends StatelessWidget {
   /// The S this item may not be performed during, or `null`.
   final int? conflictWith;
   final VoidCallback onTap;
+
+  /// Opens the choice for an item marked to be chosen later, or `null`.
+  final VoidCallback? onChoose;
   final ValueChanged<Duration> onNudge;
   final VoidCallback onClear;
   final VoidCallback onPickCell;
@@ -641,6 +667,14 @@ class _TimelineRow extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if (onChoose case final onChoose?)
+                        TextButton(
+                          key: ValueKey(
+                            'choose-${entry.kind.name}-${entry.index}',
+                          ),
+                          onPressed: onChoose,
+                          child: const Text('Choose'),
+                        ),
                       if (partner case final partner?)
                         _RowNote(
                           icon: Icons.link,
