@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/symbols/path_symbol_view.dart';
 import '../../../core/widgets/message_view.dart';
 import '../../routines/presentation/routine_controller.dart';
 import '../domain/db_element.dart';
@@ -267,6 +268,10 @@ class _ElementPickerScreenState extends ConsumerState<ElementPickerScreen> {
 
   Widget _tile(DbElement element, bool inRoutine) => ListTile(
     key: ValueKey('catalogue-${element.id}'),
+    leading: switch (element.symbolPath) {
+      null => null,
+      final path => PathSymbolView(path, label: element.name, size: 28),
+    },
     title: Text(element.name),
     // Adding it again would be a repetition (unless in a series).
     subtitle: inRoutine ? const Text('In your routine') : null,

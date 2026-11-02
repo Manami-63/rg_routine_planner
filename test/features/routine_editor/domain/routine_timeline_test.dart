@@ -55,6 +55,7 @@ void main() {
         index: 0,
         name: testJump.name,
         time: s(12),
+        db: testJump,
       ),
       TimelineEntry(
         kind: TimelineKind.da,

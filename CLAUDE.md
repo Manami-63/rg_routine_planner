@@ -263,8 +263,10 @@ sheet, "base (criteria)", only when every part has a symbol; otherwise the
 name shows. Play mode shows the symbols instead of the name; lists show both.
 `RiskCriterion.symbol` is set for all but the Rope criteria; `RiskSymbols`
 writes a risk like a coach's sheet: throw criteria, "R3", rotation criteria,
-catch criteria. `entrySymbols` picks the widget for a timeline entry. Rope and
-DB are still to come. Symbols are display only:
+catch criteria. `entrySymbols` picks the widget for a timeline entry. Rope is still
+to come. DB symbols each have their own drawing, so they are data:
+`DbElement.symbolPath` holds a `SymbolPath` text from `fig_db_symbols.dart`
+(balances so far; jumps and rotations are still to come). Symbols are display only:
 never store them or use them in scoring.
 
 ## Tests

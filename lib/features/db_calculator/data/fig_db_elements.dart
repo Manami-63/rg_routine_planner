@@ -23,6 +23,7 @@
 import '../../../core/scoring/score.dart';
 import '../domain/db_element.dart';
 import '../../../core/scoring/fig_ruleset.dart';
+import 'fig_db_symbols.dart';
 
 DbElement _element(
   String code,
@@ -47,6 +48,7 @@ DbElement _element(
   canBeInSeries: series,
   family: _familyOf(code),
   baseRotationDegrees: _halfTurnBase.contains(code) ? 180 : 360,
+  symbolPath: figDbSymbolPaths[code],
 );
 
 /// Rotations with a minimum basic rotation of 180° (#12.1.2).
