@@ -96,7 +96,7 @@ class RiskCriterion {
   /// with ...". Not enforced.
   final String? note;
 
-  /// Its FIG symbol, or `null` when not drawn yet.
+  /// Its FIG symbol; `null` only for unknown criteria.
   final RgSymbol? symbol;
 
   final bool isUnknown;

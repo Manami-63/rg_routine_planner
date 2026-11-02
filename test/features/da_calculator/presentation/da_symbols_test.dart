@@ -29,12 +29,6 @@ void main() {
       DaSymbols.canShow(DaElement(base: roll, secondBase: testRoll)),
       isFalse,
     );
-    expect(
-      DaSymbols.canShow(
-        DaElement(base: roll, criteria: {DaCriterion.ropeBackward}),
-      ),
-      isFalse,
-    );
   });
 
   testWidgets('writes the base, then the criteria in table order', (

@@ -15,11 +15,10 @@ class DaSymbols extends StatelessWidget {
   final double size;
   final Color? color;
 
-  /// Whether every part of [element] has a symbol.
+  /// Whether every base of [element] has a symbol.
   static bool canShow(DaElement element) =>
       element.base.symbol != null &&
-      (element.secondBase == null || element.secondBase!.symbol != null) &&
-      element.criteria.every((criterion) => criterion.symbol != null);
+      (element.secondBase == null || element.secondBase!.symbol != null);
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +26,7 @@ class DaSymbols extends StatelessWidget {
     final bases = [element.base.symbol!, ?element.secondBase?.symbol];
     final criteria = [
       for (final criterion in DaCriterion.tableOrder)
-        if (element.criteria.contains(criterion)) criterion.symbol!,
+        if (element.criteria.contains(criterion)) criterion.symbol,
     ];
     Widget symbol(RgSymbol s) => RgSymbolView(s, size: size, color: colour);
     Widget bracket(String text) => Text(

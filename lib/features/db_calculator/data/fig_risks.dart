@@ -73,6 +73,7 @@ const figRiskCriteria = <RiskCriterion>[
     phase: RiskPhase.throwing,
     apparatus: {Apparatus.rope},
     note: 'Minimum 2 large body segments',
+    symbol: RgSymbol.passing,
   ),
   RiskCriterion(
     id: 'fig-r-throw-open-rope-by-end',
@@ -81,6 +82,7 @@ const figRiskCriteria = <RiskCriterion>[
     rulesetId: figRulesetId,
     phase: RiskPhase.throwing,
     apparatus: {Apparatus.rope},
+    symbol: RgSymbol.highThrowOpenRopeEnd,
   ),
   RiskCriterion(
     id: 'fig-r-throw-open-rope-by-middle',
@@ -89,6 +91,7 @@ const figRiskCriteria = <RiskCriterion>[
     rulesetId: figRulesetId,
     phase: RiskPhase.throwing,
     apparatus: {Apparatus.rope},
+    symbol: RgSymbol.highThrowOpenRopeMiddle,
   ),
   // #4.8.1: criteria during the rotations.
   RiskCriterion(
@@ -197,5 +200,6 @@ const figRiskCriteria = <RiskCriterion>[
     rulesetId: figRulesetId,
     phase: RiskPhase.catching,
     apparatus: {Apparatus.rope},
+    symbol: RgSymbol.ropeCatchEnds,
   ),
 ];

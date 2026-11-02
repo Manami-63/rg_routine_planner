@@ -11,17 +11,10 @@ void main() {
       figRiskCriteria.singleWhere((c) => c.id == 'fig-r-$id');
   final four = figRiskRotationOptions.singleWhere((o) => o.rotations == 4);
 
-  test('every criterion but the Rope ones has a symbol', () {
-    final missing = [
-      for (final c in figRiskCriteria)
-        if (c.symbol == null) c.id,
-    ];
-    expect(missing, [
-      'fig-r-throw-passing-through-rope',
-      'fig-r-throw-open-rope-by-end',
-      'fig-r-throw-open-rope-by-middle',
-      'fig-r-catch-rope-end-in-each-hand',
-    ]);
+  test('every criterion has a symbol', () {
+    for (final criterion in figRiskCriteria) {
+      expect(criterion.symbol, isNotNull, reason: criterion.id);
+    }
   });
 
   test('needs a symbol for every part', () {
@@ -30,7 +23,7 @@ void main() {
       RiskSymbols.canShow(
         RiskElement(
           rotation: four,
-          criteria: [criterion('throw-passing-through-rope')],
+          criteria: [const RiskCriterion.unknown(id: 'gone', rulesetId: 'x')],
         ),
       ),
       isFalse,
