@@ -1,10 +1,14 @@
 // FIG symbols of the DB tables, redrawn from the Code of Points 2025-2028
-// (Part 1, #11 balances, pp.88-90) in the path format of `SymbolPath`.
-// Jumps/leaps (#9) and rotations (#13) are still to come.
+// (Part 1, #11 balances, pp.88-90; #13 rotations, pp.98-101) in the path
+// format of `SymbolPath`. Jumps/leaps (#9) are still to come.
 //
 // Balances share a stance: a bar for the arms and a stem for the supporting
 // leg. A small "x" or "+" marks "with help"; a small arc marks "to the side";
 // a ring is the head, where the trunk moves away from upright.
+//
+// Rotations are the same shapes on a pivot: a stem ending in a circle at the
+// foot, or in a small cup for those with a minimum of 180°. A tick across the
+// stem or a small "x" marks "with help"; a dot is the head.
 
 const _stance = 'M30 14L90 14M60 14L60 90';
 const _legForward = 'M60 46L90 46';
@@ -18,6 +22,14 @@ const _headBackward = 'M60 50L32 50O26 50 6';
 const _headForward = 'M60 50L82 50O88 50 6';
 const _plus = 'M78 4L78 24M68 14L88 14';
 const _cossack = 'M30 10L84 10M54 10L54 40L72 56L50 84';
+
+const _pivot = 'M54 8L54 74O54 83 9';
+const _halfPivot = 'M54 8L54 90M36 72Q38 92 54 92Q70 92 72 72';
+const _pivotArc = 'M86 10Q98 16 94 30';
+const _pivotHelpForward = 'M74 6L88 20M88 6L74 20';
+const _pivotHelpBackward = 'M20 6L34 20M34 6L20 20';
+const _pivotHeadForward = 'M54 44L84 44D90 44 6';
+const _helpTick = 'M38 14L70 20';
 
 const figDbSymbolPaths = <String, String>{
   '2.101': '$_stance M60 36L84 36L60 58',
@@ -58,4 +70,40 @@ const figDbSymbolPaths = <String, String>{
   '2.1904':
       'M14 88L106 88M46 88L46 58L22 28M16 20L30 34M30 20L16 34'
       'M84 88L84 28M84 44Q66 46 66 62O66 68 5',
+
+  '3.101': '$_pivot M54 30L80 30L56 54',
+  '3.203':
+      'M74 26Q60 6 44 18Q30 34 50 46Q72 52 70 36M48 44Q34 58 44 72O52 84 8',
+  '3.301': '$_pivot M54 40L74 40L88 52',
+  '3.303': '$_pivot M54 44L86 44',
+  '3.403': '$_pivot M54 46L81 13 $_pivotHelpForward',
+  '3.405': '$_pivot M54 62L88 8',
+  '3.505': '$_halfPivot M54 30L34 30D28 30 6',
+  '3.603': '$_pivot M54 44L86 44 $_pivotArc',
+  '3.604': 'M26 30L86 30M56 30L56 76O56 84 6D92 30 5M102 12Q112 18 108 30',
+  '3.703': '$_pivot M54 46L81 13 $_pivotHelpForward M96 10Q106 16 102 30',
+  '3.705': '$_pivot M54 46L84 12 $_pivotArc',
+  '3.804': '$_halfPivot $_helpTick $_pivotHeadForward M74 8Q84 12 82 24',
+  '3.805': '$_halfPivot $_pivotHeadForward M74 12Q84 16 82 28',
+  '3.903': '$_pivot M54 40L26 40',
+  '3.904': 'M30 20L86 20M56 20L56 74O56 82 7D92 20 6',
+  '3.905': 'M54 46L54 74O54 83 9M24 46L74 46M34 46Q34 16 54 16Q74 16 74 46',
+  '3.1003': '$_pivot M54 50L27 13 $_pivotHelpBackward',
+  '3.1005': '$_pivot M54 74L22 8',
+  '3.1104': '$_pivot $_helpTick $_pivotHeadForward',
+  '3.1105': '$_pivot M54 36L84 36D90 36 6',
+  '3.1203': '$_pivot M54 44L32 44L26 24',
+  '3.1205': '$_pivot M54 20L26 38L54 50',
+  '3.1303': '$_pivot M54 22L26 42L54 50M32 12L60 40',
+  '3.1405': '$_halfPivot M54 30Q34 34 36 60',
+  '3.1501': 'M62 8L34 42L64 36L42 68O37 80 9M50 38L92 38',
+  '3.1601': '$_pivot M32 36L78 36L56 60',
+  '3.1602': '$_pivot M30 36L80 36',
+  '3.1704':
+      'M28 74L28 32Q30 8 52 8Q76 12 76 44Q74 76 50 88L50 30M16 56L28 76L40 56',
+  '3.1801': 'M12 36L84 72L32 72O44 36 7',
+  '3.1902': 'M14 50L60 74Q84 78 78 56Q68 46 64 42O66 30 11',
+  '3.2003': 'O60 24 9 M26 50L94 50M46 62Q60 78 74 62',
+  '3.2101': 'M16 52L104 52O60 52 9',
+  '3.2202': 'M16 66L104 38O60 52 9',
 };

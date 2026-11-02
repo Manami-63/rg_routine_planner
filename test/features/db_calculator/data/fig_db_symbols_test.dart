@@ -5,18 +5,18 @@ import 'package:rg_routine_planner/features/db_calculator/data/fig_db_symbols.da
 import 'package:rg_routine_planner/features/db_calculator/domain/db_element.dart';
 
 void main() {
-  test('every balance has a symbol that draws inside its box', () async {
+  test('balances and rotations have symbols inside their box', () async {
     final elements = await const FigDbCatalogueRepository().fetchElements();
-    final balances = elements.where((e) => e.group == DbElementGroup.balance);
-    expect(balances, hasLength(36));
-    for (final balance in balances) {
-      final path = balance.symbolPath;
-      expect(path, isNotNull, reason: balance.id);
+    final drawn = elements.where((e) => e.group != DbElementGroup.jump);
+    expect(drawn, hasLength(36 + 33));
+    for (final element in drawn) {
+      final path = element.symbolPath;
+      expect(path, isNotNull, reason: element.id);
       final bounds = SymbolPath.parse(path!).outline.getBounds();
-      expect(bounds.left, greaterThanOrEqualTo(3), reason: balance.id);
-      expect(bounds.top, greaterThanOrEqualTo(3), reason: balance.id);
-      expect(bounds.right, lessThanOrEqualTo(117), reason: balance.id);
-      expect(bounds.bottom, lessThanOrEqualTo(97), reason: balance.id);
+      expect(bounds.left, greaterThanOrEqualTo(3), reason: element.id);
+      expect(bounds.top, greaterThanOrEqualTo(3), reason: element.id);
+      expect(bounds.right, lessThanOrEqualTo(117), reason: element.id);
+      expect(bounds.bottom, lessThanOrEqualTo(97), reason: element.id);
     }
   });
 

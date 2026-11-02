@@ -266,7 +266,7 @@ writes a risk like a coach's sheet: throw criteria, "R3", rotation criteria,
 catch criteria. `entrySymbols` picks the widget for a timeline entry. Rope is still
 to come. DB symbols each have their own drawing, so they are data:
 `DbElement.symbolPath` holds a `SymbolPath` text from `fig_db_symbols.dart`
-(balances so far; jumps and rotations are still to come). Symbols are display only:
+(balances and rotations so far; jumps are still to come). Symbols are display only:
 never store them or use them in scoring.
 
 ## Tests
