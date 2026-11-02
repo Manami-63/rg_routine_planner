@@ -52,18 +52,27 @@ class _IntroVideoState extends State<IntroVideo> {
 
   @override
   Widget build(BuildContext context) {
+    // A decoder that fails to start (seen on the Android emulator) only
+    // reports it here, and `initialize` never completes.
+    return ValueListenableBuilder(
+      valueListenable: _controller,
+      builder: (context, value, _) => _build(context, value),
+    );
+  }
+
+  Widget _build(BuildContext context, VideoPlayerValue value) {
     final colors = Theme.of(context).colorScheme;
-    if (_failed) {
+    if (_failed || value.hasError) {
       return Center(
         child: Icon(Icons.sports_gymnastics, size: 96, color: colors.primary),
       );
     }
-    if (!_controller.value.isInitialized) {
+    if (!value.isInitialized) {
       return const Center(child: CircularProgressIndicator());
     }
     return Center(
       child: AspectRatio(
-        aspectRatio: _controller.value.aspectRatio,
+        aspectRatio: value.aspectRatio,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
           child: Semantics(
@@ -75,18 +84,14 @@ class _IntroVideoState extends State<IntroVideo> {
                 fit: StackFit.expand,
                 children: [
                   VideoPlayer(_controller),
-                  ValueListenableBuilder(
-                    valueListenable: _controller,
-                    builder: (context, value, _) => value.isPlaying
-                        ? const SizedBox.shrink()
-                        : const Center(
-                            child: Icon(
-                              Icons.play_circle,
-                              size: 64,
-                              color: Colors.white70,
-                            ),
-                          ),
-                  ),
+                  if (!value.isPlaying)
+                    const Center(
+                      child: Icon(
+                        Icons.play_circle,
+                        size: 64,
+                        color: Colors.white70,
+                      ),
+                    ),
                 ],
               ),
             ),

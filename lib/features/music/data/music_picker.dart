@@ -1,4 +1,5 @@
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 
 import '../domain/routine_music.dart';
 
@@ -11,15 +12,20 @@ abstract interface class MusicPicker {
   Future<PickedMusic?> pick();
 }
 
-/// Uses the system file picker (the Files app on iOS).
+/// Uses the system file picker (the Files app on iOS). It may return a file
+/// of another type: callers check it with `RoutineMusic.accepts`.
 class FilePickerMusicPicker implements MusicPicker {
   const FilePickerMusicPicker();
 
   @override
   Future<PickedMusic?> pick() async {
+    // Android turns extensions into media types that miss files: .m4a asks
+    // for audio/mp4a-latm, but .m4a files are stored as audio/mp4 and show
+    // greyed out. So it offers all audio there.
+    final android = defaultTargetPlatform == TargetPlatform.android;
     final file = await FilePicker.pickFile(
-      type: FileType.custom,
-      allowedExtensions: RoutineMusic.extensions,
+      type: android ? FileType.audio : FileType.custom,
+      allowedExtensions: android ? null : RoutineMusic.extensions,
     );
     final path = file?.path;
     if (file == null || path == null) return null;

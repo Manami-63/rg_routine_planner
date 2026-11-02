@@ -49,6 +49,28 @@ void main() {
     expect(find.text('No music yet'), findsOneWidget);
   });
 
+  testWidgets('another type of file is refused with a message', (tester) async {
+    // Android's picker offers all audio, so the app checks the type itself.
+    final music = FakeMusic()
+      ..picker.next = (path: '/picked/Swan.ogg', name: 'Swan.ogg');
+    final routines = await pumpDbCalculator(tester, music: music);
+    await openMusicTab(tester);
+
+    await tester.tap(find.text('Add music'));
+    await tester.pumpAndSettle();
+
+    expect(routines.routines[testRoutineId]!.music, isNull);
+    expect(music.library.files, isEmpty);
+    expect(find.text('Choose an MP3, M4A, AAC or WAV file.'), findsOneWidget);
+  });
+
+  test('accepts only the listed types, in any case', () {
+    expect(RoutineMusic.accepts('Swan.M4A'), isTrue);
+    expect(RoutineMusic.accepts('a.b.mp3'), isTrue);
+    expect(RoutineMusic.accepts('Swan.ogg'), isFalse);
+    expect(RoutineMusic.accepts('mp3'), isFalse);
+  });
+
   testWidgets('plays, pauses and seeks', (tester) async {
     final music = FakeMusic();
     music.library.files[bolero.fileName] = '/picked/Bolero.mp3';

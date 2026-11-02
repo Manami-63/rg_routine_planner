@@ -79,7 +79,9 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   and the title the user sees. `MusicLibrary` adds, copies and deletes
   copies: replacing or removing music deletes the old copy, Duplicate
   gives the new routine its own copy, deleting a routine deletes its copy
-  (`deleteRoutine`). `MusicPicker` (file_picker) and `MusicPlayer`
+  (`deleteRoutine`). `MusicPicker` (file_picker; on Android it offers all
+  audio, because extension filters grey out .m4a, and `chooseMusic` checks
+  `RoutineMusic.accepts`) and `MusicPlayer`
   (just_audio) are wrapped so widget tests use the fakes in
   `test/features/music/fake_music.dart` (`pumpDbCalculator` sets them up).
   `MusicPlayerControls` (Music tab and Play mode) has a playback speed
@@ -171,7 +173,9 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   and file_picker; widget tests use `FakeRoutineFileTransfer`.
 - Welcome (`features/welcome/`): `WelcomeScreen` (`/welcome`) shows the
   intro video (`IntroVideo`, video_player, `assets/videos/intro.mp4`,
-  muted and looping; an icon while the file is missing) and three short
+  muted and looping; an icon while the file is missing or cannot play;
+  keep it H.264 at most 1280 high, as the Android emulator's decoder
+  rejected 720x1552) and three short
   steps. It opens on the first launch: `main` reads `WelcomeStore`
   (shared_preferences `welcome_version`, not the database) and overrides
   `startWithWelcomeProvider`. Bump `welcomeVersion` to show it again once.
