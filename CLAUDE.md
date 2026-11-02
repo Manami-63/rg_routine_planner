@@ -106,6 +106,13 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   Setting a time puts the timed items of that kind in time order
   (`timeOrder`; untimed items keep their places), so the first N risks and
   DA follow the music.
+  When every item of a kind is marked (or there are none) its button
+  becomes "Add DB/R/DA/S", so a routine can be built from the music: it
+  pauses the music, opens the usual picker for one item
+  (`ElementPickerScreen.addOne`, `RiskBuilderSheet`, `DaBuilderSheet`) and
+  marks the new item at the time of the tap. S have nothing to choose, so
+  the music plays on. While still paused, adding the other kind makes a DB
+  and DA together.
 - Floor locations: each DB, risk, DA and S can also have a `FloorCell`
   (`lib/core/floor/`: a 3 x 3 grid of the floor, front/judges at the
   bottom; corners and centre stand for the 5 zones of CoP #9.2.1.A),
