@@ -256,6 +256,39 @@ class RgSymbolPainter extends CustomPainter {
             ..lineTo(90, 90),
           Offset.zero,
         ),
+    RgSymbol.ropeSkips =>
+      Path()
+        ..moveTo(6, 66)
+        ..lineTo(36, 34)
+        ..lineTo(60, 66)
+        ..lineTo(90, 34)
+        ..lineTo(114, 66)
+        ..lineTo(144, 34),
+    RgSymbol.ropeCatchEnds =>
+      Path()
+        ..moveTo(8, 84)
+        ..quadraticBezierTo(24, 88, 28, 56)
+        ..cubicTo(30, 6, 70, 6, 72, 56)
+        ..quadraticBezierTo(76, 88, 92, 84),
+    RgSymbol.ropeOpenRotation => _line(
+      22,
+      34,
+      w - 6,
+      34,
+    )..addPath(_line(6, 68, w - 6, 68), Offset.zero),
+    RgSymbol.highThrowOpenRopeMiddle => _line(
+      20,
+      30,
+      w - 10,
+      30,
+    )..addPath(_arrow(22, 90, w / 2, 34), Offset.zero),
+    RgSymbol.highThrowOpenRopeEnd => _line(
+      58,
+      30,
+      w - 6,
+      30,
+    )..addPath(_arrow(10, 90, 56, 34), Offset.zero),
+    RgSymbol.ropeBackward => _arrow(w - 6, 50, 6, 50),
     RgSymbol.duringDb =>
       (Path()
           ..moveTo(10, 20)
@@ -277,13 +310,24 @@ class RgSymbolPainter extends CustomPainter {
     )..addPath(_circle(w / 2, 74, 18), Offset.zero),
   };
 
-  /// The filled heads of the locked Clubs.
-  List<Rect> _dots(double w) => symbol == RgSymbol.smallThrowLockedClubs
-      ? [
-          Rect.fromCenter(center: Offset(w / 2 - 6, 50), width: 34, height: 20),
-          Rect.fromCenter(center: Offset(w - 22, 50), width: 26, height: 18),
-        ]
-      : const [];
+  /// The filled heads of locked Clubs, and the hands on an open Rope.
+  List<Rect> _dots(double w) {
+    Rect dot(double x, double y, double width, double height) =>
+        Rect.fromCenter(center: Offset(x, y), width: width, height: height);
+    return switch (symbol) {
+      RgSymbol.smallThrowLockedClubs => [
+        dot(w / 2 - 6, 50, 34, 20),
+        dot(w - 22, 50, 26, 18),
+      ],
+      RgSymbol.ropeOpenRotation => [
+        dot(22, 34, 16, 16),
+        dot(w / 2, 68, 22, 16),
+      ],
+      RgSymbol.highThrowOpenRopeMiddle => [dot(w / 2, 30, 16, 16)],
+      RgSymbol.highThrowOpenRopeEnd => [dot(58, 30, 16, 16)],
+      _ => const [],
+    };
+  }
 
   static Path _line(double x1, double y1, double x2, double y2) => Path()
     ..moveTo(x1, y1)

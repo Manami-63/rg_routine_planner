@@ -2,7 +2,7 @@
 /// apparatus technical groups (#3.3), those valid for all apparatus (#3.4)
 /// the DA criteria (#5.4.3) and the risk criteria (#4.8, #4.10). Redrawn as vectors by `RgSymbolView`.
 ///
-/// Rope is not here yet, and neither are the apparatus' own marks.
+/// The apparatus' own marks are not here.
 enum RgSymbol {
   // #3.3: on more than one apparatus.
   largeRoll('Large roll', '#3.3', aspect: 1.7),
@@ -62,7 +62,23 @@ enum RgSymbol {
   series('Series', '#4.8.1'),
   directRebound('Direct rebound on the body', '#4.10.1', aspect: 0.9),
   catchWithRoll('Direct catch with rolling', '#4.10.1', aspect: 1.7),
-  catchWithRotation('Direct catch with rotation', '#4.10.1');
+  catchWithRotation('Direct catch with rotation', '#4.10.1'),
+
+  // Junior Rope (annex #5.2, #6.4, #7.3).
+  ropeSkips('Series of skips or hops', '#7.3', aspect: 1.5),
+  ropeCatchEnds('Catch with 1 end in each hand', '#6.4'),
+  ropeOpenRotation('Rotation of the open Rope', '#7.3', aspect: 1.5),
+  highThrowOpenRopeMiddle(
+    'High throw of the open Rope by the middle',
+    '#6.4',
+    aspect: 1.3,
+  ),
+  highThrowOpenRopeEnd(
+    'High throw of the open Rope by the end',
+    '#6.4',
+    aspect: 1.7,
+  ),
+  ropeBackward('Rope turning backward', '#7.3', aspect: 1.3);
 
   const RgSymbol(this.description, this.reference, {this.aspect = 1});
 

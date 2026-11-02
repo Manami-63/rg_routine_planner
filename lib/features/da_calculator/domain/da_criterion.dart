@@ -48,8 +48,8 @@ enum DaCriterion {
     ropeCrossedArms,
   ];
 
-  /// Its FIG symbol (#5.4.3), or `null` when not drawn yet.
-  RgSymbol? get symbol => switch (this) {
+  /// Its FIG symbol (#5.4.3, Rope #7.3).
+  RgSymbol get symbol => switch (this) {
     outsideVisualField => RgSymbol.outsideVisualField,
     withoutHands => RgSymbol.withoutHands,
     underLeg => RgSymbol.underLeg,
@@ -57,7 +57,9 @@ enum DaCriterion {
     fullBodyWave => RgSymbol.fullBodyWave,
     db => RgSymbol.duringDb,
     rotation => RgSymbol.rotation,
-    ropeDoubleRotation || ropeBackward || ropeCrossedArms => null,
+    ropeDoubleRotation => RgSymbol.handling,
+    ropeBackward => RgSymbol.ropeBackward,
+    ropeCrossedArms => RgSymbol.mill,
   };
 
   /// The criteria stored as comma-separated names in [text]; unknown names

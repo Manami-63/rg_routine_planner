@@ -74,7 +74,7 @@ class DaBase {
   /// A condition from the table shown with it. Not enforced.
   final String? note;
 
-  /// Its FIG base symbol, or `null` when not drawn yet.
+  /// Its FIG base symbol; `null` for custom and unknown bases.
   final RgSymbol? symbol;
 
   final bool isCustom;

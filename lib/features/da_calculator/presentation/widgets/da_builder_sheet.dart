@@ -303,10 +303,7 @@ class _DaBuilderSheetState extends ConsumerState<DaBuilderSheet> {
             controlAffinity: ListTileControlAffinity.leading,
             dense: true,
             title: Text(criterion.label),
-            secondary: switch (criterion.symbol) {
-              null => null,
-              final symbol => RgSymbolView(symbol, size: 22),
-            },
+            secondary: RgSymbolView(criterion.symbol, size: 22),
             subtitle: available.contains(criterion)
                 ? null
                 : Text(

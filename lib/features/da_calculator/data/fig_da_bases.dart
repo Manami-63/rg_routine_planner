@@ -541,6 +541,7 @@ final _rope = [
     30,
     'vv-vvvvvvv',
     note: '2 large body segments.',
+    symbol: RgSymbol.passing,
   ),
   _base(
     Apparatus.rope,
@@ -548,6 +549,7 @@ final _rope = [
     'Passing through the Rope with a series (min. 3) of skips/hops',
     30,
     'vv-v---vvv',
+    symbol: RgSymbol.ropeSkips,
   ),
   _base(
     Apparatus.rope,
@@ -557,14 +559,23 @@ final _rope = [
     'v-vvvvv',
     isCatchFromHighThrow: true,
     note: 'Without support on another part of the body.',
+    symbol: RgSymbol.ropeCatchEnds,
   ),
-  _base(Apparatus.rope, 'echappe', 'Echappé and catch', 30, 'vv-vvvv'),
+  _base(
+    Apparatus.rope,
+    'echappe',
+    'Echappé and catch',
+    30,
+    'vv-vvvv',
+    symbol: RgSymbol.echappe,
+  ),
   _base(
     Apparatus.rope,
     'spirals',
     'Spirals: rotations of the free end, Rope held by 1 end',
     30,
     'vv-vvvv',
+    symbol: RgSymbol.echappe,
   ),
   _base(
     Apparatus.rope,
@@ -572,6 +583,7 @@ final _rope = [
     'Free rotation (min. 1) around a part of the body',
     20,
     'v--vvvv',
+    symbol: RgSymbol.circle,
   ),
   _base(
     Apparatus.rope,
@@ -579,8 +591,16 @@ final _rope = [
     'Rotation (min. 1) of the open Rope held by its end or middle',
     20,
     _all,
+    symbol: RgSymbol.ropeOpenRotation,
   ),
-  _base(Apparatus.rope, 'mills', 'Mills with the open Rope', 20, 'v-vvvvv'),
+  _base(
+    Apparatus.rope,
+    'mills',
+    'Mills with the open Rope',
+    20,
+    'v-vvvvv',
+    symbol: RgSymbol.mill,
+  ),
   _base(
     Apparatus.rope,
     'transmission',
@@ -588,6 +608,7 @@ final _rope = [
     20,
     'v--vvvv',
     note: 'Between at least 2 body parts (not the hands).',
+    symbol: RgSymbol.handling,
   ),
   _base(
     Apparatus.rope,
@@ -595,6 +616,7 @@ final _rope = [
     'Small throw/catch (incl. free fall)',
     20,
     _smallThrow,
+    symbol: RgSymbol.smallThrow,
   ),
   _base(
     Apparatus.rope,
@@ -603,14 +625,23 @@ final _rope = [
     20,
     _thrust,
     note: 'Using different parts of the body except hands/arms.',
+    symbol: RgSymbol.smallThrow,
   ),
-  _base(Apparatus.rope, 'high-throw', 'High throw', 20, _all),
+  _base(
+    Apparatus.rope,
+    'high-throw',
+    'High throw',
+    20,
+    _all,
+    symbol: RgSymbol.highThrow,
+  ),
   _base(
     Apparatus.rope,
     'high-throw-middle',
     'High throw of the open Rope held by the middle',
     20,
     _all,
+    symbol: RgSymbol.highThrowOpenRopeMiddle,
   ),
   _base(
     Apparatus.rope,
@@ -618,6 +649,7 @@ final _rope = [
     'High throw of the open Rope held by the end',
     20,
     _all,
+    symbol: RgSymbol.highThrowOpenRopeEnd,
   ),
   _base(
     Apparatus.rope,
@@ -627,6 +659,7 @@ final _rope = [
     _all,
     startsCombination: true,
     isCatchFromHighThrow: true,
+    symbol: RgSymbol.catchHighThrow,
   ),
 ];
 
