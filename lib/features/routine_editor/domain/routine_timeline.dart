@@ -1,4 +1,5 @@
 import '../../../core/floor/floor_cell.dart';
+import '../../da_calculator/domain/da_element.dart';
 import '../../routines/domain/routine.dart';
 
 /// The kinds of item that can be marked on the music.
@@ -31,6 +32,7 @@ class TimelineEntry {
     required this.name,
     required this.time,
     this.cell,
+    this.da,
   });
 
   final TimelineKind kind;
@@ -45,6 +47,9 @@ class TimelineEntry {
   /// Where on the floor it starts, or `null` when not set.
   final FloorCell? cell;
 
+  /// The DA, when this entry is one (for showing its symbols).
+  final DaElement? da;
+
   @override
   bool operator ==(Object other) =>
       other is TimelineEntry &&
@@ -52,10 +57,11 @@ class TimelineEntry {
       other.index == index &&
       other.name == name &&
       other.time == time &&
-      other.cell == cell;
+      other.cell == cell &&
+      other.da == da;
 
   @override
-  int get hashCode => Object.hash(kind, index, name, time, cell);
+  int get hashCode => Object.hash(kind, index, name, time, cell, da);
 
   @override
   String toString() => 'TimelineEntry(${kind.label} $index, $time)';
@@ -101,6 +107,7 @@ extension RoutineTimeline on Routine {
               name: _nameOf(kind, i),
               time: time,
               cell: cellsOf(kind)[i],
+              da: kind == TimelineKind.da ? da.elements[i] : null,
             ),
     ];
     // `sort` is not stable, so ties are broken explicitly.

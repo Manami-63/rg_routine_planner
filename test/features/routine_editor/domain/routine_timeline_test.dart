@@ -61,6 +61,7 @@ void main() {
         index: 0,
         name: testRoll.name,
         time: s(12),
+        da: marked.da.elements.single,
       ),
       TimelineEntry(
         kind: TimelineKind.risk,

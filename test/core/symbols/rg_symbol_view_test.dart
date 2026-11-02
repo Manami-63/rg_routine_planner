@@ -23,7 +23,7 @@ void main() {
   test('every symbol has a description and a reference', () {
     for (final symbol in RgSymbol.values) {
       expect(symbol.description, isNotEmpty);
-      expect(symbol.reference, startsWith('#3.'));
+      expect(symbol.reference, startsWith('#'));
     }
   });
 

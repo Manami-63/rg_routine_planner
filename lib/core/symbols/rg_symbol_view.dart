@@ -184,6 +184,52 @@ class RgSymbolPainter extends CustomPainter {
       _arc()
         ..addPath(_circle(50, 78, 12), Offset.zero)
         ..addPath(_line(50, 32, 50, 66), Offset.zero),
+    RgSymbol.outsideVisualField =>
+      _circle(50, 50, 26)
+        ..addPath(_line(14, 14, 86, 86), Offset.zero)
+        ..addPath(_line(86, 14, 14, 86), Offset.zero),
+    RgSymbol.withoutHands =>
+      _line(50, 8, 50, 92)
+        ..addPath(_line(18, 38, 82, 38), Offset.zero)
+        ..addPath(_line(18, 62, 82, 62), Offset.zero),
+    RgSymbol.underLeg => _line(
+      8,
+      50,
+      92,
+      50,
+    )..addPath(_line(28, 74, 74, 26), Offset.zero),
+    RgSymbol.positionOnFloor => _line(
+      10,
+      39,
+      90,
+      39,
+    )..addPath(_line(10, 61, 90, 61), Offset.zero),
+    RgSymbol.fullBodyWave =>
+      Path()
+        ..moveTo(8, 22)
+        ..lineTo(29, 80)
+        ..lineTo(50, 34)
+        ..lineTo(71, 80)
+        ..lineTo(92, 22),
+    RgSymbol.duringDb =>
+      (Path()
+          ..moveTo(10, 20)
+          ..lineTo(10, 80)
+          ..cubicTo(72, 86, 72, 14, 10, 20))
+        ..addPath(
+          Path()
+            ..moveTo(70, 20)
+            ..lineTo(70, 80)
+            ..cubicTo(128, 86, 124, 46, 70, 50)
+            ..cubicTo(118, 46, 116, 14, 70, 20),
+          Offset.zero,
+        ),
+    RgSymbol.rotation => _line(
+      w / 2,
+      6,
+      w / 2,
+      58,
+    )..addPath(_circle(w / 2, 74, 18), Offset.zero),
   };
 
   /// The filled heads of the locked Clubs.

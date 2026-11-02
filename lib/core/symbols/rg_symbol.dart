@@ -1,6 +1,6 @@
-/// The shared apparatus symbols of the FIG Code of Points 2025-2028: the
-/// apparatus technical groups (#3.3) and those valid for all apparatus
-/// (#3.4). Redrawn as vectors by `RgSymbolView`.
+/// The FIG Code of Points 2025-2028 symbols shared across elements: the
+/// apparatus technical groups (#3.3), those valid for all apparatus (#3.4)
+/// and the DA criteria (#5.4.3). Redrawn as vectors by `RgSymbolView`.
 ///
 /// Rope is not here yet, and neither are the apparatus' own marks.
 enum RgSymbol {
@@ -43,7 +43,16 @@ enum RgSymbol {
   smallThrow('Small throw and catch', '#3.4.2', aspect: 1.3),
   underFlightJump('Jump under the flight', '#3.4.3'),
   underFlightBalance('Balance under the flight', '#3.4.3'),
-  underFlightRotation('Rotation under the flight', '#3.4.3');
+  underFlightRotation('Rotation under the flight', '#3.4.3'),
+
+  // #5.4.3 DA criteria.
+  outsideVisualField('Outside the visual field', '#5.4.3'),
+  withoutHands('Without the help of the hands', '#5.4.3'),
+  underLeg('Under the leg', '#5.4.3'),
+  positionOnFloor('Position on the floor', '#5.4.3'),
+  fullBodyWave('Full body wave', '#5.4.3'),
+  duringDb('During a DB', '#5.4.3', aspect: 1.3),
+  rotation('Rotation', '#5.4.3', aspect: 0.7);
 
   const RgSymbol(this.description, this.reference, {this.aspect = 1});
 

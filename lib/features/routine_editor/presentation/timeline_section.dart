@@ -6,6 +6,7 @@ import '../../../core/scoring/apparatus.dart';
 import '../../da_calculator/domain/da_base.dart';
 import '../../da_calculator/presentation/da_calculator_providers.dart';
 import '../../da_calculator/presentation/widgets/da_builder_sheet.dart';
+import '../../da_calculator/presentation/widgets/da_symbols.dart';
 import '../../db_calculator/presentation/db_calculator_providers.dart';
 import '../../db_calculator/presentation/element_picker_screen.dart';
 import '../../db_calculator/presentation/widgets/risk_builder_sheet.dart';
@@ -618,11 +619,18 @@ class _TimelineRow extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    entry.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (entry.da case final da? when DaSymbols.canShow(da))
+                        DaSymbols(da, size: 18),
+                      Text(
+                        entry.name,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                    ],
                   ),
                 ),
               ],

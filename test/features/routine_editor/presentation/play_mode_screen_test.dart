@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rg_routine_planner/core/scoring/apparatus.dart';
+import 'package:rg_routine_planner/core/scoring/score.dart';
+import 'package:rg_routine_planner/core/symbols/rg_symbol.dart';
+import 'package:rg_routine_planner/features/da_calculator/domain/da_base.dart';
+import 'package:rg_routine_planner/features/da_calculator/presentation/widgets/da_symbols.dart';
 import 'package:rg_routine_planner/features/da_calculator/domain/da_element.dart';
 import 'package:rg_routine_planner/features/music/domain/routine_music.dart';
 import 'package:rg_routine_planner/features/routine_editor/domain/routine_timeline.dart';
@@ -106,6 +111,32 @@ void main() {
     // The countdown is gone after 8 s.
     await seek(tester, music, 18);
     expect(find.byKey(const ValueKey('dance-step-overlay')), findsNothing);
+  });
+
+  testWidgets('a DA with symbols shows them instead of its name', (
+    tester,
+  ) async {
+    const roll = DaBase(
+      id: 'symbol-roll',
+      name: 'Roll with a symbol',
+      apparatus: Apparatus.ball,
+      value: Score.hundredths(30),
+      rulesetId: 'test-v1',
+      criteria: {},
+      symbol: RgSymbol.largeRoll,
+    );
+    final empty = emptyTestRoutine().withMusic(bolero);
+    final music = await openPlayMode(
+      tester,
+      routine: empty
+          .withDa(empty.da.withElementAdded(DaElement(base: roll)))
+          .withTime(TimelineKind.da, 0, const Duration(seconds: 5)),
+    );
+
+    await seek(tester, music, 5);
+
+    expect(find.byType(DaSymbols), findsOneWidget);
+    expect(find.text('Roll with a symbol'), findsNothing);
   });
 
   testWidgets('fits a phone screen', (tester) async {

@@ -65,6 +65,12 @@ void main() {
     });
   });
 
+  test('every Ball base has its symbol (#5.9)', () {
+    for (final base in of(Apparatus.ball)) {
+      expect(base.symbol, isNotNull, reason: base.id);
+    }
+  });
+
   test('every base allows at least 2 criteria', () {
     for (final base in bases) {
       expect(base.criteria.length, greaterThanOrEqualTo(2), reason: base.id);
