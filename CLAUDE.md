@@ -14,6 +14,14 @@ provisional difficulty totals.
 - `dart run flutter_launcher_icons` after changing the icon in `tool/icon/`
   (`icon.png` is full-bleed with no alpha: iOS rounds it; `foreground.png`
   is the Android adaptive foreground on `#4E0453`)
+- Store screenshots: `tool/screenshots/take_screenshots.sh ios|android
+  <device> <made-up track> <out dir>` runs
+  `integration_test/store_screenshots_test.dart` (a demo FIG Senior Hoop
+  routine) on a fresh iPhone 17 Pro Max simulator (6.9", 1320x2868) or the
+  emulator, then `tool/screenshots/frame.swift` adds captions (iOS
+  1320x2868, Play 1080x1920) and `feature_graphic.swift` makes Play's
+  1024x500 graphic. The app is iPhone only (`TARGETED_DEVICE_FAMILY = 1`)
+  until the iPad layout is checked
 - Android release signing reads `android/key.properties` (not in git);
   without it release builds use the debug key
 - `dart run build_runner build --delete-conflicting-outputs` after changing
