@@ -49,7 +49,10 @@ void main() {
     const custom = CompetitionLevel.custom(
       LevelRequirements(da: CountLimit(max: 3), minDanceSteps: 1),
     );
-    expect(describeLevel(custom, Apparatus.freehand), 'at least 1\u00A0S');
+    expect(
+      describeLevel(custom, Apparatus.freehand),
+      'DA up to 3 · at least 1\u00A0S',
+    );
     expect(
       describeLevel(
         custom,
@@ -60,7 +63,7 @@ void main() {
     );
   });
 
-  test('describeLevel for freehand shows only DB', () {
+  test('describeLevel for freehand hides risks', () {
     const custom = CompetitionLevel.custom(
       LevelRequirements(db: CountLimit(max: 5), risk: CountLimit(max: 2)),
     );

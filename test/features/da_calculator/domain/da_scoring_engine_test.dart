@@ -7,6 +7,8 @@ import 'package:rg_routine_planner/features/da_calculator/domain/da_criterion.da
 import 'package:rg_routine_planner/features/da_calculator/domain/da_element.dart';
 import 'package:rg_routine_planner/features/da_calculator/domain/da_routine.dart';
 import 'package:rg_routine_planner/features/da_calculator/domain/da_scoring_engine.dart';
+import 'package:rg_routine_planner/features/levels/domain/competition_level.dart';
+import 'package:rg_routine_planner/features/levels/domain/count_limit.dart';
 
 import '../../db_calculator/test_data.dart';
 import '../test_data.dart';
@@ -201,6 +203,34 @@ void main() {
 
       expect(result.counted, isEmpty);
       expect(result.subtotal, Score.zero);
+    });
+  });
+
+  group('freehand', () {
+    final custom = DaElement(
+      base: const DaBase.custom(name: 'Illusion', rulesetId: 'test-v1'),
+      manualValue: const Score.hundredths(30),
+    );
+
+    test('counts custom DA only, even FIG DA with a manual value', () {
+      final result = calculate([
+        da(testRoll),
+        DaElement(base: testThrow, manualValue: const Score.hundredths(20)),
+        custom,
+      ], apparatus: Apparatus.freehand);
+
+      expect(result.statuses, [
+        DaStatus.otherApparatus,
+        DaStatus.otherApparatus,
+        DaStatus.valid,
+      ]);
+      expect(result.subtotal, const Score.hundredths(30));
+    });
+
+    test("uses the level's freehand DA maximum", () {
+      const requirements = LevelRequirements(da: CountLimit(max: 4));
+      expect(daMaxCounted(requirements, Apparatus.freehand), 4);
+      expect(daMaxCounted(null, Apparatus.freehand), isNull);
     });
   });
 

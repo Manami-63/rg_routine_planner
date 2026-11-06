@@ -94,9 +94,10 @@ class DaScoreResult {
 }
 
 /// How many DA count for a level's [requirements] in a routine with
-/// [apparatus]; `null` for no limit. Freehand routines have no DA.
+/// [apparatus]; `null` for no limit. Freehand routines have no FIG DA, but
+/// some levels have their own (custom DA), so their limit applies too.
 int? daMaxCounted(LevelRequirements? requirements, Apparatus? apparatus) =>
-    apparatus == Apparatus.freehand ? 0 : requirements?.da.max;
+    requirements?.da.max;
 
 /// Calculates a DA score for a routine under one specific ruleset.
 ///
@@ -225,7 +226,11 @@ class ProvisionalDaScoringEngine implements DaScoringEngine {
   /// The status of [element] on its own, before comparing it with others.
   DaStatus _statusOf(DaElement element, Apparatus? apparatus) {
     if (element.isPending) return DaStatus.notChosen;
-    if (element.manualValue != null || element.isCustom) return DaStatus.valid;
+    if (element.isCustom) return DaStatus.valid;
+    // Freehand has no FIG DA: only custom ones (a level's own rules) count,
+    // even with a manual value.
+    if (apparatus == Apparatus.freehand) return DaStatus.otherApparatus;
+    if (element.manualValue != null) return DaStatus.valid;
     final base = element.base, second = element.secondBase;
     if (base.isUnknown || (second?.isUnknown ?? false)) {
       return DaStatus.unknownBase;

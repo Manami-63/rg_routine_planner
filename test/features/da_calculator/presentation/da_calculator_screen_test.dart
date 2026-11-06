@@ -222,15 +222,46 @@ void main() {
     expect(subtotal(tester), '0.50');
   });
 
-  testWidgets('freehand counts no DA but keeps them', (tester) async {
+  testWidgets('freehand counts no FIG DA but keeps them', (tester) async {
     await pumpWith(tester, [
       DaElement(base: testRoll, criteria: twoCriteria),
+      DaElement(base: testThrow, manualValue: const Score.hundredths(20)),
     ], apparatus: Apparatus.freehand);
 
-    expect(find.text('No DA in freehand'), findsOneWidget);
+    expect(find.byKey(const ValueKey('da-freehand-notice')), findsOneWidget);
     expect(find.text('Build a DA'), findsNothing);
     expect(find.text('Test Roll'), findsOneWidget);
     expect(subtotal(tester), '0.00');
+  });
+
+  testWidgets('freehand DA are added with a name and value', (tester) async {
+    await pumpWith(
+      tester,
+      const [],
+      apparatus: Apparatus.freehand,
+      level: const CompetitionLevel.custom(
+        LevelRequirements(da: CountLimit(max: 1)),
+      ),
+    );
+
+    for (final (name, value) in [
+      ('Illusion', '0.3'),
+      ('Pre-acro series', '0.3'),
+    ]) {
+      await tester.tap(find.text('Add a DA'));
+      await tester.pumpAndSettle();
+      expect(find.text('A DA not in the list'), findsNothing);
+      final fields = find.byType(TextField);
+      await tester.enterText(fields.at(fields.evaluate().length - 2), name);
+      await tester.enterText(fields.last, value);
+      await tester.pump();
+      expect(preview(tester), '0.30');
+      await tapText(tester, 'Add DA');
+    }
+
+    expect(find.text('Illusion'), findsOneWidget);
+    // The level's freehand maximum applies: only the first counts.
+    expect(subtotal(tester), '0.30');
   });
 
   testWidgets('removing and clearing DA', (tester) async {

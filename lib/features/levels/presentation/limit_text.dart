@@ -44,12 +44,13 @@ String describeLevel(
 }
 
 /// The [categories] that apply to a routine with [apparatus]: freehand
-/// routines have no risks or DA, so their limits are not shown.
+/// routines have no risks, so their limits are not shown. They can have a
+/// level's own DA (custom DA).
 List<DifficultyCategory> categoriesFor(
   Apparatus? apparatus, [
   List<DifficultyCategory> categories = DifficultyCategory.values,
 ]) => [
   for (final category in categories)
-    if (apparatus != Apparatus.freehand || category == DifficultyCategory.db)
+    if (apparatus != Apparatus.freehand || category != DifficultyCategory.risk)
       category,
 ];

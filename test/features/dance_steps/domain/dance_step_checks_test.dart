@@ -112,7 +112,7 @@ void main() {
     );
   });
 
-  test('freehand checks only DB', () {
+  test('freehand checks DB and DA, not risks', () {
     final routine = routineWith(
       jump: s(11),
       risk: s(11),
@@ -120,8 +120,9 @@ void main() {
       apparatus: Apparatus.freehand,
     );
 
-    expect(danceStepConflicts(routine, dbValues: values).map((c) => c.kind), [
-      DanceStepConflictKind.db,
-    ]);
+    expect(
+      danceStepConflicts(routine, dbValues: values).map((c) => c.kind),
+      unorderedEquals([DanceStepConflictKind.da, DanceStepConflictKind.db]),
+    );
   });
 }

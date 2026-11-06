@@ -30,7 +30,8 @@ class DaBuilderSheet extends ConsumerStatefulWidget {
 
   final String routineId;
 
-  /// The bases for the routine's apparatus, in table order.
+  /// The bases for the routine's apparatus, in table order. Empty for
+  /// freehand: then a DA is only a name and a value (a level's own rules).
   final List<DaBase> bases;
 
   /// The position of the DA being edited, or `null` to add one.
@@ -67,7 +68,7 @@ class _DaBuilderSheetState extends ConsumerState<DaBuilderSheet> {
   late DaBase? _base = _offered(widget.initial?.base);
   late DaBase? _secondBase = _offered(widget.initial?.secondBase);
   late bool _withSecondBase = _secondBase != null;
-  late bool _custom = widget.initial?.isCustom ?? false;
+  late bool _custom = (widget.initial?.isCustom ?? false) || _onlyCustom;
   late final _name = TextEditingController(
     text: (widget.initial?.isCustom ?? false) ? widget.initial!.base.name : '',
   );
@@ -82,6 +83,9 @@ class _DaBuilderSheetState extends ConsumerState<DaBuilderSheet> {
       base != null && widget.bases.contains(base) ? base : null;
 
   bool get _isEditing => widget.index != null;
+
+  /// No bases to choose from (freehand): every DA is custom.
+  bool get _onlyCustom => widget.bases.isEmpty;
 
   Score? get _manualValue => Score.tryParse(_manualText.text);
 
@@ -171,16 +175,30 @@ class _DaBuilderSheetState extends ConsumerState<DaBuilderSheet> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              _isEditing ? 'Edit DA' : 'Build a DA',
+              _isEditing
+                  ? 'Edit DA'
+                  : _onlyCustom
+                  ? 'Add a DA'
+                  : 'Build a DA',
               style: theme.textTheme.titleLarge,
             ),
-            const _Header('Base'),
+            if (!_onlyCustom) const _Header('Base'),
             if (_custom) ...[
-              _ChosenBase(
-                title: 'A DA not in the list',
-                onChange: () => _chooseBase(null),
-              ),
-              const SizedBox(height: 8),
+              if (_onlyCustom)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    'Enter a DA from your level\'s rules, e.g. a set freehand '
+                    'requirement, and its value.',
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                )
+              else
+                _ChosenBase(
+                  title: 'A DA not in the list',
+                  onChange: () => _chooseBase(null),
+                ),
+              const SizedBox(height: 16),
               TextField(
                 controller: _name,
                 textCapitalization: TextCapitalization.sentences,

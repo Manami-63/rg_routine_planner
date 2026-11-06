@@ -267,8 +267,12 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   app cannot see); the UI only warns "you may get a penalty".
 - A routine has an optional `Apparatus` (Freehand, Rope, Hoop, Ball, Clubs,
   Ribbon). Levels can have separate `freehandRequirements`
-  (`requirementsFor(apparatus)`). Freehand has no risks or DA: they cannot
-  be built and existing ones are not counted.
+  (`requirementsFor(apparatus)`). Freehand has no risks (they cannot be
+  built and existing ones are not counted) and no FIG DA, but some levels
+  have their own freehand DA (e.g. Australian HP set FX requirements,
+  0.30 each): the DA tab's "Add a DA" adds only custom DA (name + value),
+  which count with the level's freehand DA limit; FIG DA (even with a
+  manual value) are `otherApparatus`. No such rules are built in.
 - The UI must label totals as provisional while any notice is present.
 
 ## Symbols
