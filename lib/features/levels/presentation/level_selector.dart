@@ -223,7 +223,7 @@ class _CustomRequirementsEditor extends StatelessWidget {
 
   final LevelRequirements requirements;
 
-  /// The categories that apply to the routine (freehand has only DB).
+  /// The categories that apply to the routine (freehand has no risks).
   final List<DifficultyCategory> categories;
   final bool showMinimums;
   final ValueChanged<LevelRequirements> onChanged;

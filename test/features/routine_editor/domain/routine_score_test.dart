@@ -65,7 +65,7 @@ void main() {
     expect(result.total, const Score.hundredths(60));
   });
 
-  test('freehand counts no DA', () {
+  test('freehand counts no FIG DA', () {
     final result = score(routine(apparatus: Apparatus.freehand));
 
     expect(result.da.subtotal, Score.zero);

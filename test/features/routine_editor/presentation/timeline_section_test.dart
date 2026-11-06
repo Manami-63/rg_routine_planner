@@ -349,7 +349,7 @@ void main() {
     expect(find.text('Not allowed during S 1'), findsOneWidget);
   });
 
-  testWidgets('freehand has no R or DA buttons', (tester) async {
+  testWidgets('freehand has DA but no R buttons', (tester) async {
     await pumpMusicTab(
       tester,
       routine: routineWithContent().withApparatus(Apparatus.freehand),
@@ -357,7 +357,7 @@ void main() {
 
     expect(find.byKey(const ValueKey('mark-db')), findsOneWidget);
     expect(find.byKey(const ValueKey('mark-risk')), findsNothing);
-    expect(find.byKey(const ValueKey('mark-da')), findsNothing);
+    expect(find.byKey(const ValueKey('mark-da')), findsOneWidget);
   });
 
   test('formatTimelineTime shows tenths', () {

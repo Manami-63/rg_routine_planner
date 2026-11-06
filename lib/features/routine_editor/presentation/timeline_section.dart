@@ -164,8 +164,12 @@ class _TimelineSectionState extends ConsumerState<TimelineSection> {
     TimelineKind.db || TimelineKind.danceStep => true,
     TimelineKind.risk =>
       !(ref.watch(riskCatalogueProvider).value?.isEmpty ?? true),
+    // Freehand DA are custom, so they need no bases.
     TimelineKind.da =>
-      ref.watch(daBasesProvider).hasValue && _daBases.isNotEmpty,
+      ref.watch(daBasesProvider).hasValue &&
+          (_daBases.isNotEmpty ||
+              ref.watch(routineProvider(routineId)).apparatus ==
+                  Apparatus.freehand),
   };
 
   /// The time of the dropped DB or DA that an item of [kind] is performed
@@ -197,9 +201,9 @@ class _TimelineSectionState extends ConsumerState<TimelineSection> {
     final conflicts = watchDanceStepConflicts(ref, routineId);
     final theme = Theme.of(context);
 
-    // Freehand routines have no risks or DA to mark.
+    // Freehand routines have no risks to mark (DA are a level's own).
     final kinds = routine.apparatus == Apparatus.freehand
-        ? const [TimelineKind.db, TimelineKind.danceStep]
+        ? const [TimelineKind.db, TimelineKind.da, TimelineKind.danceStep]
         : TimelineKind.values;
 
     return Column(
@@ -303,9 +307,7 @@ class _TimelineSectionState extends ConsumerState<TimelineSection> {
                   : null,
               onNudge: (offset) =>
                   controller.moveTime(entry.kind, entry.index, offset),
-              onPair:
-                  routine.apparatus == Apparatus.freehand ||
-                      entry.kind.partnerKind == null
+              onPair: entry.kind.partnerKind == null
                   ? null
                   : () async {
                       if (routine.partnerOf(entry.kind, entry.index) != null) {

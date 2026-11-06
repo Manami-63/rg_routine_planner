@@ -287,9 +287,7 @@ void main() {
     );
   });
 
-  testWidgets('freehand hides risk and DA limits in the picker', (
-    tester,
-  ) async {
+  testWidgets('freehand hides risk limits in the picker', (tester) async {
     await pumpScreen(tester);
     await chooseFreehand(tester);
     await openPicker(tester);
@@ -298,7 +296,7 @@ void main() {
 
     expect(find.text('Body difficulties (DB)'), findsOneWidget);
     expect(find.text('Risks (R)'), findsNothing);
-    expect(find.text('Apparatus difficulties (DA)'), findsNothing);
+    expect(find.text('Apparatus difficulties (DA)'), findsOneWidget);
   });
 
   Finder groupAlert(String text) => find.descendant(

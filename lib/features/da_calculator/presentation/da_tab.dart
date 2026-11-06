@@ -53,16 +53,22 @@ class DaTab extends ConsumerWidget {
           trailing: '$count added',
         ),
         if (apparatus == Apparatus.freehand)
-          // Existing DA stay listed (as not counted) so nothing is lost if
-          // the apparatus was changed by mistake.
-          SliverToBoxAdapter(
-            child: MessageView(
-              icon: Icons.do_not_disturb_alt,
-              title: 'No DA in freehand',
-              message: count == 0
-                  ? 'Freehand routines have no apparatus difficulties.'
-                  : 'Freehand routines have no apparatus difficulties, so '
-                        'these DA are not counted.',
+          // FIG has no freehand DA, but some levels have their own (e.g.
+          // set freehand requirements). FIG DA stay listed (as not counted)
+          // so nothing is lost if the apparatus was changed by mistake.
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+            sliver: SliverList.list(
+              children: [
+                const _FreehandNotice(),
+                const SizedBox(height: 8),
+                CountLimitNotice(
+                  level: level,
+                  apparatus: apparatus,
+                  category: DifficultyCategory.da,
+                  count: daCount,
+                ),
+              ],
             ),
           )
         else if (apparatus == null)
@@ -107,6 +113,25 @@ class DaTab extends ConsumerWidget {
   }
 }
 
+/// Freehand DA are a level's own rules, entered by the user.
+class _FreehandNotice extends StatelessWidget {
+  const _FreehandNotice();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return LevelNotice(
+      key: const ValueKey('da-freehand-notice'),
+      icon: Icons.info_outline,
+      background: colors.surfaceContainerHighest,
+      foreground: colors.onSurfaceVariant,
+      message:
+          'The FIG Code has no freehand DA. If your level has its own (e.g. '
+          'set freehand requirements), add each with its name and value.',
+    );
+  }
+}
+
 /// More than 3 DA in a row on the floor (#5.4.6). Only a reminder: the app
 /// cannot see whether the gymnast leaves the floor in between.
 class _OnFloorNotice extends StatelessWidget {
@@ -132,7 +157,7 @@ class _OnFloorNotice extends StatelessWidget {
 }
 
 /// "Build a DA", once the bases have loaded, for routines with an
-/// apparatus.
+/// apparatus; "Add a DA" (name and value) for freehand routines.
 class BuildDaButton extends ConsumerWidget {
   const BuildDaButton({super.key, required this.routineId});
 
@@ -148,7 +173,8 @@ class BuildDaButton extends ConsumerWidget {
       for (final base in bases ?? const <DaBase>[])
         if (base.apparatus == apparatus) base,
     ];
-    if (apparatus == null || !apparatus.hasApparatus || forApparatus.isEmpty) {
+    final freehand = apparatus == Apparatus.freehand;
+    if (apparatus == null || (!freehand && forApparatus.isEmpty)) {
       return const SizedBox.shrink();
     }
     return FloatingActionButton.extended(
@@ -159,7 +185,7 @@ class BuildDaButton extends ConsumerWidget {
         bases: forApparatus,
       ),
       icon: const Icon(Icons.add),
-      label: const Text('Build a DA'),
+      label: Text(freehand ? 'Add a DA' : 'Build a DA'),
     );
   }
 }

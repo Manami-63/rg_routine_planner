@@ -110,8 +110,9 @@ class _RoutineDetailsFormState extends State<RoutineDetailsForm> {
       return null;
     }
     return _apparatus == Apparatus.freehand
-        ? 'Freehand routines have no risks or DA, so the ones in this '
-              'routine will not count. They are kept, not deleted.'
+        ? 'Freehand routines have no risks or FIG DA, so those in this '
+              'routine will not count (your own DA still do). They are '
+              'kept, not deleted.'
         : 'DA and risk criteria for ${before.label} may not count for '
               '${_apparatus!.label}. They are kept, not deleted.';
   }

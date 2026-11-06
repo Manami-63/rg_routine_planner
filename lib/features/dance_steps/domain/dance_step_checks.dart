@@ -70,7 +70,7 @@ class DanceStepConflict {
 ///
 /// Only items with times can be checked. Pre-acrobatic elements outside DA
 /// and risks are not recorded, so they are not checked. Freehand routines
-/// have no risks or DA to check.
+/// have no risks to check (their DA are a level's own, checked the same).
 List<DanceStepConflict> danceStepConflicts(
   Routine routine, {
   required List<Score> dbValues,
@@ -94,16 +94,16 @@ List<DanceStepConflict> danceStepConflicts(
           );
         }
       }
-      for (final (i, time) in routine.da.times.indexed) {
-        if (during(time)) {
-          conflicts.add(
-            DanceStepConflict(
-              danceStepIndex: s,
-              kind: DanceStepConflictKind.da,
-              index: i,
-            ),
-          );
-        }
+    }
+    for (final (i, time) in routine.da.times.indexed) {
+      if (during(time)) {
+        conflicts.add(
+          DanceStepConflict(
+            danceStepIndex: s,
+            kind: DanceStepConflictKind.da,
+            index: i,
+          ),
+        );
       }
     }
     for (final (i, time) in routine.db.elementTimes.indexed) {
