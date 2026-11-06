@@ -15,7 +15,7 @@ class HomeScreen extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 32, 20, 24),
           children: [
             Text(
-              'RG Routine Planner',
+              'RG Routine Lab',
               style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w700,
               ),

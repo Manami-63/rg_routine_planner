@@ -37,7 +37,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Home -> My routines (empty).
-    expect(find.text('RG Routine Planner'), findsOneWidget);
+    expect(find.text('RG Routine Lab'), findsOneWidget);
     await tester.tap(find.text('My routines'));
     await tester.pumpAndSettle();
     expect(find.text('No routines yet'), findsOneWidget);
@@ -95,6 +95,6 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Back'));
     await tester.pumpAndSettle();
-    expect(find.text('RG Routine Planner'), findsOneWidget);
+    expect(find.text('RG Routine Lab'), findsOneWidget);
   });
 }

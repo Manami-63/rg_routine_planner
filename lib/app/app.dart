@@ -42,7 +42,7 @@ class _RgRoutinePlannerAppState extends ConsumerState<RgRoutinePlannerApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'RG Routine Planner',
+      title: 'RG Routine Lab',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),

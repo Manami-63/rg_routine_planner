@@ -1,6 +1,8 @@
-# RG Routine Planner
+# RG Routine Lab
 
-Flutter app for rhythmic gymnastics gymnasts and coaches: plan routines, pick
+The app is called "RG Routine Lab" (home-screen label, titles); the Dart
+package stays `rg_routine_planner` and the app ID
+`app.saitoworks.rgroutineplanner`. Flutter app for rhythmic gymnastics gymnasts and coaches: plan routines, pick
 difficulty elements (DB) and apparatus difficulties (DA), and see
 provisional difficulty totals.
 
@@ -9,6 +11,11 @@ provisional difficulty totals.
 - `dart format lib test`
 - `flutter analyze`
 - `flutter test`
+- `dart run flutter_launcher_icons` after changing the icon in `tool/icon/`
+  (`icon.png` is full-bleed with no alpha: iOS rounds it; `foreground.png`
+  is the Android adaptive foreground on `#4E0453`)
+- Android release signing reads `android/key.properties` (not in git);
+  without it release builds use the debug key
 - `dart run build_runner build --delete-conflicting-outputs` after changing
   Drift tables (generated `*.g.dart` files are committed)
 
