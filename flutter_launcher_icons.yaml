@@ -1,0 +1,16 @@
+# App icon: `dart run flutter_launcher_icons`. Sources in tool/icon/
+# (source.png is the original design; icon.png is it made full-bleed for
+# iOS, which rounds the corners itself; foreground.png is the Android
+# adaptive foreground, scaled to fit the circle mask).
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: tool/icon/icon.png
+  remove_alpha_ios: true
+  min_sdk_android: 21
+  adaptive_icon_background: "#4E0453"
+  adaptive_icon_foreground: tool/icon/foreground.png
+  web:
+    generate: false
+  macos:
+    generate: false
