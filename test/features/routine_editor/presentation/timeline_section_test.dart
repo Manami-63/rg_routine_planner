@@ -161,6 +161,83 @@ void main() {
       expect(find.text('With DA 1'), findsOneWidget);
     });
 
+    /// Adds a Test Roll DA "During a DB" and chooses who it is done with
+    /// (the key of the "Done together with" option).
+    Future<void> addDaDuringDb(WidgetTester tester, String together) async {
+      await tester.tap(find.byKey(const ValueKey('mark-da')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(ValueKey('da-base-${testRoll.id}')));
+      await tester.pumpAndSettle();
+      for (final criterion in ['Outside the visual field', 'During a DB']) {
+        final box = find.widgetWithText(CheckboxListTile, criterion);
+        await tester.ensureVisible(box);
+        await tester.tap(box);
+        await tester.pumpAndSettle();
+      }
+      final option = find.byKey(ValueKey(together));
+      await tester.ensureVisible(option);
+      await tester.tap(option);
+      await tester.pumpAndSettle();
+      final add = find.widgetWithText(FilledButton, 'Add DA').last;
+      await tester.ensureVisible(add);
+      await tester.pumpAndSettle();
+      await tester.tap(add);
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('a DA during a DB names its DB, which gets the DA time', (
+      tester,
+    ) async {
+      final empty = emptyWithMusic();
+      final (routines, music) = await pumpMusicTab(
+        tester,
+        routine: empty.withDb(empty.db.withElementAdded(testJump)),
+      );
+      await music.player.seek(const Duration(seconds: 15));
+
+      await addDaDuringDb(tester, 'da-together-db-0');
+
+      final saved = routines.routines[testRoutineId]!;
+      expect(saved.da.times, [const Duration(seconds: 15)]);
+      expect(saved.db.elementTimes, [const Duration(seconds: 15)]);
+      expect(find.text('With DB 1'), findsOneWidget);
+    });
+
+    testWidgets('a DA during "a new DB" adds that DB at the same time', (
+      tester,
+    ) async {
+      final (routines, music) = await pumpMusicTab(
+        tester,
+        routine: emptyWithMusic(),
+      );
+      await music.player.seek(const Duration(seconds: 15));
+
+      await addDaDuringDb(tester, 'da-together-new');
+      expect(find.byType(ElementPickerScreen), findsOneWidget);
+      await tester.tap(find.byTooltip('Add ${testJump.name}'));
+      await tester.pumpAndSettle();
+
+      final saved = routines.routines[testRoutineId]!;
+      expect(saved.db.elements.single.id, testJump.id);
+      expect(saved.db.elementTimes, [const Duration(seconds: 15)]);
+      expect(saved.da.times, [const Duration(seconds: 15)]);
+    });
+
+    testWidgets('"Choose later" leaves the DB alone', (tester) async {
+      final empty = emptyWithMusic();
+      final (routines, music) = await pumpMusicTab(
+        tester,
+        routine: empty.withDb(empty.db.withElementAdded(testJump)),
+      );
+      await music.player.seek(const Duration(seconds: 15));
+
+      await addDaDuringDb(tester, 'da-together-later');
+
+      final saved = routines.routines[testRoutineId]!;
+      expect(saved.da.times, [const Duration(seconds: 15)]);
+      expect(saved.db.elementTimes, [null]);
+    });
+
     testWidgets('Add R builds a risk at the tapped time', (tester) async {
       final (routines, music) = await pumpMusicTab(
         tester,

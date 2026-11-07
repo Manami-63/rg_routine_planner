@@ -8,6 +8,7 @@ import '../../da_calculator/presentation/da_calculator_providers.dart';
 import '../../da_calculator/presentation/widgets/da_builder_sheet.dart';
 import '../../db_calculator/presentation/db_calculator_providers.dart';
 import '../../db_calculator/presentation/element_picker_screen.dart';
+import '../../db_calculator/presentation/widgets/db_symbol.dart';
 import '../../db_calculator/presentation/widgets/risk_builder_sheet.dart';
 import '../../music/presentation/music_player.dart';
 import '../../music/presentation/music_providers.dart';
@@ -28,7 +29,9 @@ import 'timeline_editing.dart';
 ///
 /// A drop on the mat pauses the music. Marking a DA right after dropping a
 /// DB (or the other way round), before playing on, marks it at the same
-/// time: performed together, in the same moment.
+/// time: performed together, in the same moment. A DA added or chosen here
+/// "During a DB" can also name its DB (or a new one), which then gets the
+/// DA's time and cell.
 class TimelineSection extends ConsumerStatefulWidget {
   const TimelineSection({super.key, required this.routineId});
 
@@ -103,7 +106,7 @@ class _TimelineSectionState extends ConsumerState<TimelineSection> {
       await player.pause();
       if (!mounted) return;
       final pausedAt = player.position;
-      await _showPicker(kind);
+      final picked = await _showPicker(kind);
       if (!mounted) return;
       final controller = ref.read(
         routineControllerProvider(routineId).notifier,
@@ -113,6 +116,11 @@ class _TimelineSectionState extends ConsumerState<TimelineSection> {
       }
       final together = _togetherTime(kind, player);
       controller.markNext(kind, together ?? time, cell);
+      if (picked is DaTogetherChoice) {
+        _dropped = null;
+        await _markDbTogether(picked, together ?? time, cell);
+        return;
+      }
       _dropped = together != null
           ? null
           : (kind: kind, time: time, pausedAt: pausedAt);
@@ -121,8 +129,64 @@ class _TimelineSectionState extends ConsumerState<TimelineSection> {
     }
   }
 
-  /// Opens the screen that adds one DB, risk or DA.
-  Future<void> _showPicker(TimelineKind kind, {int? replaceIndex}) =>
+  /// Chooses the item for the pending [entry], keeping its time and cell.
+  Future<void> _choose(TimelineEntry entry) async {
+    final picked = await _showPicker(entry.kind, replaceIndex: entry.index);
+    if (picked is! DaTogetherChoice || !mounted) return;
+    final cells = ref.read(routineProvider(routineId)).cellsOf(entry.kind);
+    await _markDbTogether(picked, entry.time, cells[entry.index]);
+  }
+
+  /// Gives the DB in [choice] (or a new one, chosen now) the [time] and
+  /// [cell] of the DA it is done together with.
+  Future<void> _markDbTogether(
+    DaTogetherChoice choice,
+    Duration time,
+    FloorCell? cell,
+  ) async {
+    final controller = ref.read(routineControllerProvider(routineId).notifier);
+    switch (choice) {
+      case DaWithDb(:final index):
+        controller.markAt(TimelineKind.db, index, time, cell);
+      case DaWithNewDb():
+        final before = ref.read(routineProvider(routineId)).db.elements.length;
+        await _showPicker(TimelineKind.db);
+        if (!mounted) return;
+        // Added at the end; nothing to mark if the picker was closed.
+        if (ref.read(routineProvider(routineId)).db.elements.length > before) {
+          controller.markAt(TimelineKind.db, before, time, cell);
+        }
+    }
+  }
+
+  /// The routine's DBs, for a DA "During a DB" to name the one it is done
+  /// together with.
+  List<DaTogetherDb> get _togetherDbs {
+    final db = ref.read(routineProvider(routineId)).db;
+    return [
+      for (final (i, element) in db.elements.indexed)
+        DaTogetherDb(
+          title: 'DB ${i + 1} · ${element.name}',
+          subtitle: switch (db.elementTimes[i]) {
+            final time? => 'At ${formatTimelineTime(time)}: moves to the DA',
+            null => 'Not marked yet',
+          },
+          symbol: switch (element.symbolPath) {
+            final path? => DbSymbol(
+              path,
+              label: element.name,
+              cycles: db.elementOptions[i].rotationCycles,
+              size: 22,
+            ),
+            null => null,
+          },
+        ),
+    ];
+  }
+
+  /// Opens the screen that adds one DB, risk or DA. A DA can come back
+  /// with the DB it is done together with ([DaTogetherChoice]).
+  Future<Object?> _showPicker(TimelineKind kind, {int? replaceIndex}) =>
       switch (kind) {
         TimelineKind.db => ElementPickerScreen.show(
           context,
@@ -144,6 +208,12 @@ class _TimelineSectionState extends ConsumerState<TimelineSection> {
           initial: replaceIndex == null
               ? null
               : ref.read(routineProvider(routineId)).da.elements[replaceIndex],
+          togetherDbs: _togetherDbs,
+          initialTogetherDb: replaceIndex == null
+              ? null
+              : ref
+                    .read(routineProvider(routineId))
+                    .partnerOf(TimelineKind.da, replaceIndex),
         ),
         // S are added directly, with nothing to choose.
         TimelineKind.danceStep => Future.value(),
@@ -303,7 +373,7 @@ class _TimelineSectionState extends ConsumerState<TimelineSection> {
               conflictWith: conflicts[(entry.kind, entry.index)],
               onTap: () => player.seek(entry.time),
               onChoose: entry.isPending && _canAdd(entry.kind)
-                  ? () => _showPicker(entry.kind, replaceIndex: entry.index)
+                  ? () => _choose(entry)
                   : null,
               onNudge: (offset) =>
                   controller.moveTime(entry.kind, entry.index, offset),

@@ -165,7 +165,11 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   A drop on the mat pauses the music; marking the other kind (tap or
   drop) before playing on gives it the dropped item's time. Nudges move
   both (`withTimeMoved`); a timeline row's link button splits (moves only
-  that item 0.1 s) or pairs (takes the chosen item's time). Play mode shows
+  that item 0.1 s) or pairs (takes the chosen item's time). A DA added or
+  chosen from the Music tab with "During a DB" can name its DB in the
+  builder ("Done together with": a DB, "A new DB" or Choose later;
+  `DaBuilderSheet.togetherDbs`, only offered from the music, never from the
+  DA tab); that DB gets the DA's time and cell (`markAt`). Play mode shows
   a pair together ("DB 2 + DA 3", `PlayModeFrame.currentPartner`).
 - Item colours (`ItemColours` in `routine_editor/presentation/`): DB
   blue, DA red, R amber, S green, a DB and a DA together purple. Each hue

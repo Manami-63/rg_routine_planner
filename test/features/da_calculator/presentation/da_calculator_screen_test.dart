@@ -206,6 +206,19 @@ void main() {
     expect(subtotal(tester), '0.00');
   });
 
+  testWidgets('the DA tab offers no DB to do it together with', (tester) async {
+    await pumpDaCalculator(tester);
+    await openBuilder(tester);
+    await tester.tap(find.byKey(ValueKey('da-base-${testRoll.id}')));
+    await tester.pumpAndSettle();
+    final duringDb = find.widgetWithText(CheckboxListTile, 'During a DB');
+    await tester.ensureVisible(duringDb);
+    await tester.tap(duringDb);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Done together with'), findsNothing);
+  });
+
   testWidgets('adds a DA that is not in the list', (tester) async {
     await pumpDaCalculator(tester);
     await openBuilder(tester);
