@@ -11,6 +11,7 @@ import '../../routines/presentation/routine_controller.dart';
 import '../../routines/presentation/routine_details_form.dart';
 import '../../routines/presentation/routine_loader.dart';
 import '../../routines/presentation/save_status_indicator.dart';
+import '../../music/presentation/music_providers.dart';
 import '../../music/presentation/music_tab.dart';
 import 'notes_tab.dart';
 import 'routine_total_bar.dart';
@@ -55,9 +56,64 @@ class RoutineScreen extends ConsumerWidget {
       length: RoutineTab.values.length,
       initialIndex: initialTab.index,
       // A Builder so the parts below can find the tab controller.
-      child: Builder(builder: (context) => _RoutinePage(routineId: routineId)),
+      child: Builder(
+        builder: (context) => _KeepMusic(
+          routineId: routineId,
+          child: _RoutinePage(routineId: routineId),
+        ),
+      ),
     ),
   );
+}
+
+/// Keeps the routine's music loaded while its page is open, so leaving the
+/// Music tab (whose widgets are then removed) and coming back keeps the
+/// position. The music pauses when another tab is chosen.
+class _KeepMusic extends ConsumerStatefulWidget {
+  const _KeepMusic({required this.routineId, required this.child});
+
+  final String routineId;
+  final Widget child;
+
+  @override
+  ConsumerState<_KeepMusic> createState() => _KeepMusicState();
+}
+
+class _KeepMusicState extends ConsumerState<_KeepMusic> {
+  TabController? _tabs;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final tabs = DefaultTabController.of(context);
+    if (tabs == _tabs) return;
+    _tabs?.removeListener(_pauseOffMusicTab);
+    _tabs = tabs..addListener(_pauseOffMusicTab);
+  }
+
+  @override
+  void dispose() {
+    _tabs?.removeListener(_pauseOffMusicTab);
+    super.dispose();
+  }
+
+  void _pauseOffMusicTab() {
+    if (_tabs?.index == RoutineTab.music.index) return;
+    final player = ref.read(musicPlayerProvider(widget.routineId));
+    if (player.playing) player.pause();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final id = widget.routineId;
+    // Listening keeps the auto-disposing providers alive.
+    ref.listen(musicPlayerProvider(id), (_, _) {});
+    final hasMusic = ref.watch(
+      routineProvider(id).select((r) => r.music != null),
+    );
+    if (hasMusic) ref.listen(loadedMusicProvider(id), (_, _) {});
+    return widget.child;
+  }
 }
 
 enum _MenuAction { duplicate, share, clearDb, clearDa }

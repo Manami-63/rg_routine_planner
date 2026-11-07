@@ -433,6 +433,8 @@ class _TimelineSectionState extends ConsumerState<TimelineSection> {
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
+      // Stays below the status bar when the content is tall.
+      useSafeArea: true,
       builder: (context) => SafeArea(
         child: ConstrainedBox(
           constraints: BoxConstraints(

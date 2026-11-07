@@ -111,6 +111,9 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   `MusicPlayerControls` (Music tab and Play mode) has a playback speed
   (0.5×-1×, for learning; not saved, back to 1× when the routine is opened
   again). Music times are always in music time, whatever the speed.
+  The routine page keeps the player and loaded track while it is open
+  (`_KeepMusic`), so switching tabs keeps the position; leaving the Music
+  tab pauses. Tall bottom sheets use `useSafeArea: true`.
 - Dance steps combinations (S, `features/dance_steps/`): no details, only
   an optional music time each (`Routine.danceStepTimes`; the count is its
   length), set with `DanceStepsCard` at the top of the DB tab. Levels have

@@ -65,6 +65,9 @@ class FakeMusicPlayer implements MusicPlayer {
 
   final Duration duration;
   String? loadedPath;
+
+  /// How many times a track was loaded (each load starts at 0:00).
+  var loadCount = 0;
   var disposed = false;
 
   final _position = StreamController<Duration>.broadcast();
@@ -83,6 +86,9 @@ class FakeMusicPlayer implements MusicPlayer {
   @override
   Future<Duration?> load(String path) async {
     loadedPath = path;
+    loadCount++;
+    // Like the real player, a newly loaded track starts at the beginning.
+    _position.add(position = Duration.zero);
     return duration;
   }
 

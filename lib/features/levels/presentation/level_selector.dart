@@ -81,6 +81,8 @@ class LevelPickerSheet extends ConsumerStatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      // Stays below the status bar when the content is tall.
+      useSafeArea: true,
       showDragHandle: true,
       builder: (context) => LevelPickerSheet(
         initialLevel: initialLevel,

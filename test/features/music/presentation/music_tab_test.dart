@@ -100,6 +100,31 @@ void main() {
     expect(music.player.playing, isFalse);
   });
 
+  testWidgets('another tab pauses the music and keeps its position', (
+    tester,
+  ) async {
+    final music = FakeMusic();
+    music.library.files[bolero.fileName] = '/picked/Bolero.mp3';
+    await pumpDbCalculator(
+      tester,
+      routine: emptyTestRoutine().withMusic(bolero),
+      music: music,
+    );
+    await openMusicTab(tester);
+    await tester.tap(find.byTooltip('Play'));
+    await music.player.seek(const Duration(seconds: 20));
+    await tester.pump();
+
+    await tester.tap(find.text('DB'));
+    await tester.pumpAndSettle();
+    expect(music.player.playing, isFalse);
+    expect(music.player.disposed, isFalse);
+
+    await openMusicTab(tester);
+    expect(music.player.loadCount, 1);
+    expect(text(tester, 'music-position'), '0:20');
+  });
+
   testWidgets('replacing deletes the previous copy', (tester) async {
     final music = FakeMusic()
       ..picker.next = (path: '/picked/Swan.m4a', name: 'Swan.m4a');
