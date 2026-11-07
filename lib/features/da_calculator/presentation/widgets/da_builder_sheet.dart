@@ -13,12 +13,56 @@ import '../../domain/da_element.dart';
 import '../da_calculator_providers.dart';
 import '../da_routine_providers.dart';
 
+/// A DB the DA can be done together with, offered when the sheet is opened
+/// from the music: the DA has a time the DB can share. The DA feature does
+/// not know DB, so the caller describes each one.
+class DaTogetherDb {
+  const DaTogetherDb({required this.title, this.subtitle, this.symbol});
+
+  final String title;
+  final String? subtitle;
+  final Widget? symbol;
+}
+
+/// The DB a DA "During a DB" is done together with: the caller gives the
+/// DB the DA's time (and floor cell).
+sealed class DaTogetherChoice {
+  const DaTogetherChoice();
+}
+
+/// One of the offered [DaTogetherDb]s, at [index].
+final class DaWithDb extends DaTogetherChoice {
+  const DaWithDb(this.index);
+
+  final int index;
+
+  @override
+  bool operator ==(Object other) => other is DaWithDb && other.index == index;
+
+  @override
+  int get hashCode => index.hashCode;
+}
+
+/// A DB still to be chosen, right after the DA.
+final class DaWithNewDb extends DaTogetherChoice {
+  const DaWithNewDb();
+
+  @override
+  bool operator ==(Object other) => other is DaWithNewDb;
+
+  @override
+  int get hashCode => 0;
+}
+
 /// Bottom sheet for building a DA the way it is performed: a base, an
 /// optional 2nd base after a catch from a high throw, and the criteria.
 /// Criteria that are "N/A" for the base are shown but cannot be chosen.
 ///
 /// Adds a new DA, or replaces the one at [index] when editing. The DA being
 /// built is local widget state, discarded if the sheet is dismissed.
+///
+/// With [togetherDbs] (opened from the music), a DA "During a DB" can also
+/// say which DB: the sheet closes with that [DaTogetherChoice].
 class DaBuilderSheet extends ConsumerStatefulWidget {
   const DaBuilderSheet({
     super.key,
@@ -26,6 +70,8 @@ class DaBuilderSheet extends ConsumerStatefulWidget {
     required this.bases,
     this.index,
     this.initial,
+    this.togetherDbs,
+    this.initialTogetherDb,
   });
 
   final String routineId;
@@ -38,14 +84,24 @@ class DaBuilderSheet extends ConsumerStatefulWidget {
   final int? index;
   final DaElement? initial;
 
-  static Future<void> show(
+  /// The routine's DBs, when the DA has a time they can share; `null` to
+  /// offer no choice (the DA tab, with no music time).
+  final List<DaTogetherDb>? togetherDbs;
+
+  /// The DB already done together with the DA being edited.
+  final int? initialTogetherDb;
+
+  /// Closes with the DB chosen to go with the DA, if any.
+  static Future<DaTogetherChoice?> show(
     BuildContext context, {
     required String routineId,
     required List<DaBase> bases,
     int? index,
     DaElement? initial,
+    List<DaTogetherDb>? togetherDbs,
+    int? initialTogetherDb,
   }) {
-    return showModalBottomSheet<void>(
+    return showModalBottomSheet<DaTogetherChoice>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
@@ -54,6 +110,8 @@ class DaBuilderSheet extends ConsumerStatefulWidget {
         bases: bases,
         index: index,
         initial: initial,
+        togetherDbs: togetherDbs,
+        initialTogetherDb: initialTogetherDb,
       ),
     );
   }
@@ -78,6 +136,10 @@ class _DaBuilderSheetState extends ConsumerState<DaBuilderSheet> {
   late final _manualText = TextEditingController(
     text: widget.initial?.manualValue?.format() ?? '',
   );
+  late DaTogetherChoice? _together = switch (widget.initialTogetherDb) {
+    final index? => DaWithDb(index),
+    null => null,
+  };
 
   DaBase? _offered(DaBase? base) =>
       base != null && widget.bases.contains(base) ? base : null;
@@ -131,6 +193,13 @@ class _DaBuilderSheetState extends ConsumerState<DaBuilderSheet> {
     super.dispose();
   }
 
+  /// Whether the DB done together can be chosen: from the music, with
+  /// "During a DB" among the criteria.
+  bool _offersTogether(DaElement element) =>
+      widget.togetherDbs != null &&
+      !element.isCustom &&
+      element.criteria.contains(DaCriterion.db);
+
   void _save(DaElement element) {
     final controller = ref.read(
       routineControllerProvider(widget.routineId).notifier,
@@ -140,7 +209,7 @@ class _DaBuilderSheetState extends ConsumerState<DaBuilderSheet> {
     } else {
       controller.addDa(element);
     }
-    Navigator.of(context).pop();
+    Navigator.of(context).pop(_offersTogether(element) ? _together : null);
   }
 
   void _chooseBase(DaBase? base, {bool custom = false}) => setState(() {
@@ -348,6 +417,10 @@ class _DaBuilderSheetState extends ConsumerState<DaBuilderSheet> {
           value: _preAcrobatic,
           onChanged: (on) => setState(() => _preAcrobatic = on),
         ),
+      if (widget.togetherDbs case final dbs?
+          when _criteria.contains(DaCriterion.db) &&
+              available.contains(DaCriterion.db))
+        ..._togetherSection(context, dbs),
       if (!_manual && chosen < needed)
         Padding(
           padding: const EdgeInsets.only(top: 4),
@@ -359,6 +432,60 @@ class _DaBuilderSheetState extends ConsumerState<DaBuilderSheet> {
             ),
           ),
         ),
+    ];
+  }
+
+  /// "Done together with": which DB the DA is performed during. Choosing one
+  /// gives it the DA's music time and floor cell.
+  List<Widget> _togetherSection(BuildContext context, List<DaTogetherDb> dbs) {
+    Widget option(
+      DaTogetherChoice? choice, {
+      required Widget title,
+      Widget? subtitle,
+      Widget? leading,
+      Key? key,
+    }) {
+      final selected = _together == choice;
+      return ListTile(
+        key: key,
+        contentPadding: EdgeInsets.zero,
+        dense: true,
+        selected: selected,
+        leading: SizedBox(width: 44, child: Center(child: leading)),
+        title: title,
+        subtitle: subtitle,
+        trailing: Icon(
+          selected ? Icons.check_circle : Icons.circle_outlined,
+          color: selected ? null : Theme.of(context).colorScheme.outline,
+        ),
+        onTap: () => setState(() => _together = choice),
+      );
+    }
+
+    return [
+      const _Header('Done together with'),
+      option(
+        null,
+        key: const ValueKey('da-together-later'),
+        leading: const Icon(Icons.schedule),
+        title: const Text('Choose later'),
+        subtitle: const Text('Pair it on the timeline'),
+      ),
+      for (final (i, db) in dbs.indexed)
+        option(
+          DaWithDb(i),
+          key: ValueKey('da-together-db-$i'),
+          leading: db.symbol,
+          title: Text(db.title),
+          subtitle: db.subtitle == null ? null : Text(db.subtitle!),
+        ),
+      option(
+        const DaWithNewDb(),
+        key: const ValueKey('da-together-new'),
+        leading: const Icon(Icons.add),
+        title: const Text('A new DB'),
+        subtitle: const Text('Choose it next, at the same moment'),
+      ),
     ];
   }
 }

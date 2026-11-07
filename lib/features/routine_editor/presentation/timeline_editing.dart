@@ -15,6 +15,17 @@ extension RoutineTimelineEditing on RoutineController {
         return routine.withCell(kind, index, cell).withTime(kind, index, time);
       });
 
+  /// Marks the item of [kind] at [index] at [time], and at [cell] when
+  /// given (otherwise its cell stays), e.g. a DB done together with a DA.
+  void markAt(TimelineKind kind, int index, Duration time, [FloorCell? cell]) =>
+      updateRoutine((routine) {
+        // The cell first: setting the time can move the item.
+        final placed = cell == null
+            ? routine
+            : routine.withCell(kind, index, cell);
+        return placed.withTime(kind, index, time);
+      });
+
   void setCell(TimelineKind kind, int index, FloorCell? cell) =>
       updateRoutine((routine) => routine.withCell(kind, index, cell));
 
