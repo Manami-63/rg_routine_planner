@@ -31,8 +31,16 @@ provisional difficulty totals.
 
 Flutter, Riverpod 3 (non-generated APIs: `Provider`, `FutureProvider`,
 `NotifierProvider`), go_router, Material 3, Drift (SQLite). Code generation
-is used only for Drift; no Freezed or Riverpod generators. A Laravel/MySQL
-backend is planned later; none exists yet.
+is used only for Drift; no Freezed or Riverpod generators. A Firebase
+backend is planned later (none exists yet; not Laravel/MySQL any more):
+optional sign-in (Firebase Auth, with Sign in with Apple and Google) and
+routine backup/sync (Firestore, one document per routine, close to the
+`RoutineFile` JSON). The app stays offline-first: Drift on the device is
+the source of truth, the account is optional, and only the repository
+layer talks to Firebase. Music stays on the device at first (storage cost
+and copyright). Wait for beta feedback before building it, and update the
+privacy policy (`docs/privacy.html`, store data forms) before any version
+that sends data ships.
 
 ## Architecture
 
@@ -50,7 +58,8 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
 ## Persistence
 
 - `lib/core/database/`: Drift `AppDatabase` and tables. Table/column names
-  mirror a future MySQL schema. Dates are stored as ISO-8601 text
+  are relational for Drift (the backend will be Firestore, see Stack).
+  Ids are stable strings (UUIDs, catalogue ids). Dates are stored as ISO-8601 text
   (`build.yaml`), always in UTC (the repository converts); the UI shows
   local time. Bump `schemaVersion` and add a migration on any change, with a
   test in `test/core/database/` that upgrades a hand-written old schema.
@@ -195,7 +204,7 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   (shared_preferences `welcome_version`, not the database) and overrides
   `startWithWelcomeProvider`. Bump `welcomeVersion` to show it again once.
   Home's "How it works" opens it again. No login (planned as optional with
-  the backend). Tests override `introVideoProvider` and use
+  the Firebase backend). Tests override `introVideoProvider` and use
   `FakeWelcomeStore`.
 - `routineControllerProvider(id)` is an auto-disposing async family: loads
   by id, saves every change (name and notes debounced 500 ms), flushes a pending save
