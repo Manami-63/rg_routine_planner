@@ -104,6 +104,8 @@ class DaBuilderSheet extends ConsumerStatefulWidget {
     return showModalBottomSheet<DaTogetherChoice>(
       context: context,
       isScrollControlled: true,
+      // Stays below the status bar when the content is tall.
+      useSafeArea: true,
       showDragHandle: true,
       builder: (context) => DaBuilderSheet(
         routineId: routineId,

@@ -24,8 +24,9 @@ final musicPickerProvider = Provider<MusicPicker>(
   (ref) => const FilePickerMusicPicker(),
 );
 
-/// The player of an open routine. Released (and the music stopped) when
-/// nothing shows the music any more.
+/// The player of an open routine. The routine page keeps it (and the loaded
+/// track) while it is open; released, and the music stopped, when the page
+/// closes.
 final musicPlayerProvider = Provider.autoDispose.family<MusicPlayer, String>((
   ref,
   routineId,
