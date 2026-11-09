@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rg_routine_planner/core/scoring/apparatus.dart';
+import 'package:rg_routine_planner/core/scoring/score.dart';
 import 'package:rg_routine_planner/features/da_calculator/domain/da_element.dart';
+import 'package:rg_routine_planner/features/db_calculator/domain/db_element.dart';
+import 'package:rg_routine_planner/features/db_calculator/domain/db_element_options.dart';
 import 'package:rg_routine_planner/features/db_calculator/presentation/element_picker_screen.dart';
 import 'package:rg_routine_planner/features/music/domain/routine_music.dart';
 import 'package:rg_routine_planner/features/routine_editor/presentation/routine_screen.dart';
@@ -236,6 +239,59 @@ void main() {
       final saved = routines.routines[testRoutineId]!;
       expect(saved.da.times, [const Duration(seconds: 15)]);
       expect(saved.db.elementTimes, [null]);
+    });
+
+    testWidgets('a DB already together with a DA is not offered', (
+      tester,
+    ) async {
+      final empty = emptyWithMusic();
+      const at10 = Duration(seconds: 10);
+      final routine = empty
+          .withDb(
+            empty.db
+                .withElementAdded(testJump)
+                .withElementAdded(testBalance)
+                .withElementTimeAt(0, at10),
+          )
+          .withDa(
+            empty.da
+                .withElementAdded(DaElement(base: testRoll))
+                .withElementTimeAt(0, at10),
+          );
+      final (routines, music) = await pumpMusicTab(tester, routine: routine);
+      await music.player.seek(const Duration(seconds: 15));
+
+      await addDaDuringDb(tester, 'da-together-db-1');
+
+      final saved = routines.routines[testRoutineId]!;
+      expect(saved.db.elementTimes, [at10, const Duration(seconds: 15)]);
+    });
+
+    testWidgets('a wide DB symbol fits its row', (tester) async {
+      final empty = emptyWithMusic();
+      const fouette = DbElement(
+        id: 'fouette',
+        name: 'Test Fouetté',
+        group: DbElementGroup.rotation,
+        value: Score.hundredths(10),
+        rulesetId: 'test-v1',
+        canHaveCycles: true,
+        symbolPath: 'M10 10L90 90',
+      );
+      final (_, music) = await pumpMusicTab(
+        tester,
+        routine: empty.withDb(
+          empty.db.withElementAdded(
+            fouette,
+            const DbElementOptions(rotationCycles: '2121212121'),
+          ),
+        ),
+      );
+      await music.player.seek(const Duration(seconds: 15));
+
+      await addDaDuringDb(tester, 'da-together-db-0');
+
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('Add R builds a risk at the tapped time', (tester) async {

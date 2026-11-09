@@ -17,8 +17,15 @@ import '../da_routine_providers.dart';
 /// from the music: the DA has a time the DB can share. The DA feature does
 /// not know DB, so the caller describes each one.
 class DaTogetherDb {
-  const DaTogetherDb({required this.title, this.subtitle, this.symbol});
+  const DaTogetherDb({
+    required this.index,
+    required this.title,
+    this.subtitle,
+    this.symbol,
+  });
 
+  /// The DB's position in the routine (choosing it gives [DaWithDb]).
+  final int index;
   final String title;
   final String? subtitle;
   final Widget? symbol;
@@ -30,7 +37,7 @@ sealed class DaTogetherChoice {
   const DaTogetherChoice();
 }
 
-/// One of the offered [DaTogetherDb]s, at [index].
+/// The routine's DB at [index] (see [DaTogetherDb.index]).
 final class DaWithDb extends DaTogetherChoice {
   const DaWithDb(this.index);
 
@@ -453,7 +460,13 @@ class _DaBuilderSheetState extends ConsumerState<DaBuilderSheet> {
         contentPadding: EdgeInsets.zero,
         dense: true,
         selected: selected,
-        leading: SizedBox(width: 44, child: Center(child: leading)),
+        // Wide symbols (a Fouetté with its cycles) shrink to fit.
+        leading: SizedBox(
+          width: 44,
+          child: Center(
+            child: FittedBox(fit: BoxFit.scaleDown, child: leading),
+          ),
+        ),
         title: title,
         subtitle: subtitle,
         trailing: Icon(
@@ -473,10 +486,10 @@ class _DaBuilderSheetState extends ConsumerState<DaBuilderSheet> {
         title: const Text('Choose later'),
         subtitle: const Text('Pair it on the timeline'),
       ),
-      for (final (i, db) in dbs.indexed)
+      for (final db in dbs)
         option(
-          DaWithDb(i),
-          key: ValueKey('da-together-db-$i'),
+          DaWithDb(db.index),
+          key: ValueKey('da-together-db-${db.index}'),
           leading: db.symbol,
           title: Text(db.title),
           subtitle: db.subtitle == null ? null : Text(db.subtitle!),
