@@ -141,17 +141,36 @@ void main() {
       ),
     );
 
-    expect(
-      find.textContaining('Not valid: identical repetition'),
-      findsOneWidget,
-    );
     expect(find.textContaining('Not a DA: needs 2 criteria'), findsOneWidget);
     expect(find.textContaining('Not a DA: base for Ball'), findsOneWidget);
-    // The repetition uses the 2nd counted DA, so the throw does not count.
+    // The 2nd roll uses the 2nd counted DA, so the throw does not count.
     expect(find.textContaining('Not counted'), findsOneWidget);
     expect(find.text('3 DA · 1 not counted (first 2 count)'), findsOneWidget);
-    expect(subtotal(tester), '0.30');
+    expect(subtotal(tester), '0.60');
     expect(breakdown(tester), '2 of 3 DA counted');
+  });
+
+  testWidgets('the same base and criteria counts, with a notice', (
+    tester,
+  ) async {
+    await pumpWith(tester, [
+      DaElement(base: testRoll, criteria: twoCriteria),
+      DaElement(base: testThrow, criteria: twoCriteria),
+      DaElement(base: testRoll, criteria: twoCriteria),
+    ]);
+
+    expect(
+      find.textContaining('Same as DA 1: valid only if performed differently'),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('da-same-notice')),
+        matching: find.textContaining('DA 3 (as DA 1) has the same base'),
+      ),
+      findsOneWidget,
+    );
+    expect(subtotal(tester), '0.80');
   });
 
   testWidgets('warns about more than 3 DA in a row on the floor', (

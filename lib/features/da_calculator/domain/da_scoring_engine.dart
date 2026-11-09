@@ -35,9 +35,6 @@ enum DaStatus {
   unknownBase,
 
   // An attempt that is not valid: counted in order, worth nothing.
-  /// The same combination of base(s) and criteria as an earlier DA (#5.6.2).
-  repetition,
-
   /// A 4th (or later) DA with a pre-acrobatic element as "rotation"
   /// (#5.4.7).
   tooManyPreAcrobatic;
@@ -45,7 +42,7 @@ enum DaStatus {
   /// Whether it is a DA at all (valid or not), so it takes one of the
   /// counted DA in chronological order (#5.2.1).
   bool get isDa => switch (this) {
-    valid || notChosen || repetition || tooManyPreAcrobatic => true,
+    valid || notChosen || tooManyPreAcrobatic => true,
     tooFewCriteria || otherApparatus || unknownBase => false,
   };
 }
@@ -57,6 +54,7 @@ class DaScoreResult {
     required this.statuses,
     required this.counted,
     required this.floorWarnings,
+    required this.sameAsEarlier,
     required this.countLimitApplied,
     required this.ruleset,
     required this.notices,
@@ -78,6 +76,13 @@ class DaScoreResult {
   /// (#5.4.6). Only a warning: the app cannot see whether the gymnast
   /// leaves the floor in between.
   final Set<int> floorWarnings;
+
+  /// For each DA with the same base(s) and criteria as an earlier DA, the
+  /// position of the first such DA. Only a reminder: an identical
+  /// repetition is not valid (#5.6.2), but the app cannot see how a DA is
+  /// performed (direction, level, plane, body part make it different,
+  /// #3.6), so it still counts.
+  final Map<int, int> sameAsEarlier;
 
   /// Whether a level limited how many DA count.
   final bool countLimitApplied;
@@ -128,9 +133,10 @@ abstract interface class DaScoringEngine {
 /// Values DA by their bases and applies the rules the app can see.
 ///
 /// Rules from the FIG Code of Points 2025-2028: criteria per base (#5.1.3,
-/// #5.4.2), value (#5.3), chronological count (#5.2.1), identical
-/// repetition (#5.6.2) and pre-acrobatic elements (#5.4.7). Results are
-/// always marked provisional.
+/// #5.4.2), value (#5.3), chronological count (#5.2.1) and pre-acrobatic
+/// elements (#5.4.7). Same base(s) and criteria as an earlier DA (#5.6.2)
+/// is only flagged ([DaScoreResult.sameAsEarlier]). Results are always
+/// marked provisional.
 class ProvisionalDaScoringEngine implements DaScoringEngine {
   const ProvisionalDaScoringEngine({required this.ruleset});
 
@@ -185,12 +191,10 @@ class ProvisionalDaScoringEngine implements DaScoringEngine {
 
     final statuses = <DaStatus>[];
     var preAcrobatic = 0;
-    for (final (i, element) in elements.indexed) {
+    for (final element in elements) {
       final status = _statusOf(element, apparatus);
       if (status != DaStatus.valid || element.manualValue != null) {
         statuses.add(status);
-      } else if (_repeatsEarlier(elements, statuses, i)) {
-        statuses.add(DaStatus.repetition);
       } else if (element.usesPreAcrobatic && ++preAcrobatic > maxPreAcrobatic) {
         statuses.add(DaStatus.tooManyPreAcrobatic);
       } else {
@@ -214,6 +218,7 @@ class ProvisionalDaScoringEngine implements DaScoringEngine {
       statuses: List.unmodifiable(statuses),
       counted: Set.unmodifiable(counted),
       floorWarnings: Set.unmodifiable(_floorWarnings(elements, statuses)),
+      sameAsEarlier: Map.unmodifiable(_sameAsEarlier(elements, statuses)),
       countLimitApplied: maxCounted != null,
       ruleset: ruleset,
       notices: {
@@ -246,18 +251,28 @@ class ProvisionalDaScoringEngine implements DaScoringEngine {
         : DaStatus.valid;
   }
 
-  /// Whether element [index] repeats an earlier DA identically.
-  static bool _repeatsEarlier(
+  /// Valid DA (without a manual value, which replaces the checks) with the
+  /// same base(s) and criteria as an earlier DA, to that DA's position.
+  static Map<int, int> _sameAsEarlier(
+    List<DaElement> elements,
+    List<DaStatus> statuses,
+  ) => {
+    for (final (i, element) in elements.indexed)
+      if (statuses[i] == DaStatus.valid && element.manualValue == null)
+        i: ?_firstSame(elements, statuses, i),
+  };
+
+  static int? _firstSame(
     List<DaElement> elements,
     List<DaStatus> statuses,
     int index,
   ) {
     for (var i = 0; i < index; i++) {
       if (statuses[i].isDa && elements[index].isIdenticalTo(elements[i])) {
-        return true;
+        return i;
       }
     }
-    return false;
+    return null;
   }
 
   /// DA from the 4th on in a run of consecutive DA on the floor.

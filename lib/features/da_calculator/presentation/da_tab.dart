@@ -35,6 +35,9 @@ class DaTab extends ConsumerWidget {
     final daCount = ref.watch(
       daScoreResultProvider(routineId).select((r) => r.daCount),
     );
+    final sameAsEarlier = ref.watch(
+      daScoreResultProvider(routineId).select((r) => r.sameAsEarlier),
+    );
     final onFloorWarning = ref.watch(
       daScoreResultProvider(routineId)
           .select((r) => r.floorWarnings.isNotEmpty),
@@ -93,6 +96,7 @@ class DaTab extends ConsumerWidget {
                   count: daCount,
                 ),
                 if (onFloorWarning) const _OnFloorNotice(),
+                if (sameAsEarlier.isNotEmpty) _SameDaNotice(sameAsEarlier),
               ],
             ),
           ),
@@ -151,6 +155,41 @@ class _OnFloorNotice extends StatelessWidget {
             'More than 3 DA in a row on the floor. Unless you leave the '
             'floor in between, the 4th onwards is not valid: you may get a '
             '${ProvisionalDaScoringEngine.onFloorPenalty.format()} penalty.',
+      ),
+    );
+  }
+}
+
+/// DA with the same base(s) and criteria as an earlier one. An identical
+/// repetition is not valid (#5.6.2), but the app cannot see how a DA is
+/// performed, so they still count.
+class _SameDaNotice extends StatelessWidget {
+  const _SameDaNotice(this.sameAsEarlier);
+
+  /// See [DaScoreResult.sameAsEarlier].
+  final Map<int, int> sameAsEarlier;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final pairs = [
+      for (final MapEntry(key: later, value: earlier) in sameAsEarlier.entries)
+        'DA ${later + 1} (as DA ${earlier + 1})',
+    ];
+    final one = pairs.length == 1;
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: LevelNotice(
+        key: const ValueKey('da-same-notice'),
+        icon: Icons.info_outline,
+        background: colors.surfaceContainerHighest,
+        foreground: colors.onSurfaceVariant,
+        message:
+            '${pairs.join(', ')} ${one ? 'has' : 'have'} the same base and '
+            'criteria as an earlier DA. ${one ? 'It counts' : 'They count'} '
+            'only if performed differently: another direction or level '
+            '(spirals), plane or body part. If one is identical, give it a '
+            'manual value of 0.00.',
       ),
     );
   }

@@ -52,8 +52,9 @@ class DaElement {
             : criterion.shortLabel,
   ].join(', ');
 
-  /// Whether [other] is the same combination of base(s) and criteria, i.e.
-  /// an identical repetition (#5.6.2). Custom DA are never identical.
+  /// Whether [other] is the same combination of base(s) and criteria. It
+  /// is an identical repetition (#5.6.2) only if also performed the same
+  /// way, which the app cannot see (#3.6). Custom DA are never identical.
   bool isIdenticalTo(DaElement other) =>
       !isCustom &&
       base.id == other.base.id &&

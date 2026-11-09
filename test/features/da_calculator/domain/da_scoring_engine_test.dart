@@ -100,23 +100,35 @@ void main() {
   });
 
   group('validity', () {
-    test('an identical repetition is not valid but uses a DA (#5.6.2)', () {
+    test('the same base and criteria is flagged but counts (#5.6.2, #3.6)', () {
+      // The app cannot see whether it is performed differently (e.g. a
+      // spiral at another level), so it stays valid.
       final result = calculate([
         da(testRoll),
         da(testRoll, const {ovf, rotation}),
         da(testRoll),
         da(testThrow),
+        da(testRoll),
       ], maxCounted: 3);
 
-      expect(result.statuses, [
-        DaStatus.valid,
-        DaStatus.valid,
-        DaStatus.repetition,
-        DaStatus.valid,
-      ]);
-      // The repetition takes the 3rd counted DA, so the throw is not counted.
+      expect(result.statuses, everyElement(DaStatus.valid));
+      expect(result.sameAsEarlier, {2: 0, 4: 0});
       expect(result.counted, {0, 1, 2});
-      expect(result.subtotal, const Score.hundredths(60));
+      expect(result.subtotal, const Score.hundredths(90));
+    });
+
+    test('a manual value is never flagged as the same', () {
+      final result = calculate([
+        da(testRoll),
+        DaElement(
+          base: testRoll,
+          criteria: const {ovf, db},
+          manualValue: Score.zero,
+        ),
+      ]);
+
+      expect(result.sameAsEarlier, isEmpty);
+      expect(result.subtotal, testRoll.value);
     });
 
     test('only 3 DA with a pre-acrobatic rotation are valid (#5.4.7)', () {
