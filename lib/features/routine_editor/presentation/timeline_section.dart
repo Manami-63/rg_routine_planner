@@ -160,64 +160,70 @@ class _TimelineSectionState extends ConsumerState<TimelineSection> {
   }
 
   /// The routine's DBs, for a DA "During a DB" to name the one it is done
-  /// together with.
-  List<DaTogetherDb> get _togetherDbs {
-    final db = ref.read(routineProvider(routineId)).db;
+  /// together with. DBs already together with another DA are left out;
+  /// [ownPartner] (the DB of the DA being chosen again) stays.
+  List<DaTogetherDb> _togetherDbs({int? ownPartner}) {
+    final routine = ref.read(routineProvider(routineId));
+    final db = routine.db;
     return [
       for (final (i, element) in db.elements.indexed)
-        DaTogetherDb(
-          title: 'DB ${i + 1} · ${element.name}',
-          subtitle: switch (db.elementTimes[i]) {
-            final time? => 'At ${formatTimelineTime(time)}: moves to the DA',
-            null => 'Not marked yet',
-          },
-          symbol: switch (element.symbolPath) {
-            final path? => DbSymbol(
-              path,
-              label: element.name,
-              cycles: db.elementOptions[i].rotationCycles,
-              size: 22,
-            ),
-            null => null,
-          },
-        ),
+        if (i == ownPartner || routine.partnerOf(TimelineKind.db, i) == null)
+          DaTogetherDb(
+            index: i,
+            title: 'DB ${i + 1} · ${element.name}',
+            subtitle: switch (db.elementTimes[i]) {
+              final time? => 'At ${formatTimelineTime(time)}: moves to the DA',
+              null => 'Not marked yet',
+            },
+            symbol: switch (element.symbolPath) {
+              final path? => DbSymbol(
+                path,
+                label: element.name,
+                cycles: db.elementOptions[i].rotationCycles,
+                size: 22,
+              ),
+              null => null,
+            },
+          ),
     ];
   }
 
   /// Opens the screen that adds one DB, risk or DA. A DA can come back
   /// with the DB it is done together with ([DaTogetherChoice]).
-  Future<Object?> _showPicker(TimelineKind kind, {int? replaceIndex}) =>
-      switch (kind) {
-        TimelineKind.db => ElementPickerScreen.show(
-          context,
-          routineId: routineId,
-          addOne: true,
-          replaceIndex: replaceIndex,
-        ),
-        TimelineKind.risk => RiskBuilderSheet.show(
-          context,
-          routineId: routineId,
-          catalogue: ref.read(riskCatalogueProvider).requireValue,
-          index: replaceIndex,
-        ),
-        TimelineKind.da => DaBuilderSheet.show(
-          context,
-          routineId: routineId,
-          bases: _daBases,
-          index: replaceIndex,
-          initial: replaceIndex == null
-              ? null
-              : ref.read(routineProvider(routineId)).da.elements[replaceIndex],
-          togetherDbs: _togetherDbs,
-          initialTogetherDb: replaceIndex == null
-              ? null
-              : ref
-                    .read(routineProvider(routineId))
-                    .partnerOf(TimelineKind.da, replaceIndex),
-        ),
-        // S are added directly, with nothing to choose.
-        TimelineKind.danceStep => Future.value(),
-      };
+  Future<Object?> _showPicker(TimelineKind kind, {int? replaceIndex}) {
+    final partner = kind != TimelineKind.da || replaceIndex == null
+        ? null
+        : ref
+              .read(routineProvider(routineId))
+              .partnerOf(TimelineKind.da, replaceIndex);
+    return switch (kind) {
+      TimelineKind.db => ElementPickerScreen.show(
+        context,
+        routineId: routineId,
+        addOne: true,
+        replaceIndex: replaceIndex,
+      ),
+      TimelineKind.risk => RiskBuilderSheet.show(
+        context,
+        routineId: routineId,
+        catalogue: ref.read(riskCatalogueProvider).requireValue,
+        index: replaceIndex,
+      ),
+      TimelineKind.da => DaBuilderSheet.show(
+        context,
+        routineId: routineId,
+        bases: _daBases,
+        index: replaceIndex,
+        initial: replaceIndex == null
+            ? null
+            : ref.read(routineProvider(routineId)).da.elements[replaceIndex],
+        togetherDbs: _togetherDbs(ownPartner: partner),
+        initialTogetherDb: partner,
+      ),
+      // S are added directly, with nothing to choose.
+      TimelineKind.danceStep => Future.value(),
+    };
+  }
 
   /// The DA bases of the routine's apparatus.
   List<DaBase> get _daBases {
