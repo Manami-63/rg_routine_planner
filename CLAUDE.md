@@ -273,9 +273,14 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   with 1 criterion during both, worth the highest base + 0.10 (#5.1.3,
   #5.3). `DaScoringEngine.calculate` gives each entry a `DaStatus`: not a
   DA (too few criteria, other apparatus, unknown base) uses no counted DA;
-  not valid (identical repetition #5.6.2, 4th pre-acrobatic rotation
-  #5.4.7) uses one but adds nothing. The first N DA count (#5.2.1). More
-  than 3 in a row on the floor is only a warning (#5.4.6). A manual value
+  not valid (4th pre-acrobatic rotation #5.4.7) uses one but adds
+  nothing. The first N DA count (#5.2.1). More than 3 in a row on the
+  floor is only a warning (#5.4.6), and so is the same base(s) and
+  criteria as an earlier DA (`sameAsEarlier`): an identical repetition is
+  not valid (#5.6.2), but direction, level, plane or body part make it
+  different (#3.6; e.g. spirals behind the head and behind the back),
+  which the app cannot see, so it counts. A truly identical one gets a
+  manual value of 0.00. A manual value
   (or a custom DA) replaces the value and the checks.
 - Competition levels live in `features/levels/` (shared by DB and DA).
   `LevelRequirements` has DB, risk (R) and DA `CountLimit`s plus

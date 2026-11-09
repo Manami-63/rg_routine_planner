@@ -26,7 +26,6 @@ String? describeDaStatus(
   DaStatus.otherApparatus =>
     'Not a DA: base for ${element.base.apparatus?.label ?? 'another apparatus'}',
   DaStatus.unknownBase => 'Not a DA: no longer in the catalogue',
-  DaStatus.repetition => 'Not valid: identical repetition',
   DaStatus.tooManyPreAcrobatic =>
     'Not valid: more than 3 pre-acrobatic rotations',
 };
@@ -78,6 +77,8 @@ class DaListSection extends ConsumerWidget {
           if (status.isDa && !counted) 'Not counted',
           if (result.floorWarnings.contains(index))
             '4th+ in a row on the floor',
+          if (result.sameAsEarlier[index] case final earlier?)
+            'Same as DA ${earlier + 1}: valid only if performed differently',
         ].join(' · ');
         final valid = status == DaStatus.valid;
         return Material(
