@@ -262,4 +262,60 @@ void main() {
     expect(RoutineFile.fileNameFor('a/b:c'), 'a b c.rgroutine');
     expect(RoutineFile.fileNameFor(' / '), 'Routine.rgroutine');
   });
+
+  group('backup', () {
+    test('a backup line keeps the id and dates', () {
+      final edited = routine().withUpdatedAt(now);
+      final line = RoutineFile.backupLine(edited);
+
+      expect(line, isNot(contains('\n')));
+      final restored = RoutineFile.decodeBackupLine(line).routine;
+      expect(restored.id, 'r1');
+      expect(restored.createdAt, created);
+      expect(restored.updatedAt, now);
+      expect(restored.name, 'Hoop');
+      // The rest is the same as a routine file.
+      expect(
+        RoutineFile.encode(restored.withMusic(edited.music)),
+        RoutineFile.encode(edited),
+      );
+    });
+
+    test('the header gives the count; a routine file is not a backup', () {
+      expect(
+        RoutineFile.backupCount(RoutineFile.backupHeader(count: 3, now: now)),
+        3,
+      );
+      expect(RoutineFile.backupCount(RoutineFile.encode(routine())), isNull);
+      expect(RoutineFile.backupCount('not json'), isNull);
+    });
+
+    test('a backup from a newer app asks for an update', () {
+      expect(
+        () => RoutineFile.backupCount(
+          '{"app":"rg_routine_planner","format":99,"kind":"backup",'
+          '"count":1}',
+        ),
+        throwsA(isA<NewerRoutineFileException>()),
+      );
+    });
+
+    test('a header or a line without an id is not a routine', () {
+      expect(
+        () => decode(RoutineFile.backupHeader(count: 1, now: now)),
+        throwsA(isA<InvalidRoutineFileException>()),
+      );
+      expect(
+        () => RoutineFile.decodeBackupLine(RoutineFile.encode(routine())),
+        throwsA(isA<InvalidRoutineFileException>()),
+      );
+    });
+
+    test('the file name has the day', () {
+      expect(
+        RoutineFile.backupFileNameFor(DateTime(2026, 11, 9, 23, 59)),
+        'RG Routine Lab backup 2026-11-09.rgroutine',
+      );
+    });
+  });
 }

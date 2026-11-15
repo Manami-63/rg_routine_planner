@@ -10,10 +10,13 @@ import '../data/routine_repository.dart';
 import '../domain/routine.dart';
 import '../../routine_editor/presentation/routine_score_providers.dart';
 import 'routine_actions.dart';
+import 'routine_backup.dart';
 import 'routine_details_form.dart';
 import 'routine_filter.dart';
 import 'routine_filter_bar.dart';
 import 'routine_providers.dart';
+
+enum _BackupAction { backUp, restore }
 
 /// "My routines": lists saved routines and creates new ones.
 class RoutinesScreen extends ConsumerWidget {
@@ -31,6 +34,30 @@ class RoutinesScreen extends ConsumerWidget {
             tooltip: 'Import routine',
             icon: const Icon(Icons.file_download_outlined),
             onPressed: () => importRoutine(context, ref),
+          ),
+          PopupMenuButton<_BackupAction>(
+            tooltip: 'Backup',
+            onSelected: (action) => switch (action) {
+              _BackupAction.backUp => backUpAllRoutines(context, ref),
+              // A backup is imported like a routine file.
+              _BackupAction.restore => importRoutine(context, ref),
+            },
+            itemBuilder: (context) => const [
+              PopupMenuItem(
+                value: _BackupAction.backUp,
+                child: ListTile(
+                  leading: Icon(Icons.save_alt),
+                  title: Text('Back up all routines'),
+                ),
+              ),
+              PopupMenuItem(
+                value: _BackupAction.restore,
+                child: ListTile(
+                  leading: Icon(Icons.restore),
+                  title: Text('Restore a backup'),
+                ),
+              ),
+            ],
           ),
         ],
       ),

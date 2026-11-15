@@ -1,30 +1,36 @@
+import 'dart:convert';
 import 'dart:ui';
 
 import 'package:rg_routine_planner/features/routines/data/routine_file_transfer.dart';
 
-/// Records what is shared and returns [next] once when picking.
+/// Records what is shared and returns [next] once when picking. Contents
+/// are the file's text: its lines joined with newlines.
 class FakeRoutineFileTransfer implements RoutineFileTransfer {
   String? sharedFileName;
   String? sharedContents;
   String? next;
   Object? shareError;
 
+  /// The lines of [sharedContents].
+  List<String> get sharedLines => const LineSplitter().convert(sharedContents!);
+
   @override
   Future<void> share({
     required String fileName,
-    required String contents,
+    required Stream<String> lines,
     required Rect origin,
   }) async {
     if (shareError case final error?) throw error;
+    final written = await lines.toList();
     sharedFileName = fileName;
-    sharedContents = contents;
+    sharedContents = written.join('\n');
   }
 
   @override
-  Future<String?> pick() async {
+  Future<Stream<String>?> pick() async {
     final picked = next;
     next = null;
-    return picked;
+    return picked == null ? null : _lines(picked);
   }
 
   void Function(String path)? fileOpened;
@@ -36,5 +42,8 @@ class FakeRoutineFileTransfer implements RoutineFileTransfer {
   void onFileOpened(void Function(String path) handler) => fileOpened = handler;
 
   @override
-  Future<String> readOpened(String path) async => opened.remove(path)!;
+  Stream<String> readOpened(String path) => _lines(opened.remove(path)!);
+
+  static Stream<String> _lines(String contents) =>
+      Stream.fromIterable(const LineSplitter().convert(contents));
 }

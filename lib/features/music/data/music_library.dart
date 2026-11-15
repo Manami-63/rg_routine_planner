@@ -27,6 +27,9 @@ abstract interface class MusicLibrary {
   /// The full path of [music], or `null` if its file is missing.
   Future<String?> pathOf(RoutineMusic music);
 
+  /// The size in bytes of the file of [music], or `null` if it is missing.
+  Future<int?> sizeOf(RoutineMusic music);
+
   /// Deletes the file of [music], if it exists.
   Future<void> delete(RoutineMusic music);
 }
@@ -80,6 +83,12 @@ class FileMusicLibrary implements MusicLibrary {
   Future<String?> pathOf(RoutineMusic music) async {
     final file = await _file(music.fileName);
     return await file.exists() ? file.path : null;
+  }
+
+  @override
+  Future<int?> sizeOf(RoutineMusic music) async {
+    final file = await _file(music.fileName);
+    return await file.exists() ? file.length() : null;
   }
 
   @override

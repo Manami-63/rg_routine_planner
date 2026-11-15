@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -9,32 +10,37 @@ import 'package:share_plus/share_plus.dart';
 import '../domain/routine_file.dart';
 
 /// Sends routine files to other apps and reads them back.
+///
+/// Files go line by line ([RoutineFile]: a backup has one routine per
+/// line), so a backup with music is never held in memory at once.
 abstract interface class RoutineFileTransfer {
-  /// Offers [contents] as a file called [fileName]. [origin] is where the
-  /// share sheet points on tablets.
+  /// Offers the [lines] as a file called [fileName]. [origin] is where the
+  /// share sheet points on tablets. [lines] is read as it is written, so
+  /// it can load one routine at a time.
   Future<void> share({
     required String fileName,
-    required String contents,
+    required Stream<String> lines,
     required Rect origin,
   });
 
-  /// The contents of the file the user chose, or `null` if they cancelled.
-  Future<String?> pick();
+  /// The lines of the file the user chose, or `null` if they cancelled.
+  Future<Stream<String>?> pick();
 
   /// Calls [handler] with the path of each routine file opened from another
   /// app, including one that launched this app.
   void onFileOpened(void Function(String path) handler);
 
-  /// The contents of an opened file at [path], which is then removed.
-  Future<String> readOpened(String path);
+  /// The lines of an opened file at [path], which is removed once read.
+  Stream<String> readOpened(String path);
 }
 
 /// Uses the system share sheet and file picker.
 class SystemRoutineFileTransfer implements RoutineFileTransfer {
   const SystemRoutineFileTransfer();
 
-  /// Far above a routine with its music; files come from other people.
-  static const maxBytes = 100 * 1024 * 1024;
+  /// Far above a backup of many routines with their music; files can come
+  /// from other people.
+  static const maxBytes = 1024 * 1024 * 1024;
 
   /// Implemented in `AppDelegate.swift` and `MainActivity.kt`.
   static const _opened = MethodChannel('rg_routine_planner/opened_files');
@@ -42,12 +48,21 @@ class SystemRoutineFileTransfer implements RoutineFileTransfer {
   @override
   Future<void> share({
     required String fileName,
-    required String contents,
+    required Stream<String> lines,
     required Rect origin,
   }) async {
     final folder = await getTemporaryDirectory();
     final file = File(p.join(folder.path, fileName));
-    await file.writeAsString(contents);
+    final sink = file.openWrite();
+    try {
+      await for (final line in lines) {
+        sink.writeln(line);
+        // Written out before the next routine (and its music) is loaded.
+        await sink.flush();
+      }
+    } finally {
+      await sink.close();
+    }
     await SharePlus.instance.share(
       ShareParams(
         files: [XFile(file.path, mimeType: 'application/json')],
@@ -57,19 +72,22 @@ class SystemRoutineFileTransfer implements RoutineFileTransfer {
   }
 
   // Any file type: an extension only this app knows cannot be filtered on
-  // iOS without registering it. `RoutineFile.decode` checks the contents.
+  // iOS without registering it. `RoutineFile` checks the contents.
   @override
-  Future<String?> pick() async {
+  Future<Stream<String>?> pick() async {
     final path = (await FilePicker.pickFile(type: FileType.any))?.path;
     if (path == null) return null;
-    return _read(File(path));
+    return _lines(File(path));
   }
 
-  Future<String> _read(File file) async {
+  Stream<String> _lines(File file) async* {
     if (await file.length() > maxBytes) {
       throw const InvalidRoutineFileException();
     }
-    return file.readAsString();
+    yield* file
+        .openRead()
+        .transform(utf8.decoder)
+        .transform(const LineSplitter());
   }
 
   @override
@@ -88,10 +106,10 @@ class SystemRoutineFileTransfer implements RoutineFileTransfer {
   }
 
   @override
-  Future<String> readOpened(String path) async {
+  Stream<String> readOpened(String path) async* {
     final file = File(path);
     try {
-      return await _read(file);
+      yield* _lines(file);
     } finally {
       try {
         await file.delete();

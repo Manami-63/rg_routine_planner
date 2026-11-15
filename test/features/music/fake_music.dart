@@ -44,6 +44,13 @@ class FakeMusicLibrary implements MusicLibrary {
       files.containsKey(music.fileName) ? '/music/${music.fileName}' : null;
 
   @override
+  Future<int?> sizeOf(RoutineMusic music) async =>
+      switch (files[music.fileName]) {
+        final contents? => utf8.encode(contents).length,
+        null => null,
+      };
+
+  @override
   Future<void> delete(RoutineMusic music) async => files.remove(music.fileName);
 }
 

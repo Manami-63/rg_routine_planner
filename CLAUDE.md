@@ -201,7 +201,17 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   another app imports it the same way (`RgRoutinePlannerApp` listens; the
   channel `rg_routine_planner/opened_files` is in `AppDelegate.swift`,
   `SceneDelegate.swift` and `MainActivity.kt`). `RoutineFileTransfer` wraps share_plus
-  and file_picker; widget tests use `FakeRoutineFileTransfer`.
+  and file_picker and moves files as streams of lines; widget tests use
+  `FakeRoutineFileTransfer`.
+- Backup (`routine_backup.dart`, My routines' Backup menu): "Back up all
+  routines" writes one `.rgroutine` file: a `backupHeader` line, then one
+  `backupLine` per routine (a routine file that also keeps its id and
+  dates). It asks whether the music goes in, with its size. Routines are
+  written and read one line at a time, so a backup with music never has to
+  fit in memory. Import (or opening the file) sees the header and calls
+  `restoreBackup`: a routine not on the device is added; one that is
+  there is replaced only if the backup's `updatedAt` is later, so restoring
+  never loses newer work; without music in the backup it keeps its own.
 - Welcome (`features/welcome/`): `WelcomeScreen` (`/welcome`) shows the
   intro video (`IntroVideo`, video_player, `assets/videos/intro.mp4`,
   muted and looping; an icon while the file is missing or cannot play;
