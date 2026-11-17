@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/app.dart';
+import 'features/guide/data/guide_store.dart';
+import 'features/guide/presentation/guide_providers.dart';
 import 'features/welcome/data/welcome_store.dart';
 import 'features/welcome/presentation/welcome_providers.dart';
 
@@ -12,9 +14,13 @@ Future<void> main() async {
   final session = await AudioSession.instance;
   await session.configure(const AudioSessionConfiguration.music());
   final showWelcome = await needsWelcome(const SharedPreferencesWelcomeStore());
+  final guide = await const SharedPreferencesGuideStore().load();
   runApp(
     ProviderScope(
-      overrides: [startWithWelcomeProvider.overrideWithValue(showWelcome)],
+      overrides: [
+        startWithWelcomeProvider.overrideWithValue(showWelcome),
+        initialGuideSettingsProvider.overrideWithValue(guide),
+      ],
       child: const RgRoutinePlannerApp(),
     ),
   );

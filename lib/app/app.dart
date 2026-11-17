@@ -33,7 +33,7 @@ class _RgRoutinePlannerAppState extends ConsumerState<RgRoutinePlannerApp> {
     if (messenger == null) return;
     importRoutineFile(
       ref,
-      () => ref.read(routineFileTransferProvider).readOpened(path),
+      () async => ref.read(routineFileTransferProvider).readOpened(path),
       messenger: messenger,
       router: ref.read(routerProvider),
     );

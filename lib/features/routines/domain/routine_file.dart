@@ -41,7 +41,11 @@ class SharedMusic {
   final List<int> bytes;
 }
 
-/// The routine file people send each other (JSON).
+/// The routine file people send each other (JSON on one line), and the
+/// backup of all routines in the same format: a [backupHeader] line, then
+/// one routine per line that keeps its id and dates ([backupLine]). Lines
+/// are read one at a time, so a backup with music never has to fit in
+/// memory at once.
 ///
 /// Like the database, it holds catalogue ids, never values. [decode] gives
 /// `.unknown(...)` placeholders that keep those ids; saving the routine and
@@ -54,6 +58,10 @@ abstract final class RoutineFile {
 
   static const _app = 'rg_routine_planner';
   static const _format = 1;
+  static const _backupKind = 'backup';
+
+  /// A header line is small; anything longer is a routine.
+  static const _maxHeaderLength = 1000;
 
   /// A safe file name for a routine called [name].
   static String fileNameFor(String name) {
@@ -61,7 +69,74 @@ abstract final class RoutineFile {
     return '${safe.isEmpty ? 'Routine' : safe}.$extension';
   }
 
-  static String encode(Routine routine, {SharedMusic? music}) {
+  /// The backup's file name, with the local [day] it was made.
+  static String backupFileNameFor(DateTime day) {
+    String two(int n) => n.toString().padLeft(2, '0');
+    return 'RG Routine Lab backup '
+        '${day.year}-${two(day.month)}-${two(day.day)}.$extension';
+  }
+
+  /// The first line of a backup of [count] routines made [now].
+  static String backupHeader({required int count, required DateTime now}) =>
+      jsonEncode({
+        'app': _app,
+        'format': _format,
+        'kind': _backupKind,
+        'count': count,
+        'createdAt': now.toUtc().toIso8601String(),
+      });
+
+  /// How many routines the backup starting with [firstLine] holds, or
+  /// `null` if it is not a backup (a routine file).
+  ///
+  /// Throws [NewerRoutineFileException] for a backup from a newer app.
+  static int? backupCount(String firstLine) {
+    if (firstLine.length > _maxHeaderLength) return null;
+    try {
+      final json = jsonDecode(firstLine);
+      if (json is! Map<String, dynamic> ||
+          json['app'] != _app ||
+          json['kind'] != _backupKind) {
+        return null;
+      }
+      if (_count(json['format'], min: 1) > _format) {
+        throw const NewerRoutineFileException();
+      }
+      return _count(json['count']);
+    } on FormatException {
+      return null;
+    } on TypeError {
+      throw const InvalidRoutineFileException();
+    }
+  }
+
+  /// One routine of a backup: like [encode], with its id and dates.
+  static String backupLine(Routine routine, {SharedMusic? music}) =>
+      _encode(routine, music: music, identity: true);
+
+  /// A routine line of a backup, with the id and dates it had.
+  ///
+  /// Throws [NewerRoutineFileException] or [InvalidRoutineFileException].
+  static ({Routine routine, SharedMusic? music}) decodeBackupLine(
+    String line,
+  ) => _decode(line, (json) {
+    final id = json['id'] as String;
+    if (id.isEmpty) throw const InvalidRoutineFileException();
+    return (
+      id: id,
+      createdAt: DateTime.parse(json['createdAt'] as String).toUtc(),
+      updatedAt: DateTime.parse(json['updatedAt'] as String).toUtc(),
+    );
+  });
+
+  static String encode(Routine routine, {SharedMusic? music}) =>
+      _encode(routine, music: music, identity: false);
+
+  static String _encode(
+    Routine routine, {
+    required SharedMusic? music,
+    required bool identity,
+  }) {
     final db = routine.db;
     final da = routine.da;
     final level = routine.level;
@@ -69,6 +144,11 @@ abstract final class RoutineFile {
     return jsonEncode({
       'app': _app,
       'format': _format,
+      if (identity) ...{
+        'id': routine.id,
+        'createdAt': routine.createdAt.toUtc().toIso8601String(),
+        'updatedAt': routine.updatedAt.toUtc().toIso8601String(),
+      },
       'name': routine.name,
       'rulesetId': routine.rulesetId,
       'apparatus': routine.apparatus?.name,
@@ -153,13 +233,20 @@ abstract final class RoutineFile {
     String text, {
     required String id,
     required DateTime now,
-  }) {
+  }) => _decode(text, (_) => (id: id, createdAt: now, updatedAt: now));
+
+  static ({Routine routine, SharedMusic? music}) _decode(
+    String text,
+    _Identity Function(Map<String, dynamic> json) identity,
+  ) {
     try {
       final json = jsonDecode(text) as Map<String, dynamic>;
       if (json['app'] != _app) throw const InvalidRoutineFileException();
       final format = _count(json['format'], min: 1);
       if (format > _format) throw const NewerRoutineFileException();
-      return (routine: _routine(json, id: id, now: now), music: _music(json));
+      // A backup's header is not a routine.
+      if (json['kind'] != null) throw const InvalidRoutineFileException();
+      return (routine: _routine(json, identity(json)), music: _music(json));
     } on FormatException {
       throw const InvalidRoutineFileException();
     } on TypeError {
@@ -167,11 +254,7 @@ abstract final class RoutineFile {
     }
   }
 
-  static Routine _routine(
-    Map<String, dynamic> json, {
-    required String id,
-    required DateTime now,
-  }) {
+  static Routine _routine(Map<String, dynamic> json, _Identity identity) {
     final rulesetId = json['rulesetId'] as String;
     final danceSteps = _maps(json['danceSteps']);
     final elements = _maps(json['elements']);
@@ -181,15 +264,15 @@ abstract final class RoutineFile {
     DaBase base(String id) => DaBase.unknown(id: id, rulesetId: rulesetId);
 
     return Routine(
-      id: id,
+      id: identity.id,
       name: json['name'] as String,
       apparatus: Apparatus.fromName(json['apparatus'] as String?),
       level: _level(json),
       notes: json['notes'] as String,
       danceStepTimes: [for (final s in danceSteps) _time(s)],
       danceStepCells: [for (final s in danceSteps) _cell(s)],
-      createdAt: now,
-      updatedAt: now,
+      createdAt: identity.createdAt,
+      updatedAt: identity.updatedAt,
       db: DbRoutine(
         rulesetId: rulesetId,
         elements: [
@@ -337,3 +420,5 @@ abstract final class RoutineFile {
       ? null
       : FloorCell.fromNumber(item['cell'] as int?);
 }
+
+typedef _Identity = ({String id, DateTime createdAt, DateTime updatedAt});

@@ -6,6 +6,7 @@ import '../../da_calculator/presentation/da_tab.dart';
 import '../../db_calculator/presentation/db_calculator_providers.dart';
 import '../../db_calculator/presentation/db_routine_providers.dart';
 import '../../db_calculator/presentation/db_tabs.dart';
+import '../../guide/presentation/guide_card.dart';
 import '../../routines/presentation/routine_actions.dart';
 import '../../routines/presentation/routine_controller.dart';
 import '../../routines/presentation/routine_details_form.dart';
@@ -132,8 +133,22 @@ class _RoutinePage extends ConsumerWidget {
     final daEmpty = ref.watch(
       daRoutineProvider(routineId).select((r) => r.isEmpty),
     );
-    final controller = ref.read(routineControllerProvider(routineId).notifier);
+    // Rebuilt when the tab changes: the Music tab has its own bottom bar.
+    return ListenableBuilder(
+      listenable: tabs,
+      builder: (context, _) => _scaffold(context, ref, tabs, dbEmpty, daEmpty),
+    );
+  }
 
+  Widget _scaffold(
+    BuildContext context,
+    WidgetRef ref,
+    TabController tabs,
+    bool dbEmpty,
+    bool daEmpty,
+  ) {
+    final controller = ref.read(routineControllerProvider(routineId).notifier);
+    final tab = RoutineTab.values[tabs.index];
     return Scaffold(
       appBar: AppBar(
         title: _RoutineTitle(routineId: routineId),
@@ -212,35 +227,39 @@ class _RoutinePage extends ConsumerWidget {
           tabs: [for (final tab in RoutineTab.values) Tab(text: tab.label)],
         ),
       ),
-      body: TabBarView(
+      body: Column(
         children: [
-          DbBodyTab(routineId: routineId),
-          DbRisksTab(routineId: routineId),
-          DaTab(routineId: routineId),
-          NotesTab(routineId: routineId),
-          MusicTab(
-            routineId: routineId,
-            footer: TimelineSection(routineId: routineId),
+          // The next step of a new routine's guide, if it has one.
+          GuideCard(routineId: routineId),
+          Expanded(
+            child: TabBarView(
+              children: [
+                DbBodyTab(routineId: routineId),
+                DbRisksTab(routineId: routineId),
+                DaTab(routineId: routineId),
+                NotesTab(routineId: routineId),
+                MusicTab(
+                  routineId: routineId,
+                  marking: (context, parts) =>
+                      TimelineSection(routineId: routineId, parts: parts),
+                ),
+              ],
+            ),
           ),
         ],
       ),
       // The add button and the total's breakdown follow the selected tab.
-      floatingActionButton: ListenableBuilder(
-        listenable: tabs,
-        builder: (context, _) => switch (RoutineTab.values[tabs.index]) {
-          RoutineTab.db => AddElementButton(routineId: routineId),
-          RoutineTab.risks => BuildRiskButton(routineId: routineId),
-          RoutineTab.da => BuildDaButton(routineId: routineId),
-          RoutineTab.notes || RoutineTab.music => const SizedBox.shrink(),
-        },
-      ),
-      bottomNavigationBar: ListenableBuilder(
-        listenable: tabs,
-        builder: (context, _) => RoutineTotalBar(
-          routineId: routineId,
-          showDa: tabs.index == RoutineTab.da.index,
-        ),
-      ),
+      floatingActionButton: switch (tab) {
+        RoutineTab.db => AddElementButton(routineId: routineId),
+        RoutineTab.risks => BuildRiskButton(routineId: routineId),
+        RoutineTab.da => BuildDaButton(routineId: routineId),
+        RoutineTab.notes || RoutineTab.music => null,
+      },
+      // The Music tab has its own bar (play and mark buttons) instead. No
+      // bar at all there, so the page keeps the bottom safe area for it.
+      bottomNavigationBar: tab == RoutineTab.music
+          ? null
+          : RoutineTotalBar(routineId: routineId, showDa: tab == RoutineTab.da),
     );
   }
 

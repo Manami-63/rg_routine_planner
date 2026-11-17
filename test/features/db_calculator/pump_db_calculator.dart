@@ -5,12 +5,15 @@ import 'package:rg_routine_planner/core/device/screen_awake.dart';
 import 'package:rg_routine_planner/features/da_calculator/presentation/da_calculator_providers.dart';
 import 'package:rg_routine_planner/features/db_calculator/presentation/db_calculator_providers.dart';
 import 'package:rg_routine_planner/features/db_calculator/presentation/element_picker_screen.dart';
+import 'package:rg_routine_planner/features/guide/domain/guide.dart';
+import 'package:rg_routine_planner/features/guide/presentation/guide_providers.dart';
 import 'package:rg_routine_planner/features/music/presentation/music_providers.dart';
 import 'package:rg_routine_planner/features/routine_editor/presentation/routine_screen.dart';
 import 'package:rg_routine_planner/features/routines/domain/routine.dart';
 import 'package:rg_routine_planner/features/routines/presentation/routine_providers.dart';
 
 import '../../core/device/fake_screen_awake.dart';
+import '../guide/fake_guide_store.dart';
 import '../music/fake_music.dart';
 import '../routines/fake_routine_repository.dart';
 import '../da_calculator/test_data.dart';
@@ -26,7 +29,8 @@ Routine emptyTestRoutine() => Routine.create(
 
 /// Pumps the routine page for [routine] (default: an empty routine) on
 /// [initialTab], with fake catalogue and routine repositories, fake
-/// [music] and a fake [screenAwake]. Returns the routine repository.
+/// [music], a fake [screenAwake] and the [guide] (default: off, saved to
+/// [guideStore]). Returns the routine repository.
 Future<FakeRoutineRepository> pumpDbCalculator(
   WidgetTester tester, {
   FakeDbCatalogueRepository? catalogue,
@@ -36,6 +40,8 @@ Future<FakeRoutineRepository> pumpDbCalculator(
   double height = 2400,
   FakeMusic? music,
   FakeScreenAwake? screenAwake,
+  GuideSettings guide = GuideSettings.off,
+  FakeGuideStore? guideStore,
 }) async {
   // A tall surface so the whole scroll view is built without scrolling.
   tester.view.physicalSize = Size(800, height);
@@ -58,6 +64,8 @@ Future<FakeRoutineRepository> pumpDbCalculator(
         musicPickerProvider.overrideWithValue(fakeMusic.picker),
         musicPlayerProvider.overrideWith((ref, _) => fakeMusic.player),
         screenAwakeProvider.overrideWithValue(screenAwake ?? FakeScreenAwake()),
+        initialGuideSettingsProvider.overrideWithValue(guide),
+        guideStoreProvider.overrideWithValue(guideStore ?? FakeGuideStore()),
       ],
       child: MaterialApp(
         home: RoutineScreen(routineId: testRoutineId, initialTab: initialTab),

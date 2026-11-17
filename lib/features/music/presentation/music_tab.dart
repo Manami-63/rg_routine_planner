@@ -8,15 +8,33 @@ import 'music_actions.dart';
 import 'music_player.dart';
 import 'music_providers.dart';
 
+/// The parts of the Music tab handed to [MusicTab.marking] once the music
+/// has loaded: what goes at the top of its scroll view (the title and the
+/// seek bar), and the player for its own play buttons.
+class MusicTabParts {
+  const MusicTabParts({
+    required this.top,
+    required this.player,
+    required this.duration,
+  });
+
+  final List<Widget> top;
+  final MusicPlayer player;
+  final Duration duration;
+}
+
 /// The routine's music: add, replace or remove it, and play it.
 class MusicTab extends ConsumerWidget {
-  const MusicTab({super.key, required this.routineId, this.footer});
+  const MusicTab({super.key, required this.routineId, this.marking});
 
   final String routineId;
 
-  /// Shown below the player once the music has loaded (e.g. marking
-  /// times, which needs the player).
-  final Widget? footer;
+  /// Builds the whole tab once the music has loaded (e.g. marking times,
+  /// with the play buttons beside the mark buttons). Without it the tab is
+  /// the title and the full player.
+  final Widget Function(BuildContext context, MusicTabParts parts)? marking;
+
+  static const _padding = EdgeInsets.all(16);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -40,21 +58,30 @@ class MusicTab extends ConsumerWidget {
       );
     }
 
+    final header = [
+      _MusicHeader(routineId: routineId, music: music),
+      const SizedBox(height: 8),
+    ];
     final loaded = ref.watch(loadedMusicProvider(routineId));
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        _MusicHeader(routineId: routineId, music: music),
-        const SizedBox(height: 8),
-        loaded.when(
-          skipLoadingOnRefresh: false,
-          loading: () => const Padding(
+    return loaded.when(
+      skipLoadingOnRefresh: false,
+      loading: () => ListView(
+        padding: _padding,
+        children: [
+          ...header,
+          const Padding(
             padding: EdgeInsets.all(32),
             child: Center(
               child: CircularProgressIndicator(semanticsLabel: 'Loading music'),
             ),
           ),
-          error: (error, _) => MessageView(
+        ],
+      ),
+      error: (error, _) => ListView(
+        padding: _padding,
+        children: [
+          ...header,
+          MessageView(
             icon: Icons.error_outline,
             isError: true,
             title: error is MusicFileMissingException
@@ -67,18 +94,33 @@ class MusicTab extends ConsumerWidget {
               label: const Text('Choose music'),
             ),
           ),
-          data: (duration) => Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+        ],
+      ),
+      data: (duration) {
+        final player = ref.watch(musicPlayerProvider(routineId));
+        final length = duration ?? Duration.zero;
+        final marking = this.marking;
+        if (marking == null) {
+          return ListView(
+            padding: _padding,
             children: [
-              MusicPlayerControls(
-                player: ref.watch(musicPlayerProvider(routineId)),
-                duration: duration ?? Duration.zero,
-              ),
-              ?footer,
+              ...header,
+              MusicPlayerControls(player: player, duration: length),
             ],
+          );
+        }
+        return marking(
+          context,
+          MusicTabParts(
+            top: [
+              ...header,
+              MusicSeekBar(player: player, duration: length),
+            ],
+            player: player,
+            duration: length,
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 }
@@ -135,10 +177,85 @@ class MusicPlayerControls extends StatelessWidget {
   final MusicPlayer player;
   final Duration duration;
 
-  static const _skip = Duration(seconds: 5);
-
   /// The speeds to choose from: slower ones for learning a routine.
   static const speeds = [0.5, 0.75, 0.9, 1.0];
+
+  @override
+  Widget build(BuildContext context) => Column(
+    children: [
+      MusicSeekBar(player: player, duration: duration),
+      const SizedBox(height: 8),
+      MusicTransportButtons(player: player, duration: duration),
+    ],
+  );
+}
+
+/// The seek bar, with the position, the playback speed and the length.
+class MusicSeekBar extends StatelessWidget {
+  const MusicSeekBar({super.key, required this.player, required this.duration});
+
+  final MusicPlayer player;
+  final Duration duration;
+
+  @override
+  Widget build(BuildContext context) {
+    final timeStyle = Theme.of(context).textTheme.bodySmall
+        ?.copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
+    return StreamBuilder<Duration>(
+      stream: player.positionStream,
+      initialData: player.position,
+      builder: (context, snapshot) {
+        final position = snapshot.data! > duration ? duration : snapshot.data!;
+        return Column(
+          children: [
+            Slider(
+              value: position.inMilliseconds.toDouble(),
+              max: duration.inMilliseconds.toDouble().clamp(1, 1e9),
+              semanticFormatterCallback: (_) => formatMusicTime(position),
+              onChanged: (value) =>
+                  player.seek(Duration(milliseconds: value.round())),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    formatMusicTime(position),
+                    key: const ValueKey('music-position'),
+                    style: timeStyle,
+                  ),
+                  _SpeedButton(player: player),
+                  Text(
+                    formatMusicTime(duration),
+                    key: const ValueKey('music-duration'),
+                    style: timeStyle,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// Back 5 seconds, play / pause and forward 5 seconds. [compact] makes them
+/// smaller, for a bar with other buttons.
+class MusicTransportButtons extends StatelessWidget {
+  const MusicTransportButtons({
+    super.key,
+    required this.player,
+    required this.duration,
+    this.compact = false,
+  });
+
+  final MusicPlayer player;
+  final Duration duration;
+  final bool compact;
+
+  static const _skip = Duration(seconds: 5);
 
   void _seekBy(Duration offset) {
     final target = player.position + offset;
@@ -151,85 +268,40 @@ class MusicPlayerControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final timeStyle = textTheme.bodySmall?.copyWith(
-      fontFeatures: const [FontFeature.tabularFigures()],
-    );
-    return Column(
-      children: [
-        StreamBuilder<Duration>(
-          stream: player.positionStream,
-          initialData: player.position,
-          builder: (context, snapshot) {
-            final position = snapshot.data! > duration
-                ? duration
-                : snapshot.data!;
-            return Column(
-              children: [
-                Slider(
-                  value: position.inMilliseconds.toDouble(),
-                  max: duration.inMilliseconds.toDouble().clamp(1, 1e9),
-                  semanticFormatterCallback: (_) => formatMusicTime(position),
-                  onChanged: (value) =>
-                      player.seek(Duration(milliseconds: value.round())),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        formatMusicTime(position),
-                        key: const ValueKey('music-position'),
-                        style: timeStyle,
-                      ),
-                      _SpeedButton(player: player),
-                      Text(
-                        formatMusicTime(duration),
-                        key: const ValueKey('music-duration'),
-                        style: timeStyle,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-        const SizedBox(height: 8),
-        StreamBuilder<bool>(
-          stream: player.playingStream,
-          initialData: player.playing,
-          builder: (context, snapshot) {
-            final playing = snapshot.data!;
-            return Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  tooltip: 'Back 5 seconds',
-                  iconSize: 32,
-                  icon: const Icon(Icons.replay_5),
-                  onPressed: () => _seekBy(-_skip),
-                ),
-                const SizedBox(width: 16),
-                IconButton.filled(
-                  tooltip: playing ? 'Pause' : 'Play',
-                  iconSize: 48,
-                  icon: Icon(playing ? Icons.pause : Icons.play_arrow),
-                  onPressed: playing ? player.pause : player.play,
-                ),
-                const SizedBox(width: 16),
-                IconButton(
-                  tooltip: 'Forward 5 seconds',
-                  iconSize: 32,
-                  icon: const Icon(Icons.forward_5),
-                  onPressed: () => _seekBy(_skip),
-                ),
-              ],
-            );
-          },
-        ),
-      ],
+    final skipSize = compact ? 28.0 : 32.0;
+    final gap = SizedBox(width: compact ? 8 : 16);
+    return StreamBuilder<bool>(
+      stream: player.playingStream,
+      initialData: player.playing,
+      builder: (context, snapshot) {
+        final playing = snapshot.data!;
+        return Row(
+          mainAxisSize: compact ? MainAxisSize.min : MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              tooltip: 'Back 5 seconds',
+              iconSize: skipSize,
+              icon: const Icon(Icons.replay_5),
+              onPressed: () => _seekBy(-_skip),
+            ),
+            gap,
+            IconButton.filled(
+              tooltip: playing ? 'Pause' : 'Play',
+              iconSize: compact ? 36 : 48,
+              icon: Icon(playing ? Icons.pause : Icons.play_arrow),
+              onPressed: playing ? player.pause : player.play,
+            ),
+            gap,
+            IconButton(
+              tooltip: 'Forward 5 seconds',
+              iconSize: skipSize,
+              icon: const Icon(Icons.forward_5),
+              onPressed: () => _seekBy(_skip),
+            ),
+          ],
+        );
+      },
     );
   }
 }

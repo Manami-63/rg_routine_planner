@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +12,7 @@ import '../../music/domain/routine_music.dart';
 import '../../music/presentation/music_providers.dart';
 import '../domain/routine.dart';
 import '../domain/routine_file.dart';
+import 'routine_backup.dart';
 import 'routine_details_form.dart';
 import 'routine_providers.dart';
 
@@ -88,18 +91,12 @@ Future<void> shareRoutine(
         if (!context.mounted) return;
         final include = await _askIncludeMusic(context, music.title);
         if (include == null) return;
-        if (include) {
-          shared = SharedMusic(
-            title: music.title,
-            extension: p.extension(music.fileName).replaceFirst('.', ''),
-            bytes: await library.readBytes(music),
-          );
-        }
+        if (include) shared = await sharedMusicOf(library, music);
       }
     }
     await transfer.share(
       fileName: RoutineFile.fileNameFor(routineDisplayName(routine.name)),
-      contents: RoutineFile.encode(routine, music: shared),
+      lines: Stream.value(RoutineFile.encode(routine, music: shared)),
       origin: origin,
     );
   } on Object {
@@ -116,6 +113,16 @@ Future<void> shareRoutine(
     );
   }
 }
+
+/// The app's copy of [music], to go in a routine file.
+Future<SharedMusic> sharedMusicOf(
+  MusicLibrary library,
+  RoutineMusic music,
+) async => SharedMusic(
+  title: music.title,
+  extension: p.extension(music.fileName).replaceFirst('.', ''),
+  bytes: await library.readBytes(music),
+);
 
 /// `null` if the user dismissed the question.
 Future<bool?> _askIncludeMusic(BuildContext context, String title) =>
@@ -141,7 +148,7 @@ Future<bool?> _askIncludeMusic(BuildContext context, String title) =>
       ),
     );
 
-/// Lets the user choose a routine file and imports it.
+/// Lets the user choose a routine file or a backup and imports it.
 Future<void> importRoutine(BuildContext context, WidgetRef ref) =>
     importRoutineFile(
       ref,
@@ -150,51 +157,53 @@ Future<void> importRoutine(BuildContext context, WidgetRef ref) =>
       router: GoRouter.maybeOf(context),
     );
 
-/// Saves the routine file from [read] (`null`: cancelled) as a new routine,
-/// with its own copy of any music in the file, then offers to open it.
+/// Imports the file whose lines come from [read] (`null`: cancelled). A
+/// routine file is saved as a new routine, with its own copy of any music
+/// in it, then offered to open; a backup is restored ([restoreBackup]).
 Future<void> importRoutineFile(
   WidgetRef ref,
-  Future<String?> Function() read, {
+  Future<Stream<String>?> Function() read, {
   required ScaffoldMessengerState messenger,
   required GoRouter? router,
 }) async {
-  final repository = ref.read(routineRepositoryProvider);
-  final library = ref.read(musicLibraryProvider);
   final Routine routine;
-  RoutineMusic? stored;
+  StreamIterator<String>? lines;
   try {
-    final contents = await read();
-    if (contents == null) return;
-    final decoded = RoutineFile.decode(
-      contents,
-      id: const Uuid().v4(),
-      now: DateTime.now().toUtc(),
-    );
-    if (decoded.music case final music?) {
-      stored = await library.addBytes(
-        music.bytes,
-        extension: music.extension,
-        title: music.title,
-      );
+    final stream = await read();
+    if (stream == null) return;
+    lines = StreamIterator(stream);
+    if (!await lines.moveNext()) throw const InvalidRoutineFileException();
+    final first = lines.current;
+    if (RoutineFile.backupCount(first) case final count?) {
+      await restoreBackup(ref, lines, count: count, messenger: messenger);
+      return;
     }
-    routine = decoded.routine.withMusic(stored);
-    await repository.saveRoutine(routine);
+    // Our files are one line; others may have been reformatted.
+    final text = StringBuffer(first);
+    while (await lines.moveNext()) {
+      text
+        ..write('\n')
+        ..write(lines.current);
+    }
+    routine = await _saveImported(ref, text.toString());
   } on NewerRoutineFileException {
     messenger.showSnackBar(
       const SnackBar(
         content: Text(
-          'This routine needs a newer version of the app. Update it and '
+          'This file needs a newer version of the app. Update it and '
           'try again.',
         ),
       ),
     );
     return;
   } on Object {
-    if (stored != null) await _deleteQuietly(library, stored);
     messenger.showSnackBar(
       const SnackBar(content: Text('Could not import this file.')),
     );
     return;
+  } finally {
+    // Closes a file not read to the end; nothing to wait for.
+    if (lines != null) unawaited(lines.cancel());
   }
   messenger.showSnackBar(
     SnackBar(
@@ -209,17 +218,48 @@ Future<void> importRoutineFile(
   );
 }
 
+/// Saves the routine file [text] as a new routine. Nothing is left behind
+/// if it fails.
+Future<Routine> _saveImported(WidgetRef ref, String text) async {
+  final repository = ref.read(routineRepositoryProvider);
+  final library = ref.read(musicLibraryProvider);
+  final decoded = RoutineFile.decode(
+    text,
+    id: const Uuid().v4(),
+    now: DateTime.now().toUtc(),
+  );
+  RoutineMusic? stored;
+  try {
+    if (decoded.music case final music?) {
+      stored = await library.addBytes(
+        music.bytes,
+        extension: music.extension,
+        title: music.title,
+      );
+    }
+    final routine = decoded.routine.withMusic(stored);
+    await repository.saveRoutine(routine);
+    return routine;
+  } on Object {
+    if (stored != null) await deleteMusicQuietly(library, stored);
+    rethrow;
+  }
+}
+
 /// Deletes the routine with [id] and the app's copy of its music.
 Future<void> deleteRoutine(WidgetRef ref, String id) async {
   final repository = ref.read(routineRepositoryProvider);
   final library = ref.read(musicLibraryProvider);
   final music = (await repository.fetchRoutine(id))?.music;
   await repository.deleteRoutine(id);
-  if (music != null) await _deleteQuietly(library, music);
+  if (music != null) await deleteMusicQuietly(library, music);
 }
 
 /// A leftover file only wastes space, so failures are ignored.
-Future<void> _deleteQuietly(MusicLibrary library, RoutineMusic music) async {
+Future<void> deleteMusicQuietly(
+  MusicLibrary library,
+  RoutineMusic music,
+) async {
   try {
     await library.delete(music);
   } on Object {
