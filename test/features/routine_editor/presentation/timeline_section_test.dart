@@ -8,6 +8,7 @@ import 'package:rg_routine_planner/features/db_calculator/domain/db_element_opti
 import 'package:rg_routine_planner/features/db_calculator/presentation/element_picker_screen.dart';
 import 'package:rg_routine_planner/features/music/domain/routine_music.dart';
 import 'package:rg_routine_planner/features/routine_editor/presentation/routine_screen.dart';
+import 'package:rg_routine_planner/features/routine_editor/presentation/routine_total_bar.dart';
 import 'package:rg_routine_planner/features/routine_editor/presentation/timeline_section.dart';
 import 'package:rg_routine_planner/features/routines/domain/routine.dart';
 
@@ -47,6 +48,59 @@ void main() {
   }
 
   Finder rowOf(String key) => find.byKey(ValueKey(key));
+
+  testWidgets('play and mark buttons share a dock instead of the total', (
+    tester,
+  ) async {
+    final (_, music) = await pumpMusicTab(tester);
+    final dock = find.byKey(const ValueKey('marking-dock'));
+    Finder inDock(Finder finder) => find.descendant(of: dock, matching: finder);
+
+    expect(find.byType(RoutineTotalBar), findsNothing);
+    expect(inDock(find.byKey(const ValueKey('mark-db'))), findsOneWidget);
+    expect(inDock(find.byTooltip('Back 5 seconds')), findsOneWidget);
+    expect(inDock(find.text('0:00 / 1:30')), findsOneWidget);
+
+    await tester.tap(inDock(find.byTooltip('Play')));
+    await tester.pump();
+    expect(music.player.playing, isTrue);
+    expect(inDock(find.byTooltip('Pause')), findsOneWidget);
+
+    await music.player.seek(const Duration(seconds: 42));
+    await tester.pump();
+    expect(inDock(find.text('0:42 / 1:30')), findsOneWidget);
+
+    // The other tabs keep the total.
+    await tester.tap(find.text('DB'));
+    await tester.pumpAndSettle();
+    expect(find.byType(RoutineTotalBar), findsOneWidget);
+    expect(dock, findsNothing);
+  });
+
+  testWidgets('the Mark times instructions can be hidden and shown', (
+    tester,
+  ) async {
+    await pumpMusicTab(tester);
+    final help = find.textContaining('Play the music and tap');
+    expect(help, findsOneWidget);
+
+    await tester.tap(find.byTooltip('Hide instructions'));
+    await tester.pumpAndSettle();
+    expect(help, findsNothing);
+    // The switch itself stays.
+    expect(find.byKey(const ValueKey('choose-later')), findsOneWidget);
+
+    // Still hidden after leaving the Music tab and coming back.
+    await tester.tap(find.text('DB'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Music'));
+    await tester.pumpAndSettle();
+    expect(help, findsNothing);
+
+    await tester.tap(find.byTooltip('Show instructions'));
+    await tester.pumpAndSettle();
+    expect(help, findsOneWidget);
+  });
 
   testWidgets('Next DB marks the first unmarked DB at the position', (
     tester,

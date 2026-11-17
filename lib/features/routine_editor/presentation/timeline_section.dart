@@ -12,6 +12,7 @@ import '../../db_calculator/presentation/widgets/db_symbol.dart';
 import '../../db_calculator/presentation/widgets/risk_builder_sheet.dart';
 import '../../music/presentation/music_player.dart';
 import '../../music/presentation/music_providers.dart';
+import '../../music/presentation/music_tab.dart';
 import '../../routines/presentation/routine_controller.dart';
 import '../domain/routine_timeline.dart';
 import 'dance_step_conflicts.dart';
@@ -22,10 +23,26 @@ import 'play_mode_screen.dart';
 import 'timeline_colours.dart';
 import 'timeline_editing.dart';
 
-/// Shown below the music player: buttons that mark the next DB, R, DA or S
-/// at the music's position (dragged onto the floor mat to also mark where),
-/// the mat with use-of-space notices, and the marked items by time with
-/// −/+ nudges and a button to open Play mode.
+/// Whether the "Mark times" instructions are hidden, so the player, the
+/// buttons and the mat fit on the screen together. Kept while the app is
+/// open (for every routine), not saved.
+final markTimesHelpHiddenProvider = NotifierProvider<MarkTimesHelpHidden, bool>(
+  MarkTimesHelpHidden.new,
+);
+
+class MarkTimesHelpHidden extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void toggle() => state = !state;
+}
+
+/// The Music tab once its music has loaded: the title and seek bar
+/// ([parts]), the floor mat with use-of-space notices, and the marked items
+/// by time with −/+ nudges and a button to open Play mode, all scrolling;
+/// and a dock at the bottom that stays put, with the play buttons right
+/// above the buttons that mark the next DB, R, DA or S at the music's
+/// position (dragged up onto the mat to also mark where).
 ///
 /// A drop on the mat pauses the music. Marking a DA right after dropping a
 /// DB (or the other way round), before playing on, marks it at the same
@@ -33,12 +50,17 @@ import 'timeline_editing.dart';
 /// "During a DB" can also name its DB (or a new one), which then gets the
 /// DA's time and cell.
 class TimelineSection extends ConsumerStatefulWidget {
-  const TimelineSection({super.key, required this.routineId});
+  const TimelineSection({
+    super.key,
+    required this.routineId,
+    required this.parts,
+  });
 
   /// How far −/+ move a time.
   static const nudge = Duration(milliseconds: 100);
 
   final String routineId;
+  final MusicTabParts parts;
 
   @override
   ConsumerState<TimelineSection> createState() => _TimelineSectionState();
@@ -276,140 +298,180 @@ class _TimelineSectionState extends ConsumerState<TimelineSection> {
     final entries = routine.timelineEntries;
     final conflicts = watchDanceStepConflicts(ref, routineId);
     final theme = Theme.of(context);
+    final helpHidden = ref.watch(markTimesHelpHiddenProvider);
 
     // Freehand routines have no risks to mark (DA are a level's own).
     final kinds = routine.apparatus == Apparatus.freehand
         ? const [TimelineKind.db, TimelineKind.da, TimelineKind.danceStep]
         : TimelineKind.values;
 
+    final markButtons = [
+      for (final kind in kinds)
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: _MarkButton(
+              kind: kind,
+              times: routine.timesOf(kind),
+              canAdd: _canAdd(kind),
+              position: () => player.position,
+              onMark: (time) => _mark(kind, time),
+            ),
+          ),
+        ),
+    ];
+
+    final content = [
+      ...widget.parts.top,
+      const SizedBox(height: 8),
+      Row(
+        children: [
+          Flexible(
+            child: Text(
+              'Mark times',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleMedium,
+            ),
+          ),
+          IconButton(
+            key: const ValueKey('mark-times-help'),
+            tooltip: helpHidden ? 'Show instructions' : 'Hide instructions',
+            visualDensity: VisualDensity.compact,
+            icon: Icon(helpHidden ? Icons.expand_more : Icons.expand_less),
+            onPressed: ref.read(markTimesHelpHiddenProvider.notifier).toggle,
+          ),
+          Expanded(
+            child: MergeSemantics(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  const Flexible(
+                    child: Text(
+                      'Choose later',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Switch(
+                    key: const ValueKey('choose-later'),
+                    value: _chooseLater,
+                    onChanged: (on) => setState(() => _chooseLater = on),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      if (!helpHidden)
+        Text(
+          'Play the music and tap the buttons at the bottom when each one '
+          'starts. "Next" marks what is already in the routine; "Add" '
+          'pauses the music so you can choose a new one. Drag up onto the '
+          'mat to also mark where. While paused, you can add the DB or DA '
+          'done in the same moment. With Choose later on, Add only marks '
+          'the moment, so the music keeps playing.',
+          style: theme.textTheme.bodySmall,
+        ),
+      const SizedBox(height: 12),
+      Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 320),
+          child: FloorMat<_PendingMark>(
+            entries: entries,
+            onDrop: (mark, cell) =>
+                _mark(mark.kind, mark.time, cell: cell, dropped: true),
+          ),
+        ),
+      ),
+      FloorNotices(routine: routine),
+      const SizedBox(height: 16),
+      Row(
+        children: [
+          Expanded(child: Text('Timeline', style: theme.textTheme.titleMedium)),
+          if (entries.isNotEmpty)
+            TextButton(
+              onPressed: () => _confirmClear(context, controller),
+              child: const Text('Clear all'),
+            ),
+        ],
+      ),
+      if (entries.isNotEmpty)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: FilledButton.icon(
+            onPressed: () => PlayModeScreen.show(context, routineId: routineId),
+            icon: const Icon(Icons.slideshow),
+            label: const Text('Play mode'),
+          ),
+        ),
+      if (entries.isEmpty)
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Text(
+            'Nothing marked yet.',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        )
+      else
+        for (final entry in entries)
+          _TimelineRow(
+            key: ValueKey('timeline-${entry.kind.name}-${entry.index}'),
+            entry: entry,
+            partner: switch (routine.partnerOf(entry.kind, entry.index)) {
+              null => null,
+              final i => '${entry.kind.partnerKind!.label} ${i + 1}',
+            },
+            conflictWith: conflicts[(entry.kind, entry.index)],
+            onTap: () => player.seek(entry.time),
+            onChoose: entry.isPending && _canAdd(entry.kind)
+                ? () => _choose(entry)
+                : null,
+            onNudge: (offset) =>
+                controller.moveTime(entry.kind, entry.index, offset),
+            onPair: entry.kind.partnerKind == null
+                ? null
+                : () async {
+                    if (routine.partnerOf(entry.kind, entry.index) != null) {
+                      // Split: only this item moves.
+                      controller.setTime(
+                        entry.kind,
+                        entry.index,
+                        entry.time + TimelineSection.nudge,
+                      );
+                      return;
+                    }
+                    final partner = await _pickPartner(context, entry, entries);
+                    if (partner == null) return;
+                    controller.pairWith(entry.kind, entry.index, partner);
+                  },
+            onClear: () => controller.setTime(entry.kind, entry.index, null),
+            onPickCell: () async {
+              final cell = await _pickCell(context, entry);
+              if (cell == null) return;
+              controller.setCell(entry.kind, entry.index, cell.cell);
+            },
+          ),
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: 16),
-        Text('Mark times', style: theme.textTheme.titleMedium),
-        Text(
-          'Play the music and tap when each one starts. "Next" marks what '
-          'is already in the routine; "Add" pauses the music so you can '
-          'choose a new one. Drag onto the mat to also mark where. While '
-          'paused, you can add the DB or DA done in the same moment.',
-          style: theme.textTheme.bodySmall,
+        Expanded(
+          child: ListView(padding: const EdgeInsets.all(16), children: content),
         ),
-        SwitchListTile(
-          key: const ValueKey('choose-later'),
-          contentPadding: EdgeInsets.zero,
-          dense: true,
-          title: const Text('Choose later'),
-          subtitle: const Text(
-            'Add only marks the moment, so the music keeps playing.',
+        _MarkingDock(
+          transport: MusicTransportButtons(
+            player: player,
+            duration: widget.parts.duration,
+            compact: true,
           ),
-          value: _chooseLater,
-          onChanged: (on) => setState(() => _chooseLater = on),
+          position: _DockTime(player: player, duration: widget.parts.duration),
+          markButtons: markButtons,
         ),
-        Row(
-          children: [
-            for (final kind in kinds)
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: _MarkButton(
-                    kind: kind,
-                    times: routine.timesOf(kind),
-                    canAdd: _canAdd(kind),
-                    position: () => player.position,
-                    onMark: (time) => _mark(kind, time),
-                  ),
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 320),
-            child: FloorMat<_PendingMark>(
-              entries: entries,
-              onDrop: (mark, cell) =>
-                  _mark(mark.kind, mark.time, cell: cell, dropped: true),
-            ),
-          ),
-        ),
-        FloorNotices(routine: routine),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: Text('Timeline', style: theme.textTheme.titleMedium),
-            ),
-            if (entries.isNotEmpty)
-              TextButton(
-                onPressed: () => _confirmClear(context, controller),
-                child: const Text('Clear all'),
-              ),
-          ],
-        ),
-        if (entries.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: FilledButton.icon(
-              onPressed: () =>
-                  PlayModeScreen.show(context, routineId: routineId),
-              icon: const Icon(Icons.slideshow),
-              label: const Text('Play mode'),
-            ),
-          ),
-        if (entries.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Text(
-              'Nothing marked yet.',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          )
-        else
-          for (final entry in entries)
-            _TimelineRow(
-              key: ValueKey('timeline-${entry.kind.name}-${entry.index}'),
-              entry: entry,
-              partner: switch (routine.partnerOf(entry.kind, entry.index)) {
-                null => null,
-                final i => '${entry.kind.partnerKind!.label} ${i + 1}',
-              },
-              conflictWith: conflicts[(entry.kind, entry.index)],
-              onTap: () => player.seek(entry.time),
-              onChoose: entry.isPending && _canAdd(entry.kind)
-                  ? () => _choose(entry)
-                  : null,
-              onNudge: (offset) =>
-                  controller.moveTime(entry.kind, entry.index, offset),
-              onPair: entry.kind.partnerKind == null
-                  ? null
-                  : () async {
-                      if (routine.partnerOf(entry.kind, entry.index) != null) {
-                        // Split: only this item moves.
-                        controller.setTime(
-                          entry.kind,
-                          entry.index,
-                          entry.time + TimelineSection.nudge,
-                        );
-                        return;
-                      }
-                      final partner = await _pickPartner(
-                        context,
-                        entry,
-                        entries,
-                      );
-                      if (partner == null) return;
-                      controller.pairWith(entry.kind, entry.index, partner);
-                    },
-              onClear: () => controller.setTime(entry.kind, entry.index, null),
-              onPickCell: () async {
-                final cell = await _pickCell(context, entry);
-                if (cell == null) return;
-                controller.setCell(entry.kind, entry.index, cell.cell);
-              },
-            ),
       ],
     );
   }
@@ -557,6 +619,75 @@ class _TimelineSectionState extends ConsumerState<TimelineSection> {
     );
     if (confirmed ?? false) controller.clearTimes();
   }
+}
+
+/// The bottom of the Music tab, which stays put while the rest scrolls:
+/// the play buttons and the music position, with the mark buttons right
+/// below, so a thumb can play, pause and mark without moving far.
+class _MarkingDock extends StatelessWidget {
+  const _MarkingDock({
+    required this.transport,
+    required this.position,
+    required this.markButtons,
+  });
+
+  final Widget transport;
+  final Widget position;
+  final List<Widget> markButtons;
+
+  @override
+  Widget build(BuildContext context) => Material(
+    key: const ValueKey('marking-dock'),
+    color: Theme.of(context).colorScheme.surfaceContainer,
+    child: SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                const Spacer(),
+                transport,
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: FittedBox(fit: BoxFit.scaleDown, child: position),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Row(children: markButtons),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+/// The music position and length, e.g. "0:42 / 2:30".
+class _DockTime extends StatelessWidget {
+  const _DockTime({required this.player, required this.duration});
+
+  final MusicPlayer player;
+  final Duration duration;
+
+  @override
+  Widget build(BuildContext context) => StreamBuilder<Duration>(
+    stream: player.positionStream,
+    initialData: player.position,
+    builder: (context, snapshot) {
+      final position = snapshot.data! > duration ? duration : snapshot.data!;
+      return Text(
+        '${formatMusicTime(position)} / ${formatMusicTime(duration)}',
+        key: const ValueKey('dock-position'),
+        style: Theme.of(context).textTheme.bodySmall
+            ?.copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+      );
+    },
+  );
 }
 
 /// The data of a "Next" or "Add" button being dragged: what it marks, and the

@@ -6,9 +6,12 @@ import 'package:uuid/uuid.dart';
 import '../../../app/router.dart';
 import '../../../core/widgets/message_view.dart';
 import '../../db_calculator/presentation/db_calculator_providers.dart';
+import '../../guide/domain/guide.dart';
+import '../../guide/presentation/guide_choice_sheet.dart';
 import '../data/routine_repository.dart';
 import '../domain/routine.dart';
 import '../../routine_editor/presentation/routine_score_providers.dart';
+import '../../routine_editor/presentation/routine_screen.dart';
 import 'routine_actions.dart';
 import 'routine_backup.dart';
 import 'routine_details_form.dart';
@@ -99,7 +102,8 @@ class RoutinesScreen extends ConsumerWidget {
 
   /// Asks for the name, apparatus and level, then saves the new routine
   /// and opens it. Saving first means it appears in the list even if the
-  /// user leaves straight away.
+  /// user leaves straight away. While the guide is on, it first asks how
+  /// to start and opens the tab of the chosen path.
   Future<void> _createRoutine(BuildContext context, WidgetRef ref) async {
     final details = await RoutineDetailsForm.create(context);
     if (details == null || !context.mounted) return;
@@ -120,7 +124,14 @@ class RoutinesScreen extends ConsumerWidget {
       return;
     }
     if (!context.mounted) return;
-    context.go(AppRoutes.routine(routine.id));
+    final path = await offerGuide(context, ref, routine.id);
+    if (!context.mounted) return;
+    context.go(
+      AppRoutes.routine(
+        routine.id,
+        path == GuidePath.music ? RoutineTab.music : RoutineTab.db,
+      ),
+    );
   }
 }
 

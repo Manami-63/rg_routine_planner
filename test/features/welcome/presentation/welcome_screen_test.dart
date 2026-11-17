@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rg_routine_planner/app/app.dart';
+import 'package:rg_routine_planner/features/guide/domain/guide.dart';
+import 'package:rg_routine_planner/features/guide/presentation/guide_providers.dart';
 import 'package:rg_routine_planner/features/welcome/data/welcome_store.dart';
 import 'package:rg_routine_planner/features/welcome/presentation/welcome_providers.dart';
 
+import '../../guide/fake_guide_store.dart';
 import '../fake_welcome_store.dart';
 
 void main() {
@@ -12,12 +15,15 @@ void main() {
     WidgetTester tester,
     FakeWelcomeStore store, {
     required bool startWithWelcome,
+    FakeGuideStore? guideStore,
   }) async {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           welcomeStoreProvider.overrideWithValue(store),
           startWithWelcomeProvider.overrideWithValue(startWithWelcome),
+          initialGuideSettingsProvider.overrideWithValue(const GuideSettings()),
+          guideStoreProvider.overrideWithValue(guideStore ?? FakeGuideStore()),
           introVideoProvider.overrideWithValue(
             const SizedBox(key: ValueKey('intro-video')),
           ),
@@ -56,5 +62,27 @@ void main() {
     await tester.tap(find.text('Get started'));
     await tester.pumpAndSettle();
     expect(find.text('How it works'), findsOneWidget);
+  });
+
+  testWidgets('the guide for new routines can be turned off and on', (
+    tester,
+  ) async {
+    final guide = FakeGuideStore();
+    await pumpApp(
+      tester,
+      FakeWelcomeStore(),
+      startWithWelcome: true,
+      guideStore: guide,
+    );
+    final toggle = find.byKey(const ValueKey('guide-switch'));
+    expect(tester.widget<SwitchListTile>(toggle).value, isTrue);
+
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    expect(guide.saved, GuideSettings.off);
+
+    await tester.tap(toggle);
+    await tester.pumpAndSettle();
+    expect(guide.saved.enabled, isTrue);
   });
 }

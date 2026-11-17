@@ -129,9 +129,17 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   (`DbRoutine.elementTimes`/`riskTimes`, `DaRoutine.times`, parallel to
   their lists and moved with them; `time_ms` columns and the
   `routine_dance_steps` table). `RoutineTimeline` (`routine_editor/domain/`)
-  combines them; `TimelineSection` (shown by `MusicTab` below the player)
-  has "Next DB/R/DA/S" buttons that mark the first unmarked item at the
-  player position, and the marked items by time with ±0.1 s nudges.
+  combines them; `TimelineSection` (built by `MusicTab.marking` once the
+  music loads) scrolls the title and seek bar (`MusicTabParts`), the mat
+  and the marked items by time with ±0.1 s nudges, and keeps a dock at
+  the bottom: the play buttons (`MusicTransportButtons`, compact) right
+  above "Next DB/R/DA/S", which mark the first unmarked item at the
+  player position, so a thumb plays, pauses and marks without moving far
+  (drag up onto the mat). The Music tab has no total bar (the routine
+  page drops its bottom bar there, keeping the safe area for the dock).
+  The "Mark times" instructions fold away (`markTimesHelpHiddenProvider`,
+  kept while the app is open, not saved), and the guide card folds to
+  one line, so the dock and the whole mat fit on one screen.
   Setting a time puts the timed items of that kind in time order
   (`timeOrder`; untimed items keep their places), so the first N risks and
   DA follow the music.
@@ -223,6 +231,20 @@ Feature-first: `lib/features/<feature>/{domain,data,presentation}`.
   Home's "How it works" opens it again. No login (planned as optional with
   the Firebase backend). Tests override `introVideoProvider` and use
   `FakeWelcomeStore`.
+- Guide (`features/guide/`): a step-by-step guide for new routines, on
+  until the user turns it off (the switch in How it works, "Don't show
+  the guide again", or Turn off when closing it). After New routine,
+  `offerGuide` asks how to start: From my music (Music tab: add music,
+  mark the first move, timeline, floor mat, Play mode) or Pick DB and DA
+  first (first DB, total bar, DA, risk, add music, mark times; freehand
+  skips DA and R). `GuideCard` above the routine page's tabs shows the
+  current step and a "Go to <tab>" button when another tab is open. Most
+  steps finish when the routine shows them done (`GuideFacts`); the rest
+  when tapped (`GuideStep.needsTap`). One routine is guided at a time
+  (`GuideSettings.active`), kept in shared_preferences (`guide_enabled`,
+  `guide_active`), never in routines. `main` loads it and overrides
+  `initialGuideSettingsProvider`; without that (most tests) the guide is
+  off. Tests use `FakeGuideStore` (`pumpDbCalculator` takes `guide`).
 - `routineControllerProvider(id)` is an auto-disposing async family: loads
   by id, saves every change (name and notes debounced 500 ms), flushes a pending save
   on dispose, and reports `routineSaveStatusProvider(id)`. Automatic retry

@@ -3,11 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/router.dart';
+import '../../guide/presentation/guide_providers.dart';
 import '../data/welcome_store.dart';
 import 'welcome_providers.dart';
 
 /// Shown on the first launch, and again from Home ("How it works"): the
-/// intro video and the three steps of the app, as briefly as possible.
+/// intro video and the three steps of the app, as briefly as possible,
+/// and the switch for the new-routine guide.
 class WelcomeScreen extends ConsumerWidget {
   const WelcomeScreen({super.key});
 
@@ -64,7 +66,20 @@ class WelcomeScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
+              SwitchListTile(
+                key: const ValueKey('guide-switch'),
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Step-by-step guide'),
+                subtitle: const Text('Shown when you create a new routine'),
+                value: ref.watch(
+                  guideControllerProvider.select((s) => s.enabled),
+                ),
+                onChanged: ref
+                    .read(guideControllerProvider.notifier)
+                    .setEnabled,
+              ),
+              const SizedBox(height: 8),
               FilledButton(
                 onPressed: () => _done(context, ref),
                 child: const Text('Get started'),
